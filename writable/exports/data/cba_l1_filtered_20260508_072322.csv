@@ -1,0 +1,39 @@
+id,latitude,longitude,orthometric_height,anomaly_value,source_file,survey_mode
+1901,-8.56546,115.07183,41.856,84.4595488,"08_CBA Terestris - 01 (1).csv",terestris
+1915,-8.50831,115.07792,134.517,82.667465,"08_CBA Terestris - 01 (1).csv",terestris
+1916,-8.50449,115.0293,129.018,96.001764,"08_CBA Terestris - 01 (1).csv",terestris
+1917,-8.50894,114.97733,32.997,110.9733806,"08_CBA Terestris - 01 (1).csv",terestris
+1918,-8.44875,115.02418,322.682,100.280838,"08_CBA Terestris - 01 (1).csv",terestris
+1919,-8.47103,115.07831,208.615,93.243835,"08_CBA Terestris - 01 (1).csv",terestris
+1962,-8.24027,115.07398,1237.543,79.80664,"08_CBA Terestris - 01 (1).csv",terestris
+1975,-8.42206,115.07378,521.904,117.988485,"08_CBA Terestris - 01 (1).csv",terestris
+1976,-8.39714,115.06795,653.361,134.109665,"08_CBA Terestris - 01 (1).csv",terestris
+1977,-8.42919,115.02947,418.138,110.996428,"08_CBA Terestris - 01 (1).csv",terestris
+1978,-8.39453,115.03641,584,127.252058,"08_CBA Terestris - 01 (1).csv",terestris
+1979,-8.34948,115.03366,821.233,155.392456,"08_CBA Terestris - 01 (1).csv",terestris
+1980,-8.30515,114.9832,560.871,150.244846,"08_CBA Terestris - 01 (1).csv",terestris
+1981,-8.32092,114.93574,766.208,174.592609,"08_CBA Terestris - 01 (1).csv",terestris
+1982,-8.42269,114.91678,466.735,135.069548,"08_CBA Terestris - 01 (1).csv",terestris
+1983,-8.38459,114.94139,662.886,152.666398,"08_CBA Terestris - 01 (1).csv",terestris
+1984,-8.42422,114.97585,504.594,133.869198,"08_CBA Terestris - 01 (1).csv",terestris
+1985,-8.46886,114.98291,357.115,131.558444,"08_CBA Terestris - 01 (1).csv",terestris
+1986,-8.47057,114.92367,5.218,105.5354706,"08_CBA Terestris - 01 (1).csv",terestris
+3742,-8.56546,115.07183,41.856,86.097934,"08_CBA Terestris - 02.csv",terestris
+3755,-8.50831,115.07792,134.517,84.987805,"08_CBA Terestris - 02.csv",terestris
+3756,-8.50449,115.0293,129.018,92.87105,"08_CBA Terestris - 02.csv",terestris
+3757,-8.50894,114.97733,32.997,117.207689,"08_CBA Terestris - 02.csv",terestris
+3758,-8.44875,115.02418,322.682,98.60053,"08_CBA Terestris - 02.csv",terestris
+3759,-8.47103,115.07831,208.615,88.685486,"08_CBA Terestris - 02.csv",terestris
+3802,-8.24027,115.07398,1237.543,62.05465,"08_CBA Terestris - 02.csv",terestris
+3815,-8.42206,115.07378,521.904,94.502256,"08_CBA Terestris - 02.csv",terestris
+3816,-8.39714,115.06795,653.361,98.146461,"08_CBA Terestris - 02.csv",terestris
+3817,-8.42919,115.02947,418.138,99.441641,"08_CBA Terestris - 02.csv",terestris
+3818,-8.39453,115.03641,584,99.991946,"08_CBA Terestris - 02.csv",terestris
+3819,-8.34948,115.03366,821.233,103.068699,"08_CBA Terestris - 02.csv",terestris
+3820,-8.30515,114.9832,560.871,125.856673,"08_CBA Terestris - 02.csv",terestris
+3821,-8.32092,114.93574,766.208,130.193217,"08_CBA Terestris - 02.csv",terestris
+3822,-8.42269,114.91678,466.735,118.333087,"08_CBA Terestris - 02.csv",terestris
+3823,-8.38459,114.94139,662.886,113.030001,"08_CBA Terestris - 02.csv",terestris
+3824,-8.42422,114.97585,504.594,110.242742,"08_CBA Terestris - 02.csv",terestris
+3825,-8.46886,114.98291,357.115,111.973116,"08_CBA Terestris - 02.csv",terestris
+3826,-8.47057,114.92367,5.218,113.816554,"08_CBA Terestris - 02.csv",terestris

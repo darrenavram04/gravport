@@ -1,0 +1,792 @@
+ERROR - 2026-01-26 15:45:49 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 15:45:49 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 15:45:49 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 15:45:49 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 15:58:08 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 15:58:08 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 15:58:08 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 15:58:08 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:17:33 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:17:33 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:17:33 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:17:33 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:34:53 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:34:53 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:34:53 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:34:53 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:40:02 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:40:02 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:40:02 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:40:02 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;datasets&quot; does not exist
+LINE 2: FROM &quot;datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:44:45 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:44:45 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:44:45 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:44:45 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:44:46 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:44:46 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:44:46 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:44:46 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(64): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:47:08 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:47:08 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:47:08 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:47:08 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 16:47:09 --> ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^ in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:206
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Que...', 'C:\\xampp\\htdocs...', 206)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 16:47:09 --> CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 692.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 2 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 3 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:47:09 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 211.
+ 1 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 4 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 5 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 16:47:09 --> [Caused by] ErrorException: pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^
+in SYSTEMPATH\Database\Postgre\Connection.php on line 206.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_query(): Query failed: ERROR:  relation &quot;testing.geo_datasets&quot; does not exist
+LINE 2: FROM &quot;testing&quot;.&quot;geo_datasets&quot;
+             ^', 'C:\\xampp\\htdocs\\geoportal\\system\\Database\\Postgre\\Connection.php', 206)
+ 2 SYSTEMPATH\Database\Postgre\Connection.php(206): pg_query(Object(PgSql\Connection), 'SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(738): CodeIgniter\Database\Postgre\Connection->execute('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 4 SYSTEMPATH\Database\BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = \'ID\'')
+ 5 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "testing"."geo_datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 6 APPPATH\Models\DatasetModel.php(55): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 7 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-01-26 17:40:26 --> Error connecting to the database: ErrorException: pg_connect(): Unable to connect to PostgreSQL server: FATAL:  password authentication failed for user &quot;postgres&quot; in C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php:78
+Stack trace:
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'pg_connect(): U...', 'C:\\xampp\\htdocs...', 78)
+#1 C:\xampp\htdocs\geoportal\system\Database\Postgre\Connection.php(78): pg_connect('host=localhost ...')
+#2 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(421): CodeIgniter\Database\Postgre\Connection->connect(false)
+#3 C:\xampp\htdocs\geoportal\system\Database\BaseConnection.php(620): CodeIgniter\Database\BaseConnection->initialize()
+#4 C:\xampp\htdocs\geoportal\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#5 C:\xampp\htdocs\geoportal\app\Models\DatasetModel.php(56): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+#6 C:\xampp\htdocs\geoportal\app\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered(Array, 20, 1)
+#7 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(933): App\Controllers\Catalog->index()
+#8 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+#9 C:\xampp\htdocs\geoportal\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\geoportal\system\Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\geoportal\system\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\geoportal\public\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-01-26 17:40:26 --> CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [Postgre]: pg_connect(): Unable to connect to PostgreSQL server: FATAL:  password authentication failed for user &quot;postgres&quot;
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\BaseConnection.php on line 467.
+ 1 SYSTEMPATH\Database\BaseConnection.php(620): CodeIgniter\Database\BaseConnection->initialize()
+ 2 SYSTEMPATH\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*) AS "numrows"
+FROM "datasets"
+WHERE "country_code" = :country_code:', [...], false)
+ 3 APPPATH\Models\DatasetModel.php(56): CodeIgniter\Database\BaseBuilder->countAllResults(false)
+ 4 APPPATH\Controllers\Catalog.php(48): App\Models\DatasetModel->getFiltered([...], 20, 1)
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 17:49:35 --> CodeIgniter\Exceptions\InvalidArgumentException: "gravport" is not a valid database connection group.
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\Config.php on line 72.
+ 1 SYSTEMPATH\Model.php(155): CodeIgniter\Database\Config::connect('gravport')
+ 2 APPPATH\Controllers\Catalog.php(17): CodeIgniter\Model->__construct()
+ 3 SYSTEMPATH\CodeIgniter.php(903): App\Controllers\Catalog->__construct()
+ 4 SYSTEMPATH\CodeIgniter.php(498): CodeIgniter\CodeIgniter->createController()
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-26 17:50:03 --> CodeIgniter\Exceptions\InvalidArgumentException: "gravport" is not a valid database connection group.
+[Method: GET, Route: catalog]
+in SYSTEMPATH\Database\Config.php on line 72.
+ 1 SYSTEMPATH\Model.php(155): CodeIgniter\Database\Config::connect('gravport')
+ 2 APPPATH\Controllers\Catalog.php(17): CodeIgniter\Model->__construct()
+ 3 SYSTEMPATH\CodeIgniter.php(903): App\Controllers\Catalog->__construct()
+ 4 SYSTEMPATH\CodeIgniter.php(498): CodeIgniter\CodeIgniter->createController()
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

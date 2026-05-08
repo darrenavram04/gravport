@@ -1,0 +1,5 @@
+Execution_ID,Date,Tester,Test_ID,Scenario,Result,Severity,Notes,Evidence_File,Retest_Result
+EXE-001,YYYY-MM-DD,Tester Name,AUTH-001,Login admin with valid credential,Pass,None,Replace with actual observation,screenshots/auth-login-admin.png,
+EXE-002,YYYY-MM-DD,Tester Name,ADM-001,Import latest package from admin UI,Pass,None,Replace with actual observation,screenshots/admin-import-success.png,
+EXE-003,YYYY-MM-DD,Tester Name,WM-006,Draw polygon filter affects preview,Fail,Major,Returned features still include outside-area objects,screenshots/webmap-draw-filter-fail.png,Pending
+

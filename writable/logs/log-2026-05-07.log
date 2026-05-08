@@ -1,0 +1,22 @@
+DEBUG - 2026-05-07 01:24:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-05-07 01:24:44 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-05-07 01:25:39 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-05-07 01:26:14 --> ErrorException: Allowed memory size of 536870912 bytes exhausted (tried to allocate 8392704 bytes)
+[Method: POST, Route: webmap/layer]
+in SYSTEMPATH\Format\JSONFormatter.php on line 42.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2026-05-07 01:26:16 --> ErrorException: Allowed memory size of 536870912 bytes exhausted (tried to allocate 12587008 bytes)
+[Method: POST, Route: webmap/layer]
+in SYSTEMPATH\Format\JSONFormatter.php on line 42.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2026-05-07 01:33:54 --> ErrorException: Allowed memory size of 536870912 bytes exhausted (tried to allocate 6295552 bytes)
+[Method: POST, Route: webmap/layer]
+in SYSTEMPATH\Format\JSONFormatter.php on line 42.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2026-05-07 01:35:10 --> ErrorException: Allowed memory size of 536870912 bytes exhausted (tried to allocate 8388616 bytes)
+[Method: POST, Route: webmap/layer]
+in SYSTEMPATH\Database\BaseResult.php on line 203.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+DEBUG - 2026-05-07 01:44:27 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-05-07 01:44:45 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-05-07 01:44:58 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.

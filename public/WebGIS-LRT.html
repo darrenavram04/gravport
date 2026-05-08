@@ -1,0 +1,3152 @@
+<!DOCTYPE html>
+<!-- saved from url=(0043)http://localhost/project-webgis/public/Home -->
+<html class="wide wow-animation desktop landscape rd-navbar-static-linked" lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script id="debugbar_loader" data-time="1739334614.289514" src="./WebGIS-LRT_files/index.php"></script><script id="debugbar_dynamic_script">
+    var ciSiteURL = "http://localhost/project-webgis/public/index.php"
+    /*
+ * Functionality for the CodeIgniter Debug Toolbar.
+ */
+
+var ciDebugBar = {
+    toolbarContainer: null,
+    toolbar: null,
+    icon: null,
+
+    init: function () {
+        this.toolbarContainer = document.getElementById("toolbarContainer");
+        this.toolbar = document.getElementById("debug-bar");
+        this.icon = document.getElementById("debug-icon");
+
+        ciDebugBar.createListeners();
+        ciDebugBar.setToolbarState();
+        ciDebugBar.setToolbarPosition();
+        ciDebugBar.setToolbarTheme();
+        ciDebugBar.toggleViewsHints();
+        ciDebugBar.routerLink();
+        ciDebugBar.setHotReloadState();
+
+        document
+            .getElementById("debug-bar-link")
+            .addEventListener("click", ciDebugBar.toggleToolbar, true);
+        document
+            .getElementById("debug-icon-link")
+            .addEventListener("click", ciDebugBar.toggleToolbar, true);
+
+        // Allows to highlight the row of the current history request
+        var btn = this.toolbar.querySelector(
+            'button[data-time="' + localStorage.getItem("debugbar-time") + '"]'
+        );
+        ciDebugBar.addClass(btn.parentNode.parentNode, "current");
+
+        historyLoad = this.toolbar.getElementsByClassName("ci-history-load");
+
+        for (var i = 0; i < historyLoad.length; i++) {
+            historyLoad[i].addEventListener(
+                "click",
+                function () {
+                    loadDoc(this.getAttribute("data-time"));
+                },
+                true
+            );
+        }
+
+        // Display the active Tab on page load
+        var tab = ciDebugBar.readCookie("debug-bar-tab");
+        if (document.getElementById(tab)) {
+            var el = document.getElementById(tab);
+            ciDebugBar.switchClass(el, "debug-bar-ndisplay", "debug-bar-dblock");
+            ciDebugBar.addClass(el, "active");
+            tab = document.querySelector("[data-tab=" + tab + "]");
+            if (tab) {
+                ciDebugBar.addClass(tab.parentNode, "active");
+            }
+        }
+    },
+
+    createListeners: function () {
+        var buttons = [].slice.call(
+            this.toolbar.querySelectorAll(".ci-label a")
+        );
+
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener("click", ciDebugBar.showTab, true);
+        }
+
+        // Hook up generic toggle via data attributes `data-toggle="foo"`
+        var links = this.toolbar.querySelectorAll("[data-toggle]");
+        for (var i = 0; i < links.length; i++) {
+            let toggleData = links[i].getAttribute("data-toggle");
+            if (toggleData === "datatable") {
+
+                let datatable = links[i].getAttribute("data-table");
+                links[i].addEventListener("click", function() {
+                    ciDebugBar.toggleDataTable(datatable)
+                }, true);
+               
+            } else if (toggleData === "childrows") {
+
+                let child = links[i].getAttribute("data-child");
+                links[i].addEventListener("click", function() {
+                    ciDebugBar.toggleChildRows(child)
+                }, true);
+                
+            } else {
+                links[i].addEventListener("click", ciDebugBar.toggleRows, true);
+            }
+        }
+    },
+
+    showTab: function () {
+        // Get the target tab, if any
+        var tab = document.getElementById(this.getAttribute("data-tab"));
+
+        // If the label have not a tab stops here
+        if (! tab) {
+            return;
+        }
+
+        // Remove debug-bar-tab cookie
+        ciDebugBar.createCookie("debug-bar-tab", "", -1);
+
+        // Check our current state.
+        var state = tab.classList.contains("debug-bar-dblock");
+
+        // Hide all tabs
+        var tabs = document.querySelectorAll("#debug-bar .tab");
+
+        for (var i = 0; i < tabs.length; i++) {
+            ciDebugBar.switchClass(tabs[i], "debug-bar-dblock", "debug-bar-ndisplay");
+        }
+
+        // Mark all labels as inactive
+        var labels = document.querySelectorAll("#debug-bar .ci-label");
+
+        for (var i = 0; i < labels.length; i++) {
+            ciDebugBar.removeClass(labels[i], "active");
+        }
+
+        // Show/hide the selected tab
+        if (! state) {
+            ciDebugBar.switchClass(tab, "debug-bar-ndisplay", "debug-bar-dblock");
+            ciDebugBar.addClass(this.parentNode, "active");
+            // Create debug-bar-tab cookie to persistent state
+            ciDebugBar.createCookie(
+                "debug-bar-tab",
+                this.getAttribute("data-tab"),
+                365
+            );
+        }
+    },
+
+    addClass: function (el, className) {
+        if (el.classList) {
+            el.classList.add(className);
+        } else {
+            el.className += " " + className;
+        }
+    },
+
+    removeClass: function (el, className) {
+        if (el.classList) {
+            el.classList.remove(className);
+        } else {
+            el.className = el.className.replace(
+                new RegExp(
+                    "(^|\\b)" + className.split(" ").join("|") + "(\\b|$)",
+                    "gi"
+                ),
+                " "
+            );
+        }
+    },
+
+    switchClass  : function(el, classFrom, classTo) {
+        ciDebugBar.removeClass(el, classFrom);
+        ciDebugBar.addClass(el, classTo);
+    },
+
+    /**
+     * Toggle display of another object based on
+     * the data-toggle value of this object
+     *
+     * @param event
+     */
+    toggleRows: function (event) {
+        if (event.target) {
+            let row = event.target.closest("tr");
+            let target = document.getElementById(
+                row.getAttribute("data-toggle")
+            );
+
+            if (target.classList.contains("debug-bar-ndisplay")) {
+                ciDebugBar.switchClass(target, "debug-bar-ndisplay", "debug-bar-dtableRow");   
+            } else {
+                ciDebugBar.switchClass(target, "debug-bar-dtableRow", "debug-bar-ndisplay");
+            } 
+        }
+    },
+
+    /**
+     * Toggle display of a data table
+     *
+     * @param obj
+     */
+    toggleDataTable: function (obj) {
+        if (typeof obj == "string") {
+            obj = document.getElementById(obj + "_table");
+        }
+
+        if (obj) {
+            if (obj.classList.contains("debug-bar-ndisplay")) {
+                ciDebugBar.switchClass(obj, "debug-bar-ndisplay", "debug-bar-dblock");
+            } else {
+                ciDebugBar.switchClass(obj, "debug-bar-dblock", "debug-bar-ndisplay");
+            }
+        }
+    },
+
+    /**
+     * Toggle display of timeline child elements
+     *
+     * @param obj
+     */
+    toggleChildRows: function (obj) {
+        if (typeof obj == "string") {
+            par = document.getElementById(obj + "_parent");
+            obj = document.getElementById(obj + "_children");
+        }
+
+        if (par && obj) {
+
+            if (obj.classList.contains("debug-bar-ndisplay")) {
+                ciDebugBar.removeClass(obj, "debug-bar-ndisplay");
+            } else {
+                ciDebugBar.addClass(obj, "debug-bar-ndisplay");
+            }
+
+            par.classList.toggle("timeline-parent-open");
+        }
+    },
+
+    //--------------------------------------------------------------------
+
+    /**
+     *   Toggle tool bar from full to icon and icon to full
+     */
+    toggleToolbar: function () {
+        var open = ! ciDebugBar.toolbar.classList.contains("debug-bar-ndisplay");
+
+        if (open) {
+            ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
+            ciDebugBar.switchClass(ciDebugBar.toolbar, "debug-bar-dinlineBlock", "debug-bar-ndisplay");
+        } else {
+            ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-dinlineBlock", "debug-bar-ndisplay");
+            ciDebugBar.switchClass(ciDebugBar.toolbar, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
+        }
+
+        // Remember it for other page loads on this site
+        ciDebugBar.createCookie("debug-bar-state", "", -1);
+        ciDebugBar.createCookie(
+            "debug-bar-state",
+            open == true ? "minimized" : "open",
+            365
+        );
+    },
+
+    /**
+     * Sets the initial state of the toolbar (open or minimized) when
+     * the page is first loaded to allow it to remember the state between refreshes.
+     */
+    setToolbarState: function () {
+        var open = ciDebugBar.readCookie("debug-bar-state");
+
+        if (open != "open") {
+            ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
+            ciDebugBar.switchClass(ciDebugBar.toolbar, "debug-bar-dinlineBlock", "debug-bar-ndisplay");
+        } else {
+            ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-dinlineBlock", "debug-bar-ndisplay");
+            ciDebugBar.switchClass(ciDebugBar.toolbar, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
+        } 
+    },
+
+    toggleViewsHints: function () {
+        // Avoid toggle hints on history requests that are not the initial
+        if (
+            localStorage.getItem("debugbar-time") !=
+            localStorage.getItem("debugbar-time-new")
+        ) {
+            var a = document.querySelector('a[data-tab="ci-views"]');
+            a.href = "#";
+            return;
+        }
+
+        var nodeList = []; // [ Element, NewElement( 1 )/OldElement( 0 ) ]
+        var sortedComments = [];
+        var comments = [];
+
+        var getComments = function () {
+            var nodes = [];
+            var result = [];
+            var xpathResults = document.evaluate(
+                "//comment()[starts-with(., ' DEBUG-VIEW')]",
+                document,
+                null,
+                XPathResult.ANY_TYPE,
+                null
+            );
+            var nextNode = xpathResults.iterateNext();
+            while (nextNode) {
+                nodes.push(nextNode);
+                nextNode = xpathResults.iterateNext();
+            }
+
+            // sort comment by opening and closing tags
+            for (var i = 0; i < nodes.length; ++i) {
+                // get file path + name to use as key
+                var path = nodes[i].nodeValue.substring(
+                    18,
+                    nodes[i].nodeValue.length - 1
+                );
+
+                if (nodes[i].nodeValue[12] === "S") {
+                    // simple check for start comment
+                    // create new entry
+                    result[path] = [nodes[i], null];
+                } else if (result[path]) {
+                    // add to existing entry
+                    result[path][1] = nodes[i];
+                }
+            }
+
+            return result;
+        };
+
+        // find node that has TargetNode as parentNode
+        var getParentNode = function (node, targetNode) {
+            if (node.parentNode === null) {
+                return null;
+            }
+
+            if (node.parentNode !== targetNode) {
+                return getParentNode(node.parentNode, targetNode);
+            }
+
+            return node;
+        };
+
+        // define invalid & outer ( also invalid ) elements
+        const INVALID_ELEMENTS = ["NOSCRIPT", "SCRIPT", "STYLE"];
+        const OUTER_ELEMENTS = ["HTML", "BODY", "HEAD"];
+
+        var getValidElementInner = function (node, reverse) {
+            // handle invalid tags
+            if (OUTER_ELEMENTS.indexOf(node.nodeName) !== -1) {
+                for (var i = 0; i < document.body.children.length; ++i) {
+                    var index = reverse
+                        ? document.body.children.length - (i + 1)
+                        : i;
+                    var element = document.body.children[index];
+
+                    // skip invalid tags
+                    if (INVALID_ELEMENTS.indexOf(element.nodeName) !== -1) {
+                        continue;
+                    }
+
+                    return [element, reverse];
+                }
+
+                return null;
+            }
+
+            // get to next valid element
+            while (
+                node !== null &&
+                INVALID_ELEMENTS.indexOf(node.nodeName) !== -1
+            ) {
+                node = reverse
+                    ? node.previousElementSibling
+                    : node.nextElementSibling;
+            }
+
+            // return non array if we couldnt find something
+            if (node === null) {
+                return null;
+            }
+
+            return [node, reverse];
+        };
+
+        // get next valid element ( to be safe to add divs )
+        // @return [ element, skip element ] or null if we couldnt find a valid place
+        var getValidElement = function (nodeElement) {
+            if (nodeElement) {
+                if (nodeElement.nextElementSibling !== null) {
+                    return (
+                        getValidElementInner(
+                            nodeElement.nextElementSibling,
+                            false
+                        ) ||
+                        getValidElementInner(
+                            nodeElement.previousElementSibling,
+                            true
+                        )
+                    );
+                }
+                if (nodeElement.previousElementSibling !== null) {
+                    return getValidElementInner(
+                        nodeElement.previousElementSibling,
+                        true
+                    );
+                }
+            }
+
+            // something went wrong! -> element is not in DOM
+            return null;
+        };
+
+        function showHints() {
+            // Had AJAX? Reset view blocks
+            sortedComments = getComments();
+
+            for (var key in sortedComments) {
+                var startElement = getValidElement(sortedComments[key][0]);
+                var endElement = getValidElement(sortedComments[key][1]);
+
+                // skip if we couldnt get a valid element
+                if (startElement === null || endElement === null) {
+                    continue;
+                }
+
+                // find element which has same parent as startelement
+                var jointParent = getParentNode(
+                    endElement[0],
+                    startElement[0].parentNode
+                );
+                if (jointParent === null) {
+                    // find element which has same parent as endelement
+                    jointParent = getParentNode(
+                        startElement[0],
+                        endElement[0].parentNode
+                    );
+                    if (jointParent === null) {
+                        // both tries failed
+                        continue;
+                    } else {
+                        startElement[0] = jointParent;
+                    }
+                } else {
+                    endElement[0] = jointParent;
+                }
+
+                var debugDiv = document.createElement("div"); // holder
+                var debugPath = document.createElement("div"); // path
+                var childArray = startElement[0].parentNode.childNodes; // target child array
+                var parent = startElement[0].parentNode;
+                var start, end;
+
+                // setup container
+                debugDiv.classList.add("debug-view");
+                debugDiv.classList.add("show-view");
+                debugPath.classList.add("debug-view-path");
+                debugPath.innerText = key;
+                debugDiv.appendChild(debugPath);
+
+                // calc distance between them
+                // start
+                for (var i = 0; i < childArray.length; ++i) {
+                    // check for comment ( start & end ) -> if its before valid start element
+                    if (
+                        childArray[i] === sortedComments[key][1] ||
+                        childArray[i] === sortedComments[key][0] ||
+                        childArray[i] === startElement[0]
+                    ) {
+                        start = i;
+                        if (childArray[i] === sortedComments[key][0]) {
+                            start++; // increase to skip the start comment
+                        }
+                        break;
+                    }
+                }
+                // adjust if we want to skip the start element
+                if (startElement[1]) {
+                    start++;
+                }
+
+                // end
+                for (var i = start; i < childArray.length; ++i) {
+                    if (childArray[i] === endElement[0]) {
+                        end = i;
+                        // dont break to check for end comment after end valid element
+                    } else if (childArray[i] === sortedComments[key][1]) {
+                        // if we found the end comment, we can break
+                        end = i;
+                        break;
+                    }
+                }
+
+                // move elements
+                var number = end - start;
+                if (endElement[1]) {
+                    number++;
+                }
+                for (var i = 0; i < number; ++i) {
+                    if (INVALID_ELEMENTS.indexOf(childArray[start]) !== -1) {
+                        // skip invalid childs that can cause problems if moved
+                        start++;
+                        continue;
+                    }
+                    debugDiv.appendChild(childArray[start]);
+                }
+
+                // add container to DOM
+                nodeList.push(parent.insertBefore(debugDiv, childArray[start]));
+            }
+
+            ciDebugBar.createCookie("debug-view", "show", 365);
+            ciDebugBar.addClass(btn, "active");
+        }
+
+        function hideHints() {
+            for (var i = 0; i < nodeList.length; ++i) {
+                var index;
+
+                // find index
+                for (
+                    var j = 0;
+                    j < nodeList[i].parentNode.childNodes.length;
+                    ++j
+                ) {
+                    if (nodeList[i].parentNode.childNodes[j] === nodeList[i]) {
+                        index = j;
+                        break;
+                    }
+                }
+
+                // move child back
+                while (nodeList[i].childNodes.length !== 1) {
+                    nodeList[i].parentNode.insertBefore(
+                        nodeList[i].childNodes[1],
+                        nodeList[i].parentNode.childNodes[index].nextSibling
+                    );
+                    index++;
+                }
+
+                nodeList[i].parentNode.removeChild(nodeList[i]);
+            }
+            nodeList.length = 0;
+
+            ciDebugBar.createCookie("debug-view", "", -1);
+            ciDebugBar.removeClass(btn, "active");
+        }
+
+        var btn = document.querySelector("[data-tab=ci-views]");
+
+        // If the Views Collector is inactive stops here
+        if (! btn) {
+            return;
+        }
+
+        btn.parentNode.onclick = function () {
+            if (ciDebugBar.readCookie("debug-view")) {
+                hideHints();
+            } else {
+                showHints();
+            }
+        };
+
+        // Determine Hints state on page load
+        if (ciDebugBar.readCookie("debug-view")) {
+            showHints();
+        }
+    },
+
+    setToolbarPosition: function () {
+        var btnPosition = this.toolbar.querySelector("#toolbar-position");
+
+        if (ciDebugBar.readCookie("debug-bar-position") === "top") {
+            ciDebugBar.addClass(ciDebugBar.icon, "fixed-top");
+            ciDebugBar.addClass(ciDebugBar.toolbar, "fixed-top");
+        }
+
+        btnPosition.addEventListener(
+            "click",
+            function () {
+                var position = ciDebugBar.readCookie("debug-bar-position");
+
+                ciDebugBar.createCookie("debug-bar-position", "", -1);
+
+                if (! position || position === "bottom") {
+                    ciDebugBar.createCookie("debug-bar-position", "top", 365);
+                    ciDebugBar.addClass(ciDebugBar.icon, "fixed-top");
+                    ciDebugBar.addClass(ciDebugBar.toolbar, "fixed-top");
+                } else {
+                    ciDebugBar.createCookie(
+                        "debug-bar-position",
+                        "bottom",
+                        365
+                    );
+                    ciDebugBar.removeClass(ciDebugBar.icon, "fixed-top");
+                    ciDebugBar.removeClass(ciDebugBar.toolbar, "fixed-top");
+                }
+            },
+            true
+        );
+    },
+
+    setToolbarTheme: function () {
+        var btnTheme = this.toolbar.querySelector("#toolbar-theme");
+        var isDarkMode = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches;
+        var isLightMode = window.matchMedia(
+            "(prefers-color-scheme: light)"
+        ).matches;
+
+        // If a cookie is set with a value, we force the color scheme
+        if (ciDebugBar.readCookie("debug-bar-theme") === "dark") {
+            ciDebugBar.removeClass(ciDebugBar.toolbarContainer, "light");
+            ciDebugBar.addClass(ciDebugBar.toolbarContainer, "dark");
+        } else if (ciDebugBar.readCookie("debug-bar-theme") === "light") {
+            ciDebugBar.removeClass(ciDebugBar.toolbarContainer, "dark");
+            ciDebugBar.addClass(ciDebugBar.toolbarContainer, "light");
+        }
+
+        btnTheme.addEventListener(
+            "click",
+            function () {
+                var theme = ciDebugBar.readCookie("debug-bar-theme");
+
+                if (
+                    ! theme &&
+                    window.matchMedia("(prefers-color-scheme: dark)").matches
+                ) {
+                    // If there is no cookie, and "prefers-color-scheme" is set to "dark"
+                    // It means that the user wants to switch to light mode
+                    ciDebugBar.createCookie("debug-bar-theme", "light", 365);
+                    ciDebugBar.removeClass(ciDebugBar.toolbarContainer, "dark");
+                    ciDebugBar.addClass(ciDebugBar.toolbarContainer, "light");
+                } else {
+                    if (theme === "dark") {
+                        ciDebugBar.createCookie(
+                            "debug-bar-theme",
+                            "light",
+                            365
+                        );
+                        ciDebugBar.removeClass(
+                            ciDebugBar.toolbarContainer,
+                            "dark"
+                        );
+                        ciDebugBar.addClass(
+                            ciDebugBar.toolbarContainer,
+                            "light"
+                        );
+                    } else {
+                        // In any other cases: if there is no cookie, or the cookie is set to
+                        // "light", or the "prefers-color-scheme" is "light"...
+                        ciDebugBar.createCookie("debug-bar-theme", "dark", 365);
+                        ciDebugBar.removeClass(
+                            ciDebugBar.toolbarContainer,
+                            "light"
+                        );
+                        ciDebugBar.addClass(
+                            ciDebugBar.toolbarContainer,
+                            "dark"
+                        );
+                    }
+                }
+            },
+            true
+        );
+    },
+
+    setHotReloadState: function () {
+        var btn = document.getElementById("debug-hot-reload").parentNode;
+        var btnImg = btn.getElementsByTagName("img")[0];
+        var eventSource;
+
+        // If the Hot Reload Collector is inactive stops here
+        if (! btn) {
+            return;
+        }
+
+        btn.onclick = function () {
+            if (ciDebugBar.readCookie("debug-hot-reload")) {
+                ciDebugBar.createCookie("debug-hot-reload", "", -1);
+                ciDebugBar.removeClass(btn, "active");
+                ciDebugBar.removeClass(btnImg, "rotate");
+
+                // Close the EventSource connection if it exists
+                if (typeof eventSource !== "undefined") {
+                    eventSource.close();
+                    eventSource = void 0; // Undefine the variable
+                }
+            } else {
+                ciDebugBar.createCookie("debug-hot-reload", "show", 365);
+                ciDebugBar.addClass(btn, "active");
+                ciDebugBar.addClass(btnImg, "rotate");
+
+                eventSource = ciDebugBar.hotReloadConnect();
+            }
+        };
+
+        // Determine Hot Reload state on page load
+        if (ciDebugBar.readCookie("debug-hot-reload")) {
+            ciDebugBar.addClass(btn, "active");
+            ciDebugBar.addClass(btnImg, "rotate");
+            eventSource = ciDebugBar.hotReloadConnect();
+        }
+    },
+
+    hotReloadConnect: function () {
+        const eventSource = new EventSource(ciSiteURL + "/__hot-reload");
+
+        eventSource.addEventListener("reload", function (e) {
+            console.log("reload", e);
+            window.location.reload();
+        });
+
+        eventSource.onerror = (err) => {
+            console.error("EventSource failed:", err);
+        };
+
+        return eventSource;
+    },
+
+    /**
+     * Helper to create a cookie.
+     *
+     * @param name
+     * @param value
+     * @param days
+     */
+    createCookie: function (name, value, days) {
+        if (days) {
+            var date = new Date();
+
+            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+            var expires = "; expires=" + date.toGMTString();
+        } else {
+            var expires = "";
+        }
+
+        document.cookie =
+            name + "=" + value + expires + "; path=/; samesite=Lax";
+    },
+
+    readCookie: function (name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(";");
+
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == " ") {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(nameEQ) == 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
+    },
+
+    trimSlash: function (text) {
+        return text.replace(/^\/|\/$/g, "");
+    },
+
+    routerLink: function () {
+        var row, _location;
+        var rowGet = this.toolbar.querySelectorAll(
+            'td[data-debugbar-route="GET"]'
+        );
+        var patt = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/;
+
+        for (var i = 0; i < rowGet.length; i++) {
+            row = rowGet[i];
+            if (!/\/\(.+?\)/.test(rowGet[i].innerText)) {
+                ciDebugBar.addClass(row, "debug-bar-pointer");
+                row.setAttribute(
+                    "title",
+                    location.origin + "/" + ciDebugBar.trimSlash(row.innerText)
+                );
+                row.addEventListener("click", function (ev) {
+                    _location =
+                        location.origin +
+                        "/" +
+                        ciDebugBar.trimSlash(ev.target.innerText);
+                    var redirectWindow = window.open(_location, "_blank");
+                    redirectWindow.location;
+                });
+            } else {
+                row.innerHTML =
+                    "<div>" +
+                    row.innerText +
+                    "</div>" +
+                    '<form data-debugbar-route-tpl="' +
+                    ciDebugBar.trimSlash(row.innerText.replace(patt, "?")) +
+                    '">' +
+                    row.innerText.replace(
+                        patt,
+                        '<input type="text" placeholder="$1">'
+                    ) +
+                    '<input type="submit" value="Go" class="debug-bar-mleft4">' +
+                    "</form>";
+            }
+        }
+
+        rowGet = this.toolbar.querySelectorAll(
+            'td[data-debugbar-route="GET"] form'
+        );
+        for (var i = 0; i < rowGet.length; i++) {
+            row = rowGet[i];
+
+            row.addEventListener("submit", function (event) {
+                event.preventDefault();
+                var inputArray = [],
+                    t = 0;
+                var input = event.target.querySelectorAll("input[type=text]");
+                var tpl = event.target.getAttribute("data-debugbar-route-tpl");
+
+                for (var n = 0; n < input.length; n++) {
+                    if (input[n].value.length > 0) {
+                        inputArray.push(input[n].value);
+                    }
+                }
+
+                if (inputArray.length > 0) {
+                    _location =
+                        location.origin +
+                        "/" +
+                        tpl.replace(/\?/g, function () {
+                            return inputArray[t++];
+                        });
+
+                    var redirectWindow = window.open(_location, "_blank");
+                    redirectWindow.location;
+                }
+            });
+        }
+    },
+};
+</script><style id="debugbar_dynamic_style">
+    /** * This file is part of the CodeIgniter 4 framework. * * (c) CodeIgniter Foundation <admin@codeigniter.com> * * For the full copyright and license information, please view the LICENSE * file that was distributed with this source code. */ #debug-icon { bottom: 0; position: fixed; right: 0; z-index: 10000; height: 36px; width: 36px; margin: 0; padding: 0; clear: both; text-align: center; cursor: pointer; } #debug-icon a svg { margin: 8px; max-width: 20px; max-height: 20px; } #debug-icon.fixed-top { bottom: auto; top: 0; } #debug-icon .debug-bar-ndisplay { display: none; } .debug-bar-vars { cursor: pointer; } #debug-bar { bottom: 0; left: 0; position: fixed; right: 0; z-index: 10000; height: 36px; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; font-size: 16px; font-weight: 400; } #debug-bar h1 { display: flex; font-weight: normal; margin: 0 0 0 auto; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; } #debug-bar h1 svg { width: 16px; margin-right: 5px; } #debug-bar h2 { font-weight: bold; font-size: 16px; margin: 0; padding: 5px 0 10px 0; } #debug-bar h2 span { font-size: 13px; } #debug-bar h3 { font-size: 12px; font-weight: 200; margin: 0 0 0 10px; padding: 0; text-transform: uppercase; } #debug-bar p { font-size: 12px; margin: 0 0 0 15px; padding: 0; } #debug-bar a { text-decoration: none; } #debug-bar a:hover { text-decoration: underline; } #debug-bar button { border: 1px solid; border-radius: 4px; -moz-border-radius: 4px; -webkit-border-radius: 4px; cursor: pointer; line-height: 15px; } #debug-bar button:hover { text-decoration: underline; } #debug-bar table { border-collapse: collapse; font-size: 14px; line-height: normal; margin: 5px 10px 15px 10px; width: calc(100% - 10px); } #debug-bar table strong { font-weight: 500; } #debug-bar table th { display: table-cell; font-weight: 600; padding-bottom: 0.7em; text-align: left; } #debug-bar table tr { border: none; } #debug-bar table td { border: none; display: table-cell; margin: 0; text-align: left; } #debug-bar table td:first-child { max-width: 20%; } #debug-bar table td:first-child.narrow { width: 7em; } #debug-bar td[data-debugbar-route] form { display: none; } #debug-bar td[data-debugbar-route]:hover form { display: block; } #debug-bar td[data-debugbar-route]:hover > div { display: none; } #debug-bar td[data-debugbar-route] input[type=text] { padding: 2px; } #debug-bar .toolbar { display: flex; overflow: hidden; overflow-y: auto; padding: 0 12px 0 12px; white-space: nowrap; z-index: 10000; } #debug-bar .toolbar .rotate { animation: toolbar-rotate 9s linear infinite; } @keyframes toolbar-rotate { to { transform: rotate(360deg); } } #debug-bar.fixed-top { bottom: auto; top: 0; } #debug-bar.fixed-top .tab { bottom: auto; top: 36px; } #debug-bar #toolbar-position, #debug-bar #toolbar-theme { padding: 0 6px; display: inline-flex; vertical-align: top; cursor: pointer; } #debug-bar #toolbar-position:hover, #debug-bar #toolbar-theme:hover { text-decoration: none; } #debug-bar #debug-bar-link { display: flex; padding: 6px; cursor: pointer; } #debug-bar .ci-label { display: inline-flex; font-size: 14px; } #debug-bar .ci-label:hover { cursor: pointer; } #debug-bar .ci-label a { color: inherit; display: flex; letter-spacing: normal; padding: 0 10px; text-decoration: none; align-items: center; } #debug-bar .ci-label img { margin: 6px 3px 6px 0; width: 16px !important; } #debug-bar .ci-label .badge { border-radius: 12px; -moz-border-radius: 12px; -webkit-border-radius: 12px; display: inline-block; font-size: 75%; font-weight: bold; line-height: 12px; margin-left: 5px; padding: 2px 5px; text-align: center; vertical-align: baseline; white-space: nowrap; } #debug-bar .tab { height: fit-content; text-align: left; bottom: 35px; display: none; left: 0; max-height: 62%; overflow: hidden; overflow-y: auto; padding: 1em 2em; position: fixed; right: 0; z-index: 9999; } #debug-bar .timeline { position: static; display: table; margin-left: 0; width: 100%; } #debug-bar .timeline th { border-left: 1px solid; font-size: 12px; font-weight: 200; padding: 5px 5px 10px 5px; position: relative; text-align: left; } #debug-bar .timeline th:first-child { border-left: 0; } #debug-bar .timeline td { border-left: 1px solid; padding: 5px; position: relative; } #debug-bar .timeline td:first-child { border-left: 0; max-width: none; } #debug-bar .timeline td.child-container { padding: 0px; } #debug-bar .timeline td.child-container .timeline { margin: 0px; } #debug-bar .timeline td.child-container .timeline td:first-child:not(.child-container) { padding-left: calc(5px + 10px * var(--level)); } #debug-bar .timeline .timer { border-radius: 4px; -moz-border-radius: 4px; -webkit-border-radius: 4px; display: inline-block; padding: 5px; position: absolute; top: 30%; } #debug-bar .timeline .timeline-parent { cursor: pointer; } #debug-bar .timeline .timeline-parent td:first-child nav { background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAxNTAiPjxwYXRoIGQ9Ik02IDdoMThsLTkgMTV6bTAgMzBoMThsLTkgMTV6bTAgNDVoMThsLTktMTV6bTAgMzBoMThsLTktMTV6bTAgMTJsMTggMThtLTE4IDBsMTgtMTgiIGZpbGw9IiM1NTUiLz48cGF0aCBkPSJNNiAxMjZsMTggMThtLTE4IDBsMTgtMTgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlPSIjNTU1Ii8+PC9zdmc+") no-repeat scroll 0 0/15px 75px transparent; background-position: 0 25%; display: inline-block; height: 15px; width: 15px; margin-right: 3px; vertical-align: middle; } #debug-bar .timeline .timeline-parent-open { background-color: #DFDFDF; } #debug-bar .timeline .timeline-parent-open td:first-child nav { background-position: 0 75%; } #debug-bar .timeline .child-row:hover { background: transparent; } #debug-bar .route-params, #debug-bar .route-params-item { vertical-align: top; } #debug-bar .route-params td:first-child, #debug-bar .route-params-item td:first-child { font-style: italic; padding-left: 1em; text-align: right; } #debug-bar > .debug-bar-dblock { display: block; } .debug-view.show-view { border: 1px solid; margin: 4px; } .debug-view-path { font-family: monospace; font-size: 12px; letter-spacing: normal; min-height: 16px; padding: 2px; text-align: left; } .show-view .debug-view-path { display: block !important; } @media screen and (max-width: 1024px) { #debug-bar .ci-label img { margin: unset; } .hide-sm { display: none !important; } } #debug-icon { background-color: #FFFFFF; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #debug-icon a:active, #debug-icon a:link, #debug-icon a:visited { color: #DD8615; } #debug-bar { background-color: #FFFFFF; color: #434343; } #debug-bar h1, #debug-bar h2, #debug-bar h3, #debug-bar p, #debug-bar a, #debug-bar button, #debug-bar table, #debug-bar thead, #debug-bar tr, #debug-bar td, #debug-bar button, #debug-bar .toolbar { background-color: transparent; color: #434343; } #debug-bar button { background-color: #FFFFFF; } #debug-bar table strong { color: #DD8615; } #debug-bar table tbody tr:hover { background-color: #DFDFDF; } #debug-bar table tbody tr.current { background-color: #FDC894; } #debug-bar table tbody tr.current:hover td { background-color: #DD4814; color: #FFFFFF; } #debug-bar .toolbar { background-color: #FFFFFF; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #debug-bar .toolbar img { filter: brightness(0) invert(0.4); } #debug-bar.fixed-top .toolbar { box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #debug-bar.fixed-top .tab { box-shadow: 0 1px 4px #DFDFDF; -moz-box-shadow: 0 1px 4px #DFDFDF; -webkit-box-shadow: 0 1px 4px #DFDFDF; } #debug-bar .muted { color: #434343; } #debug-bar .muted td { color: #DFDFDF; } #debug-bar .muted:hover td { color: #434343; } #debug-bar #toolbar-position, #debug-bar #toolbar-theme { filter: brightness(0) invert(0.6); } #debug-bar .ci-label.active { background-color: #DFDFDF; } #debug-bar .ci-label:hover { background-color: #DFDFDF; } #debug-bar .ci-label .badge { background-color: #DD4814; color: #FFFFFF; } #debug-bar .tab { background-color: #FFFFFF; box-shadow: 0 -1px 4px #DFDFDF; -moz-box-shadow: 0 -1px 4px #DFDFDF; -webkit-box-shadow: 0 -1px 4px #DFDFDF; } #debug-bar .timeline th, #debug-bar .timeline td { border-color: #DFDFDF; } #debug-bar .timeline .timer { background-color: #DD8615; } .debug-view.show-view { border-color: #DD8615; } .debug-view-path { background-color: #FDC894; color: #434343; } @media (prefers-color-scheme: dark) { #debug-icon { background-color: #252525; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #debug-icon a:active, #debug-icon a:link, #debug-icon a:visited { color: #DD8615; } #debug-bar { background-color: #252525; color: #DFDFDF; } #debug-bar h1, #debug-bar h2, #debug-bar h3, #debug-bar p, #debug-bar a, #debug-bar button, #debug-bar table, #debug-bar thead, #debug-bar tr, #debug-bar td, #debug-bar button, #debug-bar .toolbar { background-color: transparent; color: #DFDFDF; } #debug-bar button { background-color: #252525; } #debug-bar table strong { color: #DD8615; } #debug-bar table tbody tr:hover { background-color: #434343; } #debug-bar table tbody tr.current { background-color: #FDC894; } #debug-bar table tbody tr.current td { color: #252525; } #debug-bar table tbody tr.current:hover td { background-color: #DD4814; color: #FFFFFF; } #debug-bar .toolbar { background-color: #434343; box-shadow: 0 0 4px #434343; -moz-box-shadow: 0 0 4px #434343; -webkit-box-shadow: 0 0 4px #434343; } #debug-bar .toolbar img { filter: brightness(0) invert(1); } #debug-bar.fixed-top .toolbar { box-shadow: 0 0 4px #434343; -moz-box-shadow: 0 0 4px #434343; -webkit-box-shadow: 0 0 4px #434343; } #debug-bar.fixed-top .tab { box-shadow: 0 1px 4px #434343; -moz-box-shadow: 0 1px 4px #434343; -webkit-box-shadow: 0 1px 4px #434343; } #debug-bar .muted { color: #DFDFDF; } #debug-bar .muted td { color: #434343; } #debug-bar .muted:hover td { color: #DFDFDF; } #debug-bar #toolbar-position, #debug-bar #toolbar-theme { filter: brightness(0) invert(0.6); } #debug-bar .ci-label.active { background-color: #252525; } #debug-bar .ci-label:hover { background-color: #252525; } #debug-bar .ci-label .badge { background-color: #DD4814; color: #FFFFFF; } #debug-bar .tab { background-color: #252525; box-shadow: 0 -1px 4px #434343; -moz-box-shadow: 0 -1px 4px #434343; -webkit-box-shadow: 0 -1px 4px #434343; } #debug-bar .timeline th, #debug-bar .timeline td { border-color: #434343; } #debug-bar .timeline .timer { background-color: #DD8615; } .debug-view.show-view { border-color: #DD8615; } .debug-view-path { background-color: #FDC894; color: #434343; } } #toolbarContainer.dark #debug-icon { background-color: #252525; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #toolbarContainer.dark #debug-icon a:active, #toolbarContainer.dark #debug-icon a:link, #toolbarContainer.dark #debug-icon a:visited { color: #DD8615; } #toolbarContainer.dark #debug-bar { background-color: #252525; color: #DFDFDF; } #toolbarContainer.dark #debug-bar h1, #toolbarContainer.dark #debug-bar h2, #toolbarContainer.dark #debug-bar h3, #toolbarContainer.dark #debug-bar p, #toolbarContainer.dark #debug-bar a, #toolbarContainer.dark #debug-bar button, #toolbarContainer.dark #debug-bar table, #toolbarContainer.dark #debug-bar thead, #toolbarContainer.dark #debug-bar tr, #toolbarContainer.dark #debug-bar td, #toolbarContainer.dark #debug-bar button, #toolbarContainer.dark #debug-bar .toolbar { background-color: transparent; color: #DFDFDF; } #toolbarContainer.dark #debug-bar button { background-color: #252525; } #toolbarContainer.dark #debug-bar table strong { color: #DD8615; } #toolbarContainer.dark #debug-bar table tbody tr:hover { background-color: #434343; } #toolbarContainer.dark #debug-bar table tbody tr.current { background-color: #FDC894; } #toolbarContainer.dark #debug-bar table tbody tr.current td { color: #252525; } #toolbarContainer.dark #debug-bar table tbody tr.current:hover td { background-color: #DD4814; color: #FFFFFF; } #toolbarContainer.dark #debug-bar .toolbar { background-color: #434343; box-shadow: 0 0 4px #434343; -moz-box-shadow: 0 0 4px #434343; -webkit-box-shadow: 0 0 4px #434343; } #toolbarContainer.dark #debug-bar .toolbar img { filter: brightness(0) invert(1); } #toolbarContainer.dark #debug-bar.fixed-top .toolbar { box-shadow: 0 0 4px #434343; -moz-box-shadow: 0 0 4px #434343; -webkit-box-shadow: 0 0 4px #434343; } #toolbarContainer.dark #debug-bar.fixed-top .tab { box-shadow: 0 1px 4px #434343; -moz-box-shadow: 0 1px 4px #434343; -webkit-box-shadow: 0 1px 4px #434343; } #toolbarContainer.dark #debug-bar .muted { color: #DFDFDF; } #toolbarContainer.dark #debug-bar .muted td { color: #434343; } #toolbarContainer.dark #debug-bar .muted:hover td { color: #DFDFDF; } #toolbarContainer.dark #debug-bar #toolbar-position, #toolbarContainer.dark #debug-bar #toolbar-theme { filter: brightness(0) invert(0.6); } #toolbarContainer.dark #debug-bar .ci-label.active { background-color: #252525; } #toolbarContainer.dark #debug-bar .ci-label:hover { background-color: #252525; } #toolbarContainer.dark #debug-bar .ci-label .badge { background-color: #DD4814; color: #FFFFFF; } #toolbarContainer.dark #debug-bar .tab { background-color: #252525; box-shadow: 0 -1px 4px #434343; -moz-box-shadow: 0 -1px 4px #434343; -webkit-box-shadow: 0 -1px 4px #434343; } #toolbarContainer.dark #debug-bar .timeline th, #toolbarContainer.dark #debug-bar .timeline td { border-color: #434343; } #toolbarContainer.dark #debug-bar .timeline .timer { background-color: #DD8615; } #toolbarContainer.dark .debug-view.show-view { border-color: #DD8615; } #toolbarContainer.dark .debug-view-path { background-color: #FDC894; color: #434343; } #toolbarContainer.dark td[data-debugbar-route] input[type=text] { background: #000; color: #fff; } #toolbarContainer.light #debug-icon { background-color: #FFFFFF; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #toolbarContainer.light #debug-icon a:active, #toolbarContainer.light #debug-icon a:link, #toolbarContainer.light #debug-icon a:visited { color: #DD8615; } #toolbarContainer.light #debug-bar { background-color: #FFFFFF; color: #434343; } #toolbarContainer.light #debug-bar h1, #toolbarContainer.light #debug-bar h2, #toolbarContainer.light #debug-bar h3, #toolbarContainer.light #debug-bar p, #toolbarContainer.light #debug-bar a, #toolbarContainer.light #debug-bar button, #toolbarContainer.light #debug-bar table, #toolbarContainer.light #debug-bar thead, #toolbarContainer.light #debug-bar tr, #toolbarContainer.light #debug-bar td, #toolbarContainer.light #debug-bar button, #toolbarContainer.light #debug-bar .toolbar { background-color: transparent; color: #434343; } #toolbarContainer.light #debug-bar button { background-color: #FFFFFF; } #toolbarContainer.light #debug-bar table strong { color: #DD8615; } #toolbarContainer.light #debug-bar table tbody tr:hover { background-color: #DFDFDF; } #toolbarContainer.light #debug-bar table tbody tr.current { background-color: #FDC894; } #toolbarContainer.light #debug-bar table tbody tr.current:hover td { background-color: #DD4814; color: #FFFFFF; } #toolbarContainer.light #debug-bar .toolbar { background-color: #FFFFFF; box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #toolbarContainer.light #debug-bar .toolbar img { filter: brightness(0) invert(0.4); } #toolbarContainer.light #debug-bar.fixed-top .toolbar { box-shadow: 0 0 4px #DFDFDF; -moz-box-shadow: 0 0 4px #DFDFDF; -webkit-box-shadow: 0 0 4px #DFDFDF; } #toolbarContainer.light #debug-bar.fixed-top .tab { box-shadow: 0 1px 4px #DFDFDF; -moz-box-shadow: 0 1px 4px #DFDFDF; -webkit-box-shadow: 0 1px 4px #DFDFDF; } #toolbarContainer.light #debug-bar .muted { color: #434343; } #toolbarContainer.light #debug-bar .muted td { color: #DFDFDF; } #toolbarContainer.light #debug-bar .muted:hover td { color: #434343; } #toolbarContainer.light #debug-bar #toolbar-position, #toolbarContainer.light #debug-bar #toolbar-theme { filter: brightness(0) invert(0.6); } #toolbarContainer.light #debug-bar .ci-label.active { background-color: #DFDFDF; } #toolbarContainer.light #debug-bar .ci-label:hover { background-color: #DFDFDF; } #toolbarContainer.light #debug-bar .ci-label .badge { background-color: #DD4814; color: #FFFFFF; } #toolbarContainer.light #debug-bar .tab { background-color: #FFFFFF; box-shadow: 0 -1px 4px #DFDFDF; -moz-box-shadow: 0 -1px 4px #DFDFDF; -webkit-box-shadow: 0 -1px 4px #DFDFDF; } #toolbarContainer.light #debug-bar .timeline th, #toolbarContainer.light #debug-bar .timeline td { border-color: #DFDFDF; } #toolbarContainer.light #debug-bar .timeline .timer { background-color: #DD8615; } #toolbarContainer.light .debug-view.show-view { border-color: #DD8615; } #toolbarContainer.light .debug-view-path { background-color: #FDC894; color: #434343; } .debug-bar-width30 { width: 30%; } .debug-bar-width10 { width: 10%; } .debug-bar-width70p { width: 70px; } .debug-bar-width190p { width: 190px; } .debug-bar-width20e { width: 20em; } .debug-bar-width6r { width: 6rem; } .debug-bar-ndisplay { display: none; } .debug-bar-alignRight { text-align: right; } .debug-bar-alignLeft { text-align: left; } .debug-bar-noverflow { overflow: hidden; } .debug-bar-dtableRow { display: table-row; } .debug-bar-dinlineBlock { display: inline-block; } .debug-bar-pointer { cursor: pointer; } .debug-bar-mleft4 { margin-left: 4px; } .debug-bar-level-0 { --level: 0; } .debug-bar-level-1 { --level: 1; } .debug-bar-level-2 { --level: 2; } .debug-bar-level-3 { --level: 3; } .debug-bar-level-4 { --level: 4; } .debug-bar-level-5 { --level: 5; } .debug-bar-level-6 { --level: 6; } 
+.debug-bar-timeline-0 { left: 12.514591217041%; width: 50.140023231506%; }
+.debug-bar-timeline-1 { left: 41.25714302063%; width: 21.380186080933%; }
+.debug-bar-timeline-2 { left: 62.659978866577%; width: 6.7222118377686%; }
+.debug-bar-timeline-3 { left: 69.394707679749%; width: 5.0276517868042%; }
+.debug-bar-timeline-4 { left: 74.442625045776%; width: 0.036954879760742%; }
+.debug-bar-timeline-5 { left: 74.482560157776%; width: 11.504888534546%; }
+.debug-bar-timeline-6 { left: 74.484944343567%; width: 3.1250715255737%; }
+.debug-bar-timeline-7 { left: 81.717371940613%; width: 3.6901235580444%; }
+.debug-bar-timeline-8 { left: 86.044669151306%; width: 0.020265579223633%; }
+.debug-bar-timeline-9 { left: 86.184740066528%; width: 1.8578767776489%; }
+</style><style class="kint-rich-style">.kint-rich{--spacing: 4px;--nav-size: 15px;--backdrop-color: rgba(255, 255, 255, 0.9);--main-background: #e0eaef;--secondary-background: #c1d4df;--text-color: #1d1e1e;--variable-name-color: #1d1e1e;--variable-type-color: #0092db;--variable-type-color-hover: #5cb730;--border-color: #b6cedb;--border-color-hover: #0092db;--border: 1px solid var(--border-color);--foldout-max-size: calc(100vh - 100px);--foldout-zindex: 999999;--caret-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 150'><g stroke-width='2' fill='%23FFF'><path d='M1 1h28v28H1zm5 14h18m-9 9V6M1 61h28v28H1zm5 14h18' stroke='%23379'/><path d='M1 31h28v28H1zm5 14h18m-9 9V36M1 91h28v28H1zm5 14h18' stroke='%235A3'/><path d='M1 121h28v28H1zm5 5l18 18m-18 0l18-18' stroke='%23CCC'/></g></svg>");--ap-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><g stroke='%23000' fill='transparent'><path d='M2 8h3m3 3v3M8 2v3m3 3h3M3 8' stroke-width='2' stroke-linecap='round'/><circle stroke-width='1.5' r='4.5' cx='8' cy='8'/></g></svg>");--folder-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M2 2h4l2 2h6v9H2V2h2' stroke-width='2' stroke='%23000' fill='transparent' stroke-linejoin='round'/></svg>");--search-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><g stroke='%23000' fill='transparent'><path d='M2 14l3-3' stroke-linecap='round' stroke-width='3'/><circle stroke-width='2' r='5' cx='9' cy='7'/></g></svg>");font-size:13px;overflow-x:auto;white-space:nowrap;background:var(--backdrop-color);direction:ltr;contain:content}.kint-rich.kint-folder{position:fixed;bottom:0;left:0;right:0;z-index:var(--foldout-zindex);width:100%;margin:0;display:block}.kint-rich.kint-folder dd.kint-foldout{max-height:var(--foldout-max-size);padding-right:calc(var(--spacing)*2);overflow-y:scroll;display:none}.kint-rich.kint-folder dd.kint-foldout.kint-show{display:block}.kint-rich::selection{background:var(--border-color-hover);color:var(--text-color)}.kint-rich .kint-focused{box-shadow:0 0 3px 3px var(--variable-type-color-hover)}.kint-rich .kint-focused.kint-weak-focus{box-shadow:0 0 3px 1px color-mix(in srgb, var(--variable-type-color-hover) 50%, transparent)}.kint-rich,.kint-rich::before,.kint-rich::after,.kint-rich *,.kint-rich *::before,.kint-rich *::after{box-sizing:border-box;border-radius:0;color:var(--text-color);float:none !important;font-family:Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,serif;line-height:15px;margin:0;padding:0;text-align:left}.kint-rich{margin:calc(var(--spacing)*2) 0}.kint-rich dt,.kint-rich dl{width:auto}.kint-rich dt,.kint-rich div.access-path{background:var(--main-background);border:var(--border);color:var(--text-color);display:block;font-weight:bold;list-style:none outside none;overflow:auto;padding:var(--spacing)}.kint-rich dt:hover,.kint-rich div.access-path:hover{border-color:var(--border-color-hover)}.kint-rich>dl dl{padding:0 0 0 calc(var(--spacing)*3)}.kint-rich dt.kint-parent>nav,.kint-rich>footer>nav{background:var(--caret-image) no-repeat scroll 0 0/var(--nav-size) 75px rgba(0,0,0,0);cursor:pointer;display:inline-block;height:var(--nav-size);width:var(--nav-size);margin-right:3px;vertical-align:middle}.kint-rich dt.kint-parent:hover>nav,.kint-rich>footer>nav:hover{background-position:0 25%}.kint-rich dt.kint-parent.kint-show>nav,.kint-rich>footer.kint-show>nav{background-position:0 50%}.kint-rich dt.kint-parent.kint-show:hover>nav,.kint-rich>footer.kint-show>nav:hover{background-position:0 75%}.kint-rich dt.kint-parent.kint-locked>nav{background-position:0 100%}.kint-rich dt.kint-parent+dd{display:none;border-left:1px dashed var(--border-color);contain:strict}.kint-rich dt.kint-parent.kint-show+dd{display:block;contain:content}.kint-rich var,.kint-rich var a{color:var(--variable-type-color);font-style:normal}.kint-rich dt:hover var,.kint-rich dt:hover var a{color:var(--variable-type-color-hover)}.kint-rich dfn{font-style:normal;font-family:monospace;color:var(--variable-name-color)}.kint-rich pre{color:var(--text-color);margin:0 0 0 calc(var(--spacing)*3);padding:5px;overflow-y:hidden;border-top:0;border:var(--border);background:var(--main-background);display:block;word-break:normal}.kint-rich .kint-access-path-trigger,.kint-rich .kint-folder-trigger,.kint-rich .kint-search-trigger{background:color-mix(in srgb, var(--text-color) 80%, transparent);border-radius:3px;padding:2px;height:var(--nav-size);width:var(--nav-size);font-size:var(--nav-size);margin-left:5px;font-weight:bold;text-align:center;line-height:1;float:right !important;cursor:pointer;position:relative;overflow:hidden}.kint-rich .kint-access-path-trigger::before,.kint-rich .kint-folder-trigger::before,.kint-rich .kint-search-trigger::before{display:block;content:"";width:100%;height:100%;background:var(--main-background);mask:center/contain no-repeat alpha}.kint-rich .kint-access-path-trigger:hover,.kint-rich .kint-folder-trigger:hover,.kint-rich .kint-search-trigger:hover{background:var(--main-background)}.kint-rich .kint-access-path-trigger:hover::before,.kint-rich .kint-folder-trigger:hover::before,.kint-rich .kint-search-trigger:hover::before{background:var(--text-color)}.kint-rich .kint-access-path-trigger::before{mask-image:var(--ap-image)}.kint-rich .kint-folder-trigger::before{mask-image:var(--folder-image)}.kint-rich .kint-search-trigger::before{mask-image:var(--search-image)}.kint-rich input.kint-search{display:none;border:var(--border);border-top-width:0;border-bottom-width:0;padding:var(--spacing);float:right !important;margin:calc(var(--spacing)*-1) 0;color:var(--variable-name-color);background:var(--secondary-background);height:calc(var(--nav-size) + var(--spacing)*2);width:calc(var(--nav-size)*10);position:relative;z-index:100}.kint-rich input.kint-search.kint-show{display:block}.kint-rich .kint-search-root ul.kint-tabs>li:not(.kint-search-match){background:var(--secondary-background);filter:saturate(0);opacity:.5}.kint-rich .kint-search-root dl:not(.kint-search-match){opacity:.5}.kint-rich .kint-search-root dl:not(.kint-search-match)>dt{background:var(--main-background);filter:saturate(0)}.kint-rich .kint-search-root dl:not(.kint-search-match) dl,.kint-rich .kint-search-root dl:not(.kint-search-match) ul.kint-tabs>li:not(.kint-search-match){opacity:1}.kint-rich div.access-path{background:var(--secondary-background);display:none;margin-top:5px;padding:4px;white-space:pre}.kint-rich div.access-path.kint-show{display:block}.kint-rich footer{padding:0 3px 3px;font-size:9px;background:rgba(0,0,0,0)}.kint-rich footer>.kint-folder-trigger{background:rgba(0,0,0,0)}.kint-rich footer>.kint-folder-trigger::before{background:var(--text-color)}.kint-rich footer nav{height:10px;width:10px;background-size:10px 50px}.kint-rich footer>ol{display:none;margin-left:32px}.kint-rich footer.kint-show>ol{display:block}.kint-rich a{color:var(--text-color);text-shadow:none;text-decoration:underline}.kint-rich a:hover{color:var(--variable-name-color);border-bottom:1px dotted var(--variable-name-color)}.kint-rich ul{list-style:none;padding-left:calc(var(--spacing)*3)}.kint-rich ul:not(.kint-tabs) li{border-left:1px dashed var(--border-color)}.kint-rich ul:not(.kint-tabs) li>dl{border-left:none}.kint-rich ul.kint-tabs{margin:0 0 0 calc(var(--spacing)*3);padding-left:0;background:var(--main-background);border:var(--border);border-top:0}.kint-rich ul.kint-tabs>li{background:var(--secondary-background);border:var(--border);cursor:pointer;display:inline-block;height:calc(var(--spacing)*6);margin:calc(var(--spacing)/2);padding:0 calc(2px + var(--spacing)*2.5);vertical-align:top}.kint-rich ul.kint-tabs>li:hover,.kint-rich ul.kint-tabs>li.kint-active-tab:hover{border-color:var(--border-color-hover);color:var(--variable-type-color-hover)}.kint-rich ul.kint-tabs>li.kint-active-tab{background:var(--main-background);border-top:0;margin-top:-1px;height:27px;line-height:24px}.kint-rich ul.kint-tabs>li:not(.kint-active-tab){line-height:calc(var(--spacing)*5)}.kint-rich ul.kint-tabs li+li{margin-left:0}.kint-rich ul.kint-tab-contents>li{display:none;contain:strict}.kint-rich ul.kint-tab-contents>li.kint-show{display:block;contain:content}.kint-rich dt:hover+dd>ul>li.kint-active-tab{border-color:var(--border-color-hover);color:var(--variable-type-color-hover)}.kint-rich dt>.kint-color-preview{width:var(--nav-size);height:var(--nav-size);display:inline-block;vertical-align:middle;margin-left:10px;border:var(--border);background-color:#ccc;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path fill="%23FFF" d="M0 0h1v2h1V1H0z"/></svg>');background-size:min(20px,100%)}.kint-rich dt>.kint-color-preview:hover{border-color:var(--border-color-hover)}.kint-rich dt>.kint-color-preview>div{width:100%;height:100%}.kint-rich table{border-collapse:collapse;empty-cells:show;border-spacing:0}.kint-rich table *{font-size:12px}.kint-rich table dt{background:none;padding:calc(var(--spacing)/2)}.kint-rich table dt .kint-parent{min-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kint-rich table td,.kint-rich table th{border:var(--border);padding:calc(var(--spacing)/2);vertical-align:center}.kint-rich table th{cursor:alias}.kint-rich table td:first-child,.kint-rich table th{font-weight:bold;background:var(--secondary-background);color:var(--variable-name-color)}.kint-rich table td{background:var(--main-background);white-space:pre}.kint-rich table td>dl{padding:0}.kint-rich table pre{border-top:0;border-right:0}.kint-rich table thead th:first-child{background:none;border:0}.kint-rich table tr:hover>td{box-shadow:0 0 1px 0 var(--border-color-hover) inset}.kint-rich table tr:hover var{color:var(--variable-type-color-hover)}.kint-rich table ul.kint-tabs li.kint-active-tab{height:20px;line-height:17px}.kint-rich pre.kint-source{margin-left:-1px}.kint-rich pre.kint-source[data-kint-filename]:before{display:block;content:attr(data-kint-filename);margin-bottom:var(--spacing);padding-bottom:var(--spacing);border-bottom:1px solid var(--secondary-background)}.kint-rich pre.kint-source>div:before{display:inline-block;content:counter(kint-l);counter-increment:kint-l;border-right:1px solid var(--border-color-hover);padding-right:calc(var(--spacing)*2);margin-right:calc(var(--spacing)*2)}.kint-rich pre.kint-source>div.kint-highlight{background:var(--secondary-background)}.kint-rich .kint-microtime-js .kint-microtime-lap{text-shadow:-1px 0 var(--border-color-hover),0 1px var(--border-color-hover),1px 0 var(--border-color-hover),0 -1px var(--border-color-hover);color:var(--main-background);font-weight:bold}input.kint-note-input{width:100%}.kint-rich{--main-background: #f8f8f8;--secondary-background: #f8f8f8;--variable-type-color: #06f;--variable-type-color-hover: #f00;--border-color: #d7d7d7;--border-color-hover: #aaa;--alternative-background: #fff;--highlight-color: #cfc;--caret-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 150'><path d='M6 7h18l-9 15zm0 30h18l-9 15zm0 45h18l-9-15zm0 30h18l-9-15zm0 12l18 18m-18 0l18-18' fill='%23555'/><path d='M6 126l18 18m-18 0l18-18' stroke-width='2' stroke='%23555'/></svg>")}.kint-rich .kint-focused{box-shadow:0 0 3px 2px var(--variable-type-color-hover)}.kint-rich dt{font-weight:normal}.kint-rich dt.kint-parent{margin-top:4px}.kint-rich dl dl{margin-top:4px;padding-left:25px;border-left:none}.kint-rich>dl>dt{background:var(--secondary-background)}.kint-rich ul{margin:0;padding-left:0}.kint-rich ul:not(.kint-tabs)>li{border-left:0}.kint-rich ul.kint-tabs{background:var(--secondary-background);border:var(--border);border-width:0 1px 1px 1px;padding:4px 0 0 12px;margin-left:-1px;margin-top:-1px}.kint-rich ul.kint-tabs li,.kint-rich ul.kint-tabs li+li{margin:0 0 0 4px}.kint-rich ul.kint-tabs li{border-bottom-width:0;height:calc(var(--spacing)*6 + 1px)}.kint-rich ul.kint-tabs li:first-child{margin-left:0}.kint-rich ul.kint-tabs li.kint-active-tab{border-top:var(--border);background:var(--alternative-background);font-weight:bold;padding-top:0;border-bottom:1px solid var(--alternative-background) !important;margin-bottom:-1px}.kint-rich ul.kint-tabs li.kint-active-tab:hover{border-bottom:1px solid var(--alternative-background)}.kint-rich ul>li>pre{border:var(--border)}.kint-rich dt:hover+dd>ul{border-color:var(--border-color-hover)}.kint-rich pre{background:var(--alternative-background);margin-top:4px;margin-left:25px}.kint-rich .kint-source{margin-left:-1px}.kint-rich .kint-source .kint-highlight{background:var(--highlight-color)}.kint-rich .kint-parent.kint-show>.kint-search{border-bottom-width:1px}.kint-rich table td{background:var(--alternative-background)}.kint-rich table td>dl{padding:0;margin:0}.kint-rich table td>dl>dt.kint-parent{margin:0}.kint-rich table td:first-child,.kint-rich table td,.kint-rich table th{padding:2px 4px}.kint-rich table dd,.kint-rich table dt{background:var(--alternative-background)}.kint-rich table tr:hover>td{box-shadow:none;background:var(--highlight-color)}
+</style>
+
+    <title>WebGIS-LRT</title>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <link rel="icon" href="http://localhost/project-webgis/public/images/favicon.ico" type="image/x-icon">
+    <!-- Stylesheets-->
+    <link rel="stylesheet" type="text/css" href="./WebGIS-LRT_files/css">
+    <link rel="stylesheet" href="./WebGIS-LRT_files/bootstrap.css">
+    <link rel="stylesheet" href="./WebGIS-LRT_files/fonts.css">
+    <link rel="stylesheet" href="./WebGIS-LRT_files/style.css">
+    <!-- Swiper.js CSS -->
+    <link rel="stylesheet" href="./WebGIS-LRT_files/swiper-bundle.min.css">
+    <!-- Swiper.js JS -->
+    <script src="./WebGIS-LRT_files/swiper-bundle.min.js.download"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./WebGIS-LRT_files/swiper-style.css">
+    <!-- Custom JS -->
+    <script src="./WebGIS-LRT_files/swiper-init.js.download"></script>
+    <!-- Vendor CSS Files -->
+
+    <link href="./WebGIS-LRT_files/bootstrap-icons.css" rel="stylesheet">
+    <link href="./WebGIS-LRT_files/aos.css" rel="stylesheet">
+    <link href="./WebGIS-LRT_files/glightbox.min.css" rel="stylesheet">
+    <link href="./WebGIS-LRT_files/swiper-bundle(1).min.css" rel="stylesheet">
+
+
+    <script type="module" src="./WebGIS-LRT_files/model-viewer.min.js.download"></script>
+    <style>.ie-panel{display: none;background: #212121;padding: 10px 0;box-shadow: 3px 3px 5px 0 rgba(0,0,0,.3);clear: both;text-align:center;position: relative;z-index: 1;} html.ie-10 .ie-panel, html.lt-ie-10 .ie-panel {display: block;}</style>
+    <style>
+    .nav-pills .nav-link.active {
+      background-color: #09007b !important;
+      color: white !important;
+    }
+  </style>
+  <link type="text/css" rel="stylesheet" href="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/css/mcafee_fonts.css"></head>
+  <body data-aos-easing="ease" data-aos-duration="400" data-aos-delay="0" data-new-gr-c-s-check-loaded="14.1222.0" data-gr-ext-installed="">
+    <div class="ie-panel"><a href="http://windows.microsoft.com/en-US/internet-explorer/"><img src="./WebGIS-LRT_files/warning_bar_0000_us.jpg" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today."></a></div>
+    <div class="preloader loaded">
+      <div class="preloader-body">
+        <div class="cssload-container"><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+    <div class="page animated" style="animation-duration: 500ms;">
+      <div id="home">
+        <!-- Page Header-->
+        <header class="section page-header">
+          <!-- RD Navbar-->
+          <div class="rd-navbar-wrap" style="height: 70px;">
+            <nav class="rd-navbar rd-navbar-classic rd-navbar-original rd-navbar-static" data-layout="rd-navbar-fixed" data-sm-layout="rd-navbar-fixed" data-md-layout="rd-navbar-fixed" data-md-device-layout="rd-navbar-fixed" data-lg-layout="rd-navbar-static" data-lg-device-layout="rd-navbar-fixed" data-xl-layout="rd-navbar-static" data-xl-device-layout="rd-navbar-static" data-xxl-layout="rd-navbar-static" data-xxl-device-layout="rd-navbar-static" data-lg-stick-up-offset="46px" data-xl-stick-up-offset="30px" data-xxl-stick-up-offset="30px" data-lg-stick-up="true" data-xl-stick-up="true" data-xxl-stick-up="true">
+              <div class="rd-navbar-main-outer">
+                <div class="rd-navbar-main">
+                  <!-- RD Navbar Panel-->
+                  <div class="rd-navbar-panel">
+                    <!-- RD Navbar Toggle-->
+                    <button class="rd-navbar-toggle toggle-original" data-rd-navbar-toggle=".rd-navbar-nav-wrap"><span></span></button>
+                    <!-- RD Navbar Brand-->
+                    <div class="rd-navbar-brand"><a class="brand" href="http://localhost/project-webgis/public/index.html"><img src="./WebGIS-LRT_files/waskita.png" alt="" width="130" height="10"></a></div>
+                  </div>
+                  <div class="rd-navbar-main-element">
+                    <div class="rd-navbar-nav-wrap toggle-original-elements">
+                      <!-- RD Navbar Share-->
+                      <div class="rd-navbar-share fl-bigmug-line-share27 toggle-original" data-rd-navbar-toggle=".rd-navbar-share-list">
+                        <ul class="list-inline rd-navbar-share-list toggle-original-elements">
+                          <li class="rd-navbar-share-list-item"><a class="icon fa fa-facebook" href="http://localhost/project-webgis/public/Home#"></a></li>
+                          <li class="rd-navbar-share-list-item"><a class="icon fa fa-twitter" href="http://localhost/project-webgis/public/Home#"></a></li>
+                          <li class="rd-navbar-share-list-item"><a class="icon fa fa-google-plus" href="http://localhost/project-webgis/public/Home#"></a></li>
+                          <li class="rd-navbar-share-list-item"><a class="icon fa fa-instagram" href="http://localhost/project-webgis/public/Home#"></a></li>
+                        </ul>
+                      </div>
+                      <ul class="rd-navbar-nav">
+                        <li class="rd-nav-item active"><a class="rd-nav-link" href="http://localhost/project-webgis/public/Home">Home</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/Home#About">About</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/Home#tools">Tools</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/Home#team">Team</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="https://wkgis.maps.arcgis.com/apps/webappviewer/index.html?id=553e982327274ab88e7c44fd0f5204b2" target="_blank">2D</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/landing">3D</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/landing2">Report</a></li>
+                        <li class="rd-nav-item"><a class="rd-nav-link" href="http://localhost/project-webgis/public/Home#contacts">Contacts</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </header>
+        <!-- Swiper-->
+        <section class="section swiper-container swiper-slider swiper-slider-classic swiper-container-vertical" data-loop="true" data-autoplay="4859" data-simulate-touch="true" data-direction="vertical" data-nav="false">
+          <div class="swiper-wrapper text-center" style="transform: translate3d(0px, -1484px, 0px); transition-duration: 600ms;"><div class="swiper-slide swiper-slide-duplicate swiper-slide-duplicate-next" data-slide-bg="images/LRT3.jpg" style="position: relative; background-image: url(&quot;images/LRT3.jpg&quot;); background-size: cover; height: 742px;" data-swiper-slide-index="2">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6);"></div>
+              <div class="swiper-slide-caption section-md">
+                <div class="container">
+                  <h1 style="color: #09007b; display: inline-block; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9); border-radius: 5px; padding: 10px;" data-caption-animate="fadeInLeft" data-caption-delay="0" class="not-animated">Intership</h1>
+                  <p style="color: black;" class="text-width-large not-animated" data-caption-animate="fadeInRight" data-caption-delay="100">Kerja praktik dilaksanakan dari tanggal 16 Januari 2025 sampai dengan 16 Februari 2025 dengan total durasi 171 jam. Pelaksanaan kerja praktik dilakukan pada Proyek LRT Phase 1B di lokasi proyek Waskita Nindya LRS KSO yang terletak di Jalan Pulomas Selatan No.6, RT.16/RW.7, Kayu Putih, Kec. Pulo Gadung, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13210. Dengan letak koordinat   6°11'4.85" LS dan 106°52'33.88" BT.</p><a class="button button-primary button-ujarak not-animated" href="http://localhost/project-webgis/public/Home#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">More Info</a>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide swiper-slide-prev" data-slide-bg="images/LRT2.jpg" style="position: relative; background-image: url(&quot;images/LRT2.jpg&quot;); background-size: cover; height: 742px;" data-swiper-slide-index="0">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6);"></div>
+              <div class="swiper-slide-caption section-md">
+                <div class="container">
+                  <h1 style="color: #09007b; display: inline-block; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9); border-radius: 5px; padding: 10px;" data-caption-animate="fadeInLeft" data-caption-delay="0" class="not-animated">LRT JAKARTA PHASE 1B</h1>
+                  <p style="color: black;" class="text-width-large not-animated" data-caption-animate="fadeInRight" data-caption-delay="100">LRT Jakarta Fase 1B memiliki rentang jalur sepanjang 6,4 Km yang memiliki 5 (lima) stasiun, yaitu: Stasiun Pemuda Rawamangun, Stasiun Pramuka BPKP, Stasiun Pasar Pramuka, Stasiun Matraman, dan Stasiun Manggarai.</p><a class="button button-primary button-ujarak not-animated" href="http://localhost/project-webgis/public/Home#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">More Info</a>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide swiper-slide-active" data-slide-bg="images/LRT.jpg" style="position: relative; background-image: url(&quot;images/LRT.jpg&quot;); background-size: cover; height: 742px;" data-swiper-slide-index="1">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6);"></div>
+              <div class="swiper-slide-caption section-md">
+                <div class="container">
+                  <h1 style="color: #09007b; display: inline-block; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9); border-radius: 5px; padding: 10px;" data-caption-animate="fadeInLeft" data-caption-delay="0" class="not-animated">PT Waskita Karya (Persero) Tbk</h1>
+                  <p style="color: black;" class="text-width-large not-animated" data-caption-animate="fadeInRight" data-caption-delay="100">PT Waskita Karya (Persero) Tbk adalah sebuah Badan Usaha Milik Negara Indonesia 
+                    (BUMN) yang bergerak di bidang konstruksi dengan lima divisi, yakni Gedung, Infrastruktur I, Infrastruktur II, 
+                    EPC, dan Luar Negeri. </p><a class="button button-primary button-ujarak not-animated" href="http://localhost/project-webgis/public/Home#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">More Info</a>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide swiper-slide-next" data-slide-bg="images/LRT3.jpg" style="position: relative; background-image: url(&quot;images/LRT3.jpg&quot;); background-size: cover; height: 742px;" data-swiper-slide-index="2">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6);"></div>
+              <div class="swiper-slide-caption section-md">
+                <div class="container">
+                  <h1 style="color: #09007b; display: inline-block; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9); border-radius: 5px; padding: 10px;" data-caption-animate="fadeInLeft" data-caption-delay="0" class="not-animated">Intership</h1>
+                  <p style="color: black;" class="text-width-large not-animated" data-caption-animate="fadeInRight" data-caption-delay="100">Kerja praktik dilaksanakan dari tanggal 16 Januari 2025 sampai dengan 16 Februari 2025 dengan total durasi 171 jam. Pelaksanaan kerja praktik dilakukan pada Proyek LRT Phase 1B di lokasi proyek Waskita Nindya LRS KSO yang terletak di Jalan Pulomas Selatan No.6, RT.16/RW.7, Kayu Putih, Kec. Pulo Gadung, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13210. Dengan letak koordinat   6°11'4.85" LS dan 106°52'33.88" BT.</p><a class="button button-primary button-ujarak not-animated" href="http://localhost/project-webgis/public/Home#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">More Info</a>
+                </div>
+              </div>
+            </div>
+          <div class="swiper-slide swiper-slide-duplicate swiper-slide-duplicate-prev" data-slide-bg="images/LRT2.jpg" style="position: relative; background-image: url(&quot;images/LRT2.jpg&quot;); background-size: cover; height: 742px;" data-swiper-slide-index="0">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6);"></div>
+              <div class="swiper-slide-caption section-md">
+                <div class="container">
+                  <h1 style="color: #09007b; display: inline-block; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9); border-radius: 5px; padding: 10px;" data-caption-animate="fadeInLeft" data-caption-delay="0" class="fadeInLeft animated">LRT JAKARTA PHASE 1B</h1>
+                  <p style="color: black;" class="text-width-large fadeInRight animated" data-caption-animate="fadeInRight" data-caption-delay="100">LRT Jakarta Fase 1B memiliki rentang jalur sepanjang 6,4 Km yang memiliki 5 (lima) stasiun, yaitu: Stasiun Pemuda Rawamangun, Stasiun Pramuka BPKP, Stasiun Pasar Pramuka, Stasiun Matraman, dan Stasiun Manggarai.</p><a class="button button-primary button-ujarak fadeInUp animated" href="http://localhost/project-webgis/public/Home#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">More Info</a>
+                </div>
+              </div>
+            </div></div>
+          <!-- Swiper Pagination-->
+          <div class="swiper-pagination__module">
+            <div class="swiper-pagination__fraction"><span class="swiper-pagination__fraction-index">02</span><span class="swiper-pagination__fraction-divider">/</span><span class="swiper-pagination__fraction-count">03</span></div>
+            <div class="swiper-pagination__divider"></div>
+            <div class="swiper-pagination swiper-pagination-clickable swiper-pagination-bullets"><span class="swiper-pagination-bullet"></span><span class="swiper-pagination-bullet swiper-pagination-bullet-active"></span><span class="swiper-pagination-bullet"></span></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- About Section -->
+      <section id="About" class="about section" style="margin-top: 20px" ;="">
+        <div class="container aos-init" data-aos="fade-up">
+          <div class="row align-items-center">
+            
+            <!-- Kolom Kiri (Gambar) -->
+            <div class="col-lg-6">
+              <img src="./WebGIS-LRT_files/Site.jpg" class="img-fluid rounded shadow" alt="About Image">
+            </div>
+            
+            <!-- Kolom Kanan (Teks dan Tabs) -->
+            <div class="col-lg-6">
+              
+              <!-- Judul -->
+              <h2 class="about-title mb-4" style="position: relative; top: -10px; background: white; z-index: 5; padding: 5px; font-size: 22px; line-height: 1.2; margin: top -10px;">
+                  Overview
+              </h2>
+              
+              <!-- Tab Navigasi -->
+              <ul class="nav nav-pills mb-3 border-bottom pb-2 mt-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <a class="nav-link active" data-bs-toggle="pill" href="http://localhost/project-webgis/public/Home#tab1" style="list-style: none;" aria-selected="true" role="tab">LRT Jakarta Phase 1B</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <a class="nav-link" data-bs-toggle="pill" href="http://localhost/project-webgis/public/Home#tab2" style="list-style: none;" aria-selected="false" tabindex="-1" role="tab">PT Waskita Karya Tbk</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <a class="nav-link" data-bs-toggle="pill" href="http://localhost/project-webgis/public/Home#tab3" style="list-style: none;" aria-selected="false" tabindex="-1" role="tab">Internship</a>
+                </li>
+              </ul>
+              
+              <!-- Garis pemisah -->
+              <hr>
+              
+              <!-- Tab Content -->
+              <div class="tab-content mt-3">
+                <!-- Konten Tab 1 -->
+                <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+                  <p class="text-muted fst-italic text-justify">
+                    Lintasan dari proyek LRT Jakarta Phase 1B ini memiliki Panjang 6,4 kilometer yang dimulai dari Velodrome hingga manggarai. LRT Jakarta Phase 1B ini akan mempunyai 5 stasiun yaitu Stasiun Pemuda Rawamangun, Stasiun Pramuka BPKP, Stasiun Pasar Pramuka, Stasiun Matraman, dan Stasiun Manggarai.
+                  </p>
+                  <p class="text-justify"><strong>Proyek ini dimulai dari tahun 2023 sampai dengan waktu yang ditargetkan yaitu pada tahun 2026.</strong></p>
+                  <p class="text-justify">LRT Jakarta Phase 1B Velodrome – Manggarai merupakan proyek yang ditujukkan untuk pelayanan Masyarakat terutama dalam memudahkan mobilitas Masyarakat serta mendukung intetgrasi transportasi umum yang ada di Kota Jakarta ini. LRT sendiri mempunyai lintasan serta stasiun yang terpisah dari jalur kendaraan umum lainnya, sehingga tidak akan mengganggu keberjalanan transportasi umum lainnya. Proyek ini merupakan proyek lanjutan dari LRT Jakarta Phase 1A Dimana proyek tersebut bermula dari Kelapa Gading hingga Velodrome. Jarak antara Stasiun Pegangsaan Dua (Kelapa Gading) hingga Stasiun Manggarai mencapai 12,2 km, dengan perkiraan waktu tempuh sekitar 26 menit.</p>
+                </div>
+
+                <!-- Konten Tab 2 -->
+                <div class="tab-pane fade" id="tab2" role="tabpanel">
+                  <p class="text-muted fst-italic text-justify">
+                    PT Waskita Karya (Persero) Tbk adalah sebuah Badan Usaha Milik Negara Indonesia 
+                    (BUMN) yang bergerak di bidang konstruksi dengan lima divisi, yakni Gedung, Infrastruktur I, Infrastruktur II, 
+                    EPC, dan Luar Negeri.
+                  </p>
+                  <p class="text-justify"><strong>Perusahaan ini berdiri pada 1 Januari 1961, setelah sebelumnya merupakan bagian dari perusahaan Belanda bernama “Volker Aannemings Maatschappij N.V.” yang diambil alih berdasarkan Keputusan Pemerintah No. 62/1961.</strong></p>
+                  <p class="text-justify">PT Waskita Karya (Persero) Tbk merupakan salah satu perusahaan konstruksi milik negara yang memiliki peran penting dalam pembangunan infrastruktur di Indonesia. Pada awal operasinya, Waskita Karya berfokus pada proyek-proyek yang berkaitan dengan sumber daya air, seperti reklamasi, pengerukan, pembangunan pelabuhan, dan irigasi. Sebagai bagian dari upaya meningkatkan standar mutu dan daya saing, sejak November 1995 Waskita memperoleh sertifikat ISO 9002:1994, yang menjadi pengakuan internasional terhadap sistem manajemen mutu perusahaan. Kemudian, pada November 2009, perusahaan memperbarui sertifikasinya ke ISO 9001:2008, menunjukkan komitmen dalam memenuhi kebutuhan pelanggan dan mempertahankan standar kualitas yang tinggi.</p>
+                </div>
+
+                <!-- Konten Tab 3 -->
+                <div class="tab-pane fade" id="tab3" role="tabpanel">
+                  <p class="text-justify"><strong>Berikut merupakan maksud dan tujuan dari pelaksanaan kerja praktik yang dilaksanakan pada PT Waskita Karya (Persero) Tbk pada proyek pembangunan LRT Velodrome-Manggarai Fase 1B.</strong></p>
+                  <p class="text-justify">
+                    1.	Mahasiswa dapat memahami dan mempelajari teknik pengumpulan data menggunakan fotogrametri, GNSS, dan Terrestrial Laser Scanner (TLS) dalam proyek konstruksi.<br>
+                    2.	Mahasiswa dapat mempelajari alur kerja pemrosesan data dari tahap awal hingga menghasilkan informasi geospasial yang dapat digunakan dalam perencanaan dan analisis proyek menggunakan perangkat lunak seperti Agisoft Metashape Pro, QGIS, ArcGIS Pro, Civil 3D, Cyclone 3R, dan Redtoolbox.<br>
+                    3.	Memahami proses verifikasi dan validasi data dari data desain dengan data aktual untuk memastikan keakuratan informasi sebelum digunakan dalam tahap konstruksi.
+                  </p>
+                  <p class="text-justify"><strong>Adapun tujuan khusus dari pelaksanaan Kerja Praktik adalah sebagai berikut.</strong></p>
+                  <p class="text-justify">4.	Mahasiswa dapat mengintegrasikan data hasil akuisisi seperti fotogrametri, GNSS, dan laser scanner ke dalam platform WebGIS.<br>
+                  5.	Mahasiswa dapat mengembangkan aplikasi WebGIS yang dapat menampilkan peta dan data spasial proyek LRT dalam bentuk 2D dan 3D untuk memudahkan pemangku kepentingan dalam memantau perkembangan dan status proyek.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tools Section-->
+      <section class="section section-sm section-first bg-default text-center" id="tools" style="margin-top: -20px" !important;="">
+        <div class="container">
+            <div class="row row-30 justify-content-center">
+                <!-- Bagian Model 3D -->
+                <div class="col-md-7 col-lg-5 col-xl-6 text-lg-left wow fadeInUp" style="visibility: hidden; animation-name: none;">
+                    <model-viewer src="model/model.glb" alt="Model Civil 3D" auto-rotate="" camera-controls="" ar="" style="width: 415px; height: 592px;" ar-status="not-presenting"><template shadowrootmode="open"><!---->
+<style>
+:host {
+  display: block;
+  position: relative;
+  contain: strict;
+  width: 300px;
+  height: 150px;
+}
+
+.container {
+  position: relative;
+  overflow: hidden;
+}
+
+.userInput {
+  width: 100%;
+  height: 100%;
+  display: none;
+  position: relative;
+  outline-offset: -1px;
+  outline-width: 1px;
+}
+
+canvas {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  /* NOTE(cdata): Chrome 76 and below apparently have a bug
+   * that causes our canvas not to display pixels unless it is
+   * on its own render layer
+   * @see https://github.com/google/model-viewer/pull/755#issuecomment-536597893
+   */
+  transform: translateZ(0);
+}
+
+.show {
+  display: block;
+}
+
+/* Adapted from HTML5 Boilerplate
+ *
+ * @see https://github.com/h5bp/html5-boilerplate/blob/ceb4620c78fc82e13534fc44202a3f168754873f/dist/css/main.css#L122-L133 */
+.screen-reader-only {
+  border: 0;
+  left: 0;
+  top: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+  pointer-events: none;
+}
+
+.slot {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.slot > * {
+  pointer-events: initial;
+}
+
+.annotation-wrapper ::slotted(*) {
+  opacity: var(--max-hotspot-opacity, 1);
+  transition: opacity 0.3s;
+}
+
+.pointer-tumbling .annotation-wrapper ::slotted(*) {
+  pointer-events: none;
+}
+
+.annotation-wrapper ::slotted(*) {
+  pointer-events: initial;
+}
+
+.annotation-wrapper.hide ::slotted(*) {
+  opacity: var(--min-hotspot-opacity, 0.25);
+}
+
+.slot.poster {
+  display: none;
+  background-color: inherit;
+}
+
+.slot.poster.show {
+  display: inherit;
+}
+
+.slot.poster > * {
+  pointer-events: initial;
+}
+
+.slot.poster:not(.show) > * {
+  pointer-events: none;
+}
+
+#default-poster {
+  width: 100%;
+  height: 100%;
+  /* The default poster is a <button> so we need to set display
+   * to prevent it from being affected by text-align: */
+  display: block;
+  position: absolute;
+  border: none;
+  padding: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #fff0;
+}
+
+#default-progress-bar {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#default-progress-bar > .bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--progress-bar-height, 5px);
+  background-color: var(--progress-bar-color, rgba(0, 0, 0, 0.4));
+  transition: transform 0.09s;
+  transform-origin: top left;
+  transform: scaleX(0);
+  overflow: hidden;
+}
+
+#default-progress-bar > .bar.hide {
+  transition: opacity 0.3s 1s;
+  opacity: 0;
+}
+
+.centered {
+  align-items: center;
+  justify-content: center;
+}
+
+.cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.slot.interaction-prompt {
+  display: var(--interaction-prompt-display, flex);
+  overflow: hidden;
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 0.3s;
+}
+
+.slot.interaction-prompt.visible {
+  opacity: 1;
+}
+
+.animated-container {
+  will-change: transform, opacity;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.slot.interaction-prompt > * {
+  pointer-events: none;
+}
+
+.slot.ar-button {
+  -moz-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  display: var(--ar-button-display, block);
+}
+
+.slot.ar-button:not(.enabled) {
+  display: none;
+}
+
+.fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  background-color: #fff;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.15);
+  border-radius: 100px;
+}
+
+.fab > * {
+  opacity: 0.87;
+}
+
+#default-ar-button {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  transform: scale(var(--ar-button-scale, 1));
+  transform-origin: bottom right;
+}
+
+.slot.pan-target {
+  display: block;
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  background-color: transparent;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#default-pan-target {
+  width: 6px;
+  height: 6px;
+  border-radius: 6px;
+  border: 1px solid white;
+  box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.8);
+}
+
+.slot.default {
+  pointer-events: none;
+}
+
+.slot.progress-bar {
+  pointer-events: none;
+}
+
+.slot.exit-webxr-ar-button {
+  pointer-events: none;
+}
+
+.slot.exit-webxr-ar-button:not(.enabled) {
+  display: none;
+}
+
+#default-exit-webxr-ar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+#default-exit-webxr-ar-button > svg {
+  fill: #fff;
+}
+</style>
+<div class="container" style="width: 415px; height: 592px;">
+  <div class="userInput" tabindex="0" role="img" aria-label="Model Civil 3D. Use mouse, touch or arrow keys to move." style="cursor: grab; touch-action: none;">
+      <div class="slot canvas">
+        <slot name="canvas">
+          <canvas width="623" height="888"></canvas>
+        </slot>
+      </div>
+
+  </div>
+
+  <!-- NOTE(cdata): We need to wrap slots because browsers without ShadowDOM
+        will have their <slot> elements removed by ShadyCSS -->
+  <div class="slot poster show">
+    <slot name="poster">
+      <button type="button" id="default-poster" aria-label="Model Civil 3D"></button>
+    </slot>
+  </div>
+
+  <div class="slot ar-button">
+    <slot name="ar-button">
+      <a id="default-ar-button" part="default-ar-button" class="fab" tabindex="2" role="button" href="javascript:void(0);" aria-label="View in your space">
+        <!--?lit$427464503$-->
+<svg version="1.1" id="view_x5F_in_x5F_AR_x5F_icon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+<rect id="Bounding_Box" x="0" y="0" fill="none" width="24" height="24"></rect>
+<g id="Art_layer">
+	<path d="M3,4c0-0.55,0.45-1,1-1h2V1H4C2.35,1,1,2.35,1,4v2h2V4z"></path>
+	<path d="M20,3c0.55,0,1,0.45,1,1v2h2V4c0-1.65-1.35-3-3-3h-2v2H20z"></path>
+	<path d="M4,21c-0.55,0-1-0.45-1-1v-2H1v2c0,1.65,1.35,3,3,3h2v-2H4z"></path>
+	<path d="M20,21c0.55,0,1-0.45,1-1v-2h2v2c0,1.65-1.35,3-3,3h-2v-2H20z"></path>
+	<g>
+		<path d="M18.25,7.6l-5.5-3.18c-0.46-0.27-1.04-0.27-1.5,0L5.75,7.6C5.29,7.87,5,8.36,5,8.9v6.35c0,0.54,0.29,1.03,0.75,1.3
+			l5.5,3.18c0.46,0.27,1.04,0.27,1.5,0l5.5-3.18c0.46-0.27,0.75-0.76,0.75-1.3V8.9C19,8.36,18.71,7.87,18.25,7.6z M7,14.96v-4.62
+			l4,2.32v4.61L7,14.96z M12,10.93L8,8.61l4-2.31l4,2.31L12,10.93z M13,17.27v-4.61l4-2.32v4.62L13,17.27z"></path>
+	</g>
+</g>
+</svg>
+      </a>
+    </slot>
+  </div>
+
+  <div class="slot pan-target">
+    <slot name="pan-target">
+      <div id="default-pan-target">
+      </div>
+    </slot>
+  </div>
+
+  <div class="slot interaction-prompt cover centered">
+    <div id="prompt" class="animated-container" style="opacity: 0;">
+      <slot name="interaction-prompt" aria-hidden="true">
+        <!--?lit$427464503$-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="36">
+    <defs>
+        <path id="A" d="M.001.232h24.997V36H.001z"></path>
+    </defs>
+    <g transform="translate(-11 -4)" fill="none" fill-rule="evenodd">
+        <path fill-opacity="0" fill="#fff" d="M0 0h44v44H0z"></path>
+        <g transform="translate(11 3)">
+            <path d="M8.733 11.165c.04-1.108.766-2.027 1.743-2.307a2.54 2.54 0 0 1 .628-.089c.16 0 .314.017.463.044 1.088.2 1.9 1.092 1.9 2.16v8.88h1.26c2.943-1.39 5-4.45 5-8.025a9.01 9.01 0 0 0-1.9-5.56l-.43-.5c-.765-.838-1.683-1.522-2.712-2-1.057-.49-2.226-.77-3.46-.77s-2.4.278-3.46.77c-1.03.478-1.947 1.162-2.71 2l-.43.5a9.01 9.01 0 0 0-1.9 5.56 9.04 9.04 0 0 0 .094 1.305c.03.21.088.41.13.617l.136.624c.083.286.196.56.305.832l.124.333a8.78 8.78 0 0 0 .509.953l.065.122a8.69 8.69 0 0 0 3.521 3.191l1.11.537v-9.178z" fill-opacity=".5" fill="#e4e4e4"></path>
+            <path d="M22.94 26.218l-2.76 7.74c-.172.485-.676.8-1.253.8H12.24c-1.606 0-3.092-.68-3.98-1.82-1.592-2.048-3.647-3.822-6.11-5.27-.095-.055-.15-.137-.152-.23-.004-.1.046-.196.193-.297.56-.393 1.234-.6 1.926-.6a3.43 3.43 0 0 1 .691.069l4.922.994V10.972c0-.663.615-1.203 1.37-1.203s1.373.54 1.373 1.203v9.882h2.953c.273 0 .533.073.757.21l6.257 3.874c.027.017.045.042.07.06.41.296.586.77.426 1.22M4.1 16.614c-.024-.04-.042-.083-.065-.122a8.69 8.69 0 0 1-.509-.953c-.048-.107-.08-.223-.124-.333l-.305-.832c-.058-.202-.09-.416-.136-.624l-.13-.617a9.03 9.03 0 0 1-.094-1.305c0-2.107.714-4.04 1.9-5.56l.43-.5c.764-.84 1.682-1.523 2.71-2 1.058-.49 2.226-.77 3.46-.77s2.402.28 3.46.77c1.03.477 1.947 1.16 2.712 2l.428.5a9 9 0 0 1 1.901 5.559c0 3.577-2.056 6.636-5 8.026h-1.26v-8.882c0-1.067-.822-1.96-1.9-2.16-.15-.028-.304-.044-.463-.044-.22 0-.427.037-.628.09-.977.28-1.703 1.198-1.743 2.306v9.178l-1.11-.537C6.18 19.098 4.96 18 4.1 16.614M22.97 24.09l-6.256-3.874c-.102-.063-.218-.098-.33-.144 2.683-1.8 4.354-4.855 4.354-8.243 0-.486-.037-.964-.104-1.43a9.97 9.97 0 0 0-1.57-4.128l-.295-.408-.066-.092a10.05 10.05 0 0 0-.949-1.078c-.342-.334-.708-.643-1.094-.922-1.155-.834-2.492-1.412-3.94-1.65l-.732-.088-.748-.03a9.29 9.29 0 0 0-1.482.119c-1.447.238-2.786.816-3.94 1.65a9.33 9.33 0 0 0-.813.686 9.59 9.59 0 0 0-.845.877l-.385.437-.36.5-.288.468-.418.778-.04.09c-.593 1.28-.93 2.71-.93 4.222 0 3.832 2.182 7.342 5.56 8.938l1.437.68v4.946L5 25.64a4.44 4.44 0 0 0-.888-.086c-.017 0-.034.003-.05.003-.252.004-.503.033-.75.08a5.08 5.08 0 0 0-.237.056c-.193.046-.382.107-.568.18-.075.03-.15.057-.225.1-.25.114-.494.244-.723.405a1.31 1.31 0 0 0-.566 1.122 1.28 1.28 0 0 0 .645 1.051C4 29.925 5.96 31.614 7.473 33.563a5.06 5.06 0 0 0 .434.491c1.086 1.082 2.656 1.713 4.326 1.715h6.697c.748-.001 1.43-.333 1.858-.872.142-.18.256-.38.336-.602l2.757-7.74c.094-.26.13-.53.112-.794s-.088-.52-.203-.76a2.19 2.19 0 0 0-.821-.91" fill-opacity=".6" fill="#000"></path>
+            <path d="M22.444 24.94l-6.257-3.874a1.45 1.45 0 0 0-.757-.211h-2.953v-9.88c0-.663-.616-1.203-1.373-1.203s-1.37.54-1.37 1.203v16.643l-4.922-.994a3.44 3.44 0 0 0-.692-.069 3.35 3.35 0 0 0-1.925.598c-.147.102-.198.198-.194.298.004.094.058.176.153.23 2.462 1.448 4.517 3.22 6.11 5.27.887 1.14 2.373 1.82 3.98 1.82h6.686c.577 0 1.08-.326 1.253-.8l2.76-7.74c.16-.448-.017-.923-.426-1.22-.025-.02-.043-.043-.07-.06z" fill="#fff"></path>
+            <g transform="translate(0 .769)">
+                <mask id="B" fill="#fff">
+                    <use xlink:href="#A"></use>
+                </mask>
+                <path d="M23.993 24.992a1.96 1.96 0 0 1-.111.794l-2.758 7.74c-.08.22-.194.423-.336.602-.427.54-1.11.87-1.857.872h-6.698c-1.67-.002-3.24-.633-4.326-1.715-.154-.154-.3-.318-.434-.49C5.96 30.846 4 29.157 1.646 27.773c-.385-.225-.626-.618-.645-1.05a1.31 1.31 0 0 1 .566-1.122 4.56 4.56 0 0 1 .723-.405l.225-.1a4.3 4.3 0 0 1 .568-.18l.237-.056c.248-.046.5-.075.75-.08.018 0 .034-.003.05-.003.303-.001.597.027.89.086l3.722.752V20.68l-1.436-.68c-3.377-1.596-5.56-5.106-5.56-8.938 0-1.51.336-2.94.93-4.222.015-.03.025-.06.04-.09.127-.267.268-.525.418-.778.093-.16.186-.316.288-.468.063-.095.133-.186.2-.277L3.773 5c.118-.155.26-.29.385-.437.266-.3.544-.604.845-.877a9.33 9.33 0 0 1 .813-.686C6.97 2.167 8.31 1.59 9.757 1.35a9.27 9.27 0 0 1 1.481-.119 8.82 8.82 0 0 1 .748.031c.247.02.49.05.733.088 1.448.238 2.786.816 3.94 1.65.387.28.752.588 1.094.922a9.94 9.94 0 0 1 .949 1.078l.066.092c.102.133.203.268.295.408a9.97 9.97 0 0 1 1.571 4.128c.066.467.103.945.103 1.43 0 3.388-1.67 6.453-4.353 8.243.11.046.227.08.33.144l6.256 3.874c.37.23.645.55.82.9.115.24.185.498.203.76m.697-1.195c-.265-.55-.677-1.007-1.194-1.326l-5.323-3.297c2.255-2.037 3.564-4.97 3.564-8.114 0-2.19-.637-4.304-1.84-6.114-.126-.188-.26-.37-.4-.552-.645-.848-1.402-1.6-2.252-2.204C15.472.91 13.393.232 11.238.232A10.21 10.21 0 0 0 5.23 2.19c-.848.614-1.606 1.356-2.253 2.205-.136.18-.272.363-.398.55C1.374 6.756.737 8.87.737 11.06c0 4.218 2.407 8.08 6.133 9.842l.863.41v3.092l-2.525-.51c-.356-.07-.717-.106-1.076-.106a5.45 5.45 0 0 0-3.14.996c-.653.46-1.022 1.202-.99 1.983a2.28 2.28 0 0 0 1.138 1.872c2.24 1.318 4.106 2.923 5.543 4.772 1.26 1.62 3.333 2.59 5.55 2.592h6.698c1.42-.001 2.68-.86 3.134-2.138l2.76-7.74c.272-.757.224-1.584-.134-2.325" fill-opacity=".05" fill="#000" mask="url(#B)"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+      </slot>
+    </div>
+  </div>
+
+  <div id="finger0" class="animated-container cover">
+    <slot name="finger0" aria-hidden="true">
+    </slot>
+  </div>
+  <div id="finger1" class="animated-container cover">
+    <slot name="finger1" aria-hidden="true">
+    </slot>
+  </div>
+
+  <div class="slot default">
+    <slot></slot>
+
+    <div class="slot progress-bar">
+      <slot name="progress-bar">
+        <div id="default-progress-bar" aria-hidden="true">
+          
+        <div class="bar hide" part="default-progress-bar" style="transform: scaleX(1);"></div></div>
+      </slot>
+    </div>
+
+    <div class="slot exit-webxr-ar-button">
+      <slot name="exit-webxr-ar-button">
+        <a id="default-exit-webxr-ar-button" part="default-exit-webxr-ar-button" tabindex="3" aria-label="Exit AR" aria-hidden="true">
+          <!--?lit$427464503$-->
+<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
+    <!-- NOTE(cdata): This SVG filter is a stop-gap until we can implement
+         support for dynamic re-coloring of UI components -->
+    <defs>
+      <filter id="drop-shadow" x="-100%" y="-100%" width="300%" height="300%">
+        <fegaussianblur in="SourceAlpha" stdDeviation="1"></fegaussianblur>
+        <feoffset dx="0" dy="0" result="offsetblur"></feoffset>
+        <feflood flood-color="#000000"></feflood>
+        <fecomposite in2="offsetblur" operator="in"></fecomposite>
+        <femerge>
+          <femergenode></femergenode>
+          <femergenode in="SourceGraphic"></femergenode>
+        </femerge>
+      </filter>
+    </defs>
+    <path filter="url(#drop-shadow)" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+    <path d="M0 0h24v24H0z" fill="none"></path>
+</svg>
+        </a>
+      </slot>
+    </div>
+  <div style="overflow: hidden; width: 415px; height: 592px; display: none; pointer-events: none; position: absolute; top: 0px;"></div></div>
+</div>
+<div class="screen-reader-only" role="region" aria-label="Live announcements">
+  <span id="status" role="status"></span>
+</div></template>
+                    </model-viewer>
+                </div>
+            <div class="col-lg-7 col-xl-6">
+              <div class="row row-30">
+                <div class="col-sm-6 wow fadeInRight" style="visibility: hidden; animation-name: none;">
+                  <article class="box-icon-modern box-icon-modern-custom">
+                    <div class="box-icon-modern-icon">
+                      <img src="./WebGIS-LRT_files/civil3d.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                    <div>
+                      <h5 class="box-icon-modern-title"><a href="http://localhost/project-webgis/public/Home#">Civil 3D</a></h5>
+                      <div class="box-icon-modern-decor"></div>
+                      <p class="box-icon-modern-text">Pengolahan data .dwg borepile, pilecap, dan kolom</p>
+                    </div>
+                  </div></article>
+                </div>
+                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".1s" style="visibility: hidden; animation-delay: 0.1s; animation-name: none;">
+                  <article class="box-icon-modern box-icon-modern-2">
+                    <div class="box-icon-modern-icon">
+                      <img src="./WebGIS-LRT_files/arcgispro.jpeg" alt="Logo 1" style="width: 50px; height: 50px;">
+                    <div>
+                      <h5 class="box-icon-modern-title"><a href="http://localhost/project-webgis/public/Home#">ArcGIS Pro</a></h5>
+                      <div class="box-icon-modern-decor"></div>
+                      <p class="box-icon-modern-text">Pengolahan data vektor borepile, pilecap, dan kolom</p>
+                    </div>
+                  </div></article>
+                </div>
+                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".2s" style="visibility: hidden; animation-delay: 0.2s; animation-name: none;">
+                  <article class="box-icon-modern box-icon-modern-2">
+                    <div class="box-icon-modern-icon">
+                      <img src="./WebGIS-LRT_files/agisoft.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                    <div>
+                      <h5 class="box-icon-modern-title"><a href="http://localhost/project-webgis/public/Home#">Agisoft Metashape</a></h5>
+                      <div class="box-icon-modern-decor"></div>
+                      <p class="box-icon-modern-text">Post processing data fotogrametri RTK dan PPK</p>
+                    </div>
+                  </div></article>
+                </div>
+                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".3s" style="visibility: hidden; animation-delay: 0.3s; animation-name: none;">
+                  <article class="box-icon-modern box-icon-modern-2">
+                    <div class="box-icon-modern-icon">
+                      <img src="./WebGIS-LRT_files/redtoolbox.png" alt="Logo 1" style="width: 50px; height: 50px;">
+                    <div>
+                      <h5 class="box-icon-modern-title"><a href="http://localhost/project-webgis/public/Home#">RedToolBox</a></h5>
+                      <div class="box-icon-modern-decor"></div>
+                      <p class="box-icon-modern-text">Pre Processing data fotogrametri PPK</p>
+                    </div>
+                  </div></article>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Meet The Team-->
+      <section id="team" class="team section">
+
+        <div class="container">
+          <div>
+            <h2>Meet Our Team</h2>&gt;
+          </div>
+          <div class="row gy-4">
+  
+            <div class="col-lg-3 col-md-6 d-flex align-items-stretch aos-init" data-aos="fade-up" data-aos-delay="100">
+              <div class="team-member">
+                <div class="member-img">
+                  <img src="./WebGIS-LRT_files/team-1.jpg" class="img-fluid" alt="">
+                  <div class="social">
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-twitter-x"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-facebook"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-instagram"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+                <div class="member-info">
+                  <h4>Walter White</h4>
+                  <span>Chief Executive Officer</span>
+                </div>
+              </div>
+            </div><!-- End Team Member -->
+  
+            <div class="col-lg-3 col-md-6 d-flex align-items-stretch aos-init" data-aos="fade-up" data-aos-delay="200">
+              <div class="team-member">
+                <div class="member-img">
+                  <img src="./WebGIS-LRT_files/team-2.jpg" class="img-fluid" alt="">
+                  <div class="social">
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-twitter-x"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-facebook"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-instagram"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+                <div class="member-info">
+                  <h4>Sarah Jhonson</h4>
+                  <span>Product Manager</span>
+                </div>
+              </div>
+            </div><!-- End Team Member -->
+  
+            <div class="col-lg-3 col-md-6 d-flex align-items-stretch aos-init" data-aos="fade-up" data-aos-delay="300">
+              <div class="team-member">
+                <div class="member-img">
+                  <img src="./WebGIS-LRT_files/team-3.jpg" class="img-fluid" alt="">
+                  <div class="social">
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-twitter-x"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-facebook"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-instagram"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+                <div class="member-info">
+                  <h4>William Anderson</h4>
+                  <span>CTO</span>
+                </div>
+              </div>
+            </div><!-- End Team Member -->
+  
+            <div class="col-lg-3 col-md-6 d-flex align-items-stretch aos-init" data-aos="fade-up" data-aos-delay="400">
+              <div class="team-member">
+                <div class="member-img">
+                  <img src="./WebGIS-LRT_files/team-4.jpg" class="img-fluid" alt="">
+                  <div class="social">
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-twitter-x"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-facebook"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-instagram"></i></a>
+                    <a href="http://localhost/project-webgis/public/Home"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+                <div class="member-info">
+                  <h4>Amanda Jepson</h4>
+                  <span>Accountant</span>
+                </div>
+              </div>
+            </div><!-- End Team Member -->
+  
+          </div>
+  
+        </div>
+  
+      </section><!-- /Team Section -->
+
+      
+            <!-- Gallery Section -->
+      <section>
+          <div class="container section-title" style="margin-bottom: 50px" ;="">
+            <h2>Gallery</h2>
+        </div>
+    
+        <div class="container">
+            <div class="swiper swiper-initialized swiper-horizontal swiper-backface-hidden">
+                <div class="swiper-wrapper" id="swiper-wrapper-101d64ef3c43a491c" aria-live="off" style="transition-duration: 0ms; transform: translate3d(-654px, 0px, 0px); transition-delay: 0ms;">
+                    
+                    
+                    
+                    
+                    
+                <div class="swiper-slide" style="width: 327px;" role="group" aria-label="1 / 5" data-swiper-slide-index="0"><img src="./WebGIS-LRT_files/mitzu.jpg" alt="Gallery 1"></div><div class="swiper-slide" style="width: 327px;" role="group" aria-label="2 / 5" data-swiper-slide-index="1"><img src="./WebGIS-LRT_files/darren.jpg" alt="Gallery 2"></div><div class="swiper-slide swiper-slide-prev" style="width: 327px;" role="group" aria-label="3 / 5" data-swiper-slide-index="2"><img src="./WebGIS-LRT_files/han.jpg" alt="Gallery 3"></div><div class="swiper-slide swiper-slide-active" style="width: 327px;" role="group" aria-label="4 / 5" data-swiper-slide-index="3"><img src="./WebGIS-LRT_files/mitzu.jpg" alt="Gallery 4"></div><div class="swiper-slide swiper-slide-next" role="group" aria-label="5 / 5" data-swiper-slide-index="4" style="width: 327px;"><img src="./WebGIS-LRT_files/saved_resource" alt="Gallery 5"></div></div>
+                <div class="swiper-pagination swiper-pagination-clickable swiper-pagination-bullets swiper-pagination-horizontal"><span class="swiper-pagination-bullet" tabindex="0" role="button" aria-label="Go to slide 1"></span><span class="swiper-pagination-bullet" tabindex="0" role="button" aria-label="Go to slide 2"></span><span class="swiper-pagination-bullet" tabindex="0" role="button" aria-label="Go to slide 3"></span><span class="swiper-pagination-bullet swiper-pagination-bullet-active" tabindex="0" role="button" aria-label="Go to slide 4" aria-current="true"></span><span class="swiper-pagination-bullet" tabindex="0" role="button" aria-label="Go to slide 5"></span></div>
+            <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
+        </div>
+    
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var swiper = new Swiper(".swiper", {
+                    loop: true,
+                    speed: 600,
+                    autoplay: {
+                        delay: 5000,
+                        disableOnInteraction: false,
+                    },
+                    slidesPerView: 3,
+                    centeredSlides: true,
+                    pagination: {
+                        el: ".swiper-pagination",
+                        clickable: true,
+                    }
+                });
+            });
+        </script>
+      </section>
+
+      <!-- Contact Form-->
+      <section class="section section-sm section-last bg-default text-left" id="contacts">
+        <div class="container">
+          <article class="title-classic">
+            <div class="title-classic-title">
+              <h3>Get in touch</h3>
+            </div>
+            <div class="title-classic-text">
+              <p>If you have any questions, just fill in the contact form, and we will answer you shortly.</p>
+            </div>
+          </article>
+          <form class="rd-form rd-form-variant-2 rd-mailform" data-form-output="form-output-global" data-form-type="contact" method="post" action="http://localhost/project-webgis/public/bat/rd-mailform.php" novalidate="novalidate">
+            <div class="row row-14 gutters-14">
+              <div class="col-md-4">
+                <div class="form-wrap">
+                  <input class="form-input form-control-has-validation" id="contact-your-name-2" type="text" name="name" data-constraints="@Required" fdprocessedid="rlqupa"><span class="form-validation"></span>
+                  <label class="form-label rd-input-label" for="contact-your-name-2">Your Name</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-wrap">
+                  <input class="form-input form-control-has-validation" id="contact-email-2" type="email" name="email" data-constraints="@Email @Required" fdprocessedid="uunjo8"><span class="form-validation"></span>
+                  <label class="form-label rd-input-label" for="contact-email-2">E-mail</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-wrap">
+                  <input class="form-input form-control-has-validation" id="contact-phone-2" type="text" name="phone" data-constraints="@Numeric" fdprocessedid="14i88"><span class="form-validation"></span>
+                  <label class="form-label rd-input-label" for="contact-phone-2">Phone</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-wrap">
+                  <label class="form-label rd-input-label" for="contact-message-2">Message</label>
+                  <textarea class="form-input textarea-lg form-control-has-validation form-control-last-child" id="contact-message-2" name="message" data-constraints="@Required"></textarea><span class="form-validation"></span>
+                </div>
+              </div>
+            </div>
+            <button class="button button-primary button-pipaluk" type="submit" fdprocessedid="5q0vy">Send Message</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Page Footer-->
+      <footer class="section section-fluid footer-minimal context-dark">
+        <div class="bg-gray-15">
+          <div class="container-fluid">
+            <div class="footer-minimal-inset oh">
+              <ul class="footer-list-category-2">
+                <li><a href="http://localhost/project-webgis/public/Home#">Activity</a></li>
+                <li><a href="http://localhost/project-webgis/public/Home#">Contact</a></li>
+                <li><a href="http://localhost/project-webgis/public/Home#">Help</a></li>
+              </ul>
+            </div>
+            <div class="footer-minimal-bottom-panel text-sm-left">
+              <div class="row row-10 align-items-md-center">
+                <div class="col-sm-6 col-md-4 text-sm-right text-md-center">
+                </div>
+                <div class="col-sm-6 col-md-4 order-sm-first">
+                  <!-- Rights-->
+                  <p class="rights"><span>©&nbsp;</span><span class="copyright-year">2025</span> <span>Waskita-internship | All rights reserved.</span>
+                  </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></footer>
+
+      <div class="modal fade" id="modalCta" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4>Contact Us</h4>
+              <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="rd-form rd-form-variant-2 rd-mailform" data-form-output="form-output-global" data-form-type="contact-modal" method="post" action="http://localhost/project-webgis/public/bat/rd-mailform.php" novalidate="novalidate">
+                <div class="row row-14 gutters-14">
+                  <div class="col-12">
+                    <div class="form-wrap">
+                      <input class="form-input form-control-has-validation" id="contact-modal-name" type="text" name="name" data-constraints="@Required"><span class="form-validation"></span>
+                      <label class="form-label rd-input-label" for="contact-modal-name">Your Name</label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-wrap">
+                      <input class="form-input form-control-has-validation" id="contact-modal-email" type="email" name="email" data-constraints="@Email @Required"><span class="form-validation"></span>
+                      <label class="form-label rd-input-label" for="contact-modal-email">E-mail</label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-wrap">
+                      <input class="form-input form-control-has-validation" id="contact-modal-phone" type="text" name="phone" data-constraints="@Numeric"><span class="form-validation"></span>
+                      <label class="form-label rd-input-label" for="contact-modal-phone">Phone</label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-wrap">
+                      <label class="form-label rd-input-label" for="contact-modal-message">Message</label>
+                      <textarea class="form-input textarea-lg form-control-has-validation form-control-last-child" id="contact-modal-message" name="message" data-constraints="@Required"></textarea><span class="form-validation"></span>
+                    </div>
+                  </div>
+                </div>
+                <button class="button button-primary button-pipaluk" type="submit">Send Message</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Global Mailform Output-->
+    <div class="snackbars" id="form-output-global"></div>
+    <!-- Javascript-->
+    <script src="./WebGIS-LRT_files/core.min.js.download"></script>
+    <script src="./WebGIS-LRT_files/script.js.download"></script>
+    <script src="./WebGIS-LRT_files/bootstrap.bundle.min.js.download"></script>
+    <script src="./WebGIS-LRT_files/aos.js.download"></script>
+    <script>
+      AOS.init();
+    </script>
+    <script src="./WebGIS-LRT_files/swiper-bundle.min.js.download"></script>
+    <!-- coded by Himic-->
+    <script src="./WebGIS-LRT_files/bootstrap.bundle.min(1).js.download"></script>
+    <script src="./WebGIS-LRT_files/validate.js.download"></script>
+    <script src="./WebGIS-LRT_files/aos(1).js.download"></script>
+    <script src="./WebGIS-LRT_files/glightbox.min.js.download"></script>
+    <script src="./WebGIS-LRT_files/swiper-bundle.min(1).js.download"></script>
+    <script src="./WebGIS-LRT_files/imagesloaded.pkgd.min.js.download"></script>
+    <script src="./WebGIS-LRT_files/isotope.pkgd.min.js.download"></script>
+  
+
+
+<a href="http://localhost/project-webgis/public/Home#" id="ui-to-top" class="ui-to-top fa fa-angle-up"></a><div id="toolbarContainer">
+<div id="debug-icon" class="debug-bar-dinlineBlock">
+    <a id="debug-icon-link">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 155 200"><defs></defs><path fill="#dd4814" d="M73.7 3.7c2.2 7.9-.7 18.5-7.8 29-1.8 2.6-10.7 12.2-19.7 21.3-23.9 24-33.6 37.1-40.3 54.4-7.9 20.6-7.8 40.8.5 58.2C12.8 180 27.6 193 42.5 198l6 2-3-2.2c-21-15.2-22.9-38.7-4.8-58.8 2.5-2.7 4.8-5 5.1-5 .4 0 .7 2.7.7 6.1 0 5.7.2 6.2 3.7 9.5 3 2.7 4.6 3.4 7.8 3.4 5.6 0 9.9-2.4 11.6-6.5 2.9-6.9 1.6-12-5-20.5-10.5-13.4-11.7-23.3-4.3-34.7l3.1-4.8.7 4.7c1.3 8.2 5.8 12.9 25 25.8 20.9 14.1 30.6 26.1 32.8 40.5 1.1 7.2-.1 16.1-3.1 21.8-2.7 5.3-11.2 14.3-16.5 17.4-2.4 1.4-4.3 2.6-4.3 2.8 0 .2 2.4-.4 5.3-1.4 24.1-8.3 42.7-27.1 48.2-48.6 1.9-7.6 1.9-20.2-.1-28.5-3.5-15.2-14.6-30.5-29.9-41.2l-7-4.9-.6 3.3c-.8 4.8-2.6 7.6-5.9 9.3-4.5 2.3-10.3 1.9-13.8-1-6.7-5.7-7.8-14.6-3.7-30.5 3-11.6 3.2-20.6.5-29.1C88.3 18 80.6 6.3 74.8 2.2 73.1.9 73 1 73.7 3.7z"></path></svg>
+    </a>
+</div>
+<div id="debug-bar" class="debug-bar-ndisplay">
+    <div class="toolbar">
+        <span id="toolbar-position">↕</span>
+        <span id="toolbar-theme">🔅</span>
+        <span id="hot-reload-btn" class="ci-label">
+            <a id="debug-hot-reload" title="Toggle Hot Reload">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABNklEQVR4nN2US04CQRCGv/DaiBxEvYWuBRPDKSCIXsCdcg0ULqTI8xIGN7JwTCU/ScV5tTO64Us6maSq/7+nuqvgkLgHopTl+QAWwBToAg3+wMTzM7YBrihp4jkCToEB8OJyRkCFAB5yDDxVoAd8OpNMOkrcAeMAgz3nzsQ0EqkDayXZqXy5Qugrdy2tGNdKeNWv40xCqGpvJK0YEwXt8ooylMZzUnCh4EkJgzNpmFaMrYLNEgbH0thmGVhSUVrSeE8KLv+7RBMFb0oY3EnDeihGN+WZhmJ7ZlnPtKHB5RvtNwy0d5XWaGgqRmp7a/9QLjRevoDLvOSRM+nnlKumk++0xwZlLhVnEulOhnohTS37vnU1t5M/ho7rPR03/LKW1bxNQep6ETZb5mpGW2/Ak2KpF3oYfAPX9Xpc671kqwAAAABJRU5ErkJggg==">
+            </a>
+        </span>
+        <span class="ci-label">
+            <a data-tab="ci-timeline">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD7SURBVEhLY6ArSEtLK09NTbWHcvGC9PR0BaDaQiAdUl9fzwQVxg+AFvwHamqHcnGCpKQkeaDa9yD1UD09UCn8AKaBWJySkmIApFehi0ONwwRQBceBLurAh4FqFoHUAtkrgPgREN+ByYEw1DhMANVEMIhAYQ5U1wtU/wmILwLZRlAp/IBYC8gGw88CaFj3A/FnIL4ETDXGUCnyANSC/UC6HIpnQMXAqQXIvo0khxNDjcMEQEmU9AzDuNI7Lgw1DhOAJIEuhQcRKMcC+e+QNHdDpcgD6BaAANSSQqBcENFlDi6AzQKqgkFlwWhxjVI8o2OgmkFaXI8CTMDAAAAxd1O4FzLMaAAAAABJRU5ErkJggg==">
+                <span class="hide-sm">35.2 ms &nbsp; 3.841 MB</span>
+            </a>
+        </span>
+
+                                                                                                <span class="ci-label">
+                    <a data-tab="ci-views">
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADeSURBVEhL7ZSxDcIwEEWNYA0YgGmgyAaJLTcUaaBzQQEVjMEabBQxAdw53zTHiThEovGTfnE/9rsoRUxhKLOmaa6Uh7X2+UvguLCzVxN1XW9x4EYHzik033Hp3X0LO+DaQG8MDQcuq6qao4qkHuMgQggLvkPLjqh00ZgFDBacMJYFkuwFlH1mshdkZ5JPJERA9JpI6xNCBESvibQ+IURA9JpI6xNCBESvibQ+IURA9DTsuHTOrVFFxixgB/eUFlU8uKJ0eDBFOu/9EvoeKnlJS2/08Tc8NOwQ8sIfMeYFjqKDjdU2sp4AAAAASUVORK5CYII=">
+                        <span class="hide-sm">
+                            Views                                                            <span class="badge">1</span>
+                                                    </span>
+                    </a>
+                </span>
+                                                <span class="ci-label">
+                    <a data-tab="ci-files">
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGBSURBVEhL7ZQ9S8NQGIVTBQUncfMfCO4uLgoKbuKQOWg+OkXERRE1IAXrIHbVDrqIDuLiJgj+gro7S3dnpfq88b1FMTE3VZx64HBzzvvZWxKnj15QCcPwCD5HUfSWR+JtzgmtsUcQBEva5IIm9SwSu+95CAWbUuy67qBa32ByZEDpIaZYZSZMjjQuPcQUq8yEyYEb8FSerYeQVGbAFzJkX1PyQWLhgCz0BxTCekC1Wp0hsa6yokzhed4oje6Iz6rlJEkyIKfUEFtITVtQdAibn5rMyaYsMS+a5wTv8qeXMhcU16QZbKgl3hbs+L4/pnpdc87MElZgq10p5DxGdq8I7xrvUWUKvG3NbSK7ubngYzdJwSsF7TiOh9VOgfcEz1UayNe3JUPM1RWC5GXYgTfc75B4NBmXJnAtTfpABX0iPvEd9ezALwkplCFXcr9styiNOKc1RRZpaPM9tcqBwlWzGY1qPL9wjqRBgF5BH6j8HWh2S7MHlX8PrmbK+k/8PzjOOzx1D3i1pKTTAAAAAElFTkSuQmCC">
+                        <span class="hide-sm">
+                            Files                                                            <span class="badge">124</span>
+                                                    </span>
+                    </a>
+                </span>
+                                                <span class="ci-label">
+                    <a data-tab="ci-routes">
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFDSURBVEhL7ZRNSsNQFIUjVXSiOFEcuQIHDpzpxC0IGYeE/BEInbWlCHEDLsSiuANdhKDjgm6ggtSJ+l25ldrmmTwIgtgDh/t37r1J+16cX0dRFMtpmu5pWAkrvYjjOB7AETzStBFW+inxu3KUJMmhludQpoflS1zXban4LYqiO224h6VLTHr8Z+z8EpIHFF9gG78nDVmW7UgTHKjsCyY98QP+pcq+g8Ku2s8G8X3f3/I8b038WZTp+bO38zxfFd+I6YY6sNUvFlSDk9CRhiAI1jX1I9Cfw7GG1UB8LAuwbU0ZwQnbRDeEN5qqBxZMLtE1ti9LtbREnMIuOXnyIf5rGIb7Wq8HmlZgwYBH7ORTcKH5E4mpjeGt9fBZcHE2GCQ3Vt7oTNPNg+FXLHnSsHkw/FR+Gg2bB8Ptzrst/v6C/wrH+QB+duli6MYJdQAAAABJRU5ErkJggg==">
+                        <span class="hide-sm">
+                            Routes                                                            <span class="badge">4</span>
+                                                    </span>
+                    </a>
+                </span>
+                                                <span class="ci-label">
+                    <a data-tab="ci-events">
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEASURBVEhL7ZXNDcIwDIVTsRBH1uDQDdquUA6IM1xgCA6MwJUN2hk6AQzAz0vl0ETUxC5VT3zSU5w81/mRMGZysixbFEVR0jSKNt8geQU9aRpFmp/keX6AbjZ5oB74vsaN5lSzA4tLSjpBFxsjeSuRy4d2mDdQTWU7YLbXTNN05mKyovj5KL6B7q3hoy3KwdZxBlT+Ipz+jPHrBqOIynZgcZonoukb/0ckiTHqNvDXtXEAaygRbaB9FvUTjRUHsIYS0QaSp+Dw6wT4hiTmYHOcYZsdLQ2CbXa4ftuuYR4x9vYZgdb4vsFYUdmABMYeukK9/SUme3KMFQ77+Yfzh8eYF8+orDuDWU5LAAAAAElFTkSuQmCC">
+                        <span class="hide-sm">
+                            Events                                                            <span class="badge">1</span>
+                                                    </span>
+                    </a>
+                </span>
+                                                <span class="ci-label">
+                    <a data-tab="ci-history">
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJySURBVEhL3ZU7aJNhGIVTpV6i4qCIgkIHxcXLErS4FBwUFNwiCKGhuTYJGaIgnRoo4qRu6iCiiIuIXXTTIkIpuqoFwaGgonUQlC5KafU5ycmNP0lTdPLA4fu+8573/a4/f6hXpFKpwUwmc9fDfweKbk+n07fgEv33TLSbtt/hvwNFT1PsG/zdTE0Gp+GFfD6/2fbVIxqNrqPIRbjg4t/hY8aztcngfDabHXbKyiiXy2vcrcPH8oDCry2FKDrA+Ar6L01E/ypyXzXaARjDGGcoeNxSDZXE0dHRA5VRE5LJ5CFy5jzJuOX2wHRHRnjbklZ6isQ3tIctBaAd4vlK3jLtkOVWqABBXd47jGHLmjTmSScttQV5J+SjfcUweFQEbsjAas5aqoCLXutJl7vtQsAzpRowYqkBinyCC8Vicb2lOih8zoldd0F8RD7qTFiqAnGrAy8stUAvi/hbqDM+YzkAFrLPdR5ZqoLXsd+Bh5YCIH7JniVdquUWxOPxDfboHhrI5XJ7HHhiqQXox+APe/Qk64+gGYVCYZs8cMpSFQj9JOoFzVqqo7k4HIvFYpscCoAjOmLffUsNUGRaQUwDlmofUa34ecsdgXdcXo4wbakBgiUFafXJV8A4DJ/2UrxUKm3E95H8RbjLcgOJRGILhnmCP+FBy5XvwN2uIPcy1AJvWgqC4xm2aU4Xb3lF4I+Tpyf8hRe5w3J7YLymSeA8Z3nSclv4WLRyFdfOjzrUFX0klJUEtZtntCNc+F69cz/FiDzEPtjzmcUMOr83kDQEX6pAJxJfpL3OX22n01YN7SZCoQnaSdoZ+Jz+PZihH3wt/xlCoT9M6nEtmRSPCQAAAABJRU5ErkJggg==">
+                        <span class="hide-sm">
+                            History                                                            <span class="badge">20</span>
+                                                    </span>
+                    </a>
+                </span>
+                    
+        <span class="ci-label">
+            <a data-tab="ci-vars">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACLSURBVEhLYxgFJIHU1NSraWlp/6H4T0pKSjRUijoAyXAwBlrYDpViAFpmARQrJwZDtWACoCROC4D8CnR5XBiqBRMADfyNprgRKkUdAApzoCUdUNwE5MtApYYIALp6NBWBMVQLJgAaOJqK8AOgq+mSio6DggjEBtLUT0UwQ5HZIADkj6aiUTAggIEBANAEDa/lkCRlAAAAAElFTkSuQmCC">
+                <span class="hide-sm">Vars</span>
+            </a>
+        </span>
+
+        <h1>
+            <span class="ci-label">
+                <a data-tab="ci-config">
+                    <svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 155 200"><defs></defs><path fill="#dd4814" d="M73.7 3.7c2.2 7.9-.7 18.5-7.8 29-1.8 2.6-10.7 12.2-19.7 21.3-23.9 24-33.6 37.1-40.3 54.4-7.9 20.6-7.8 40.8.5 58.2C12.8 180 27.6 193 42.5 198l6 2-3-2.2c-21-15.2-22.9-38.7-4.8-58.8 2.5-2.7 4.8-5 5.1-5 .4 0 .7 2.7.7 6.1 0 5.7.2 6.2 3.7 9.5 3 2.7 4.6 3.4 7.8 3.4 5.6 0 9.9-2.4 11.6-6.5 2.9-6.9 1.6-12-5-20.5-10.5-13.4-11.7-23.3-4.3-34.7l3.1-4.8.7 4.7c1.3 8.2 5.8 12.9 25 25.8 20.9 14.1 30.6 26.1 32.8 40.5 1.1 7.2-.1 16.1-3.1 21.8-2.7 5.3-11.2 14.3-16.5 17.4-2.4 1.4-4.3 2.6-4.3 2.8 0 .2 2.4-.4 5.3-1.4 24.1-8.3 42.7-27.1 48.2-48.6 1.9-7.6 1.9-20.2-.1-28.5-3.5-15.2-14.6-30.5-29.9-41.2l-7-4.9-.6 3.3c-.8 4.8-2.6 7.6-5.9 9.3-4.5 2.3-10.3 1.9-13.8-1-6.7-5.7-7.8-14.6-3.7-30.5 3-11.6 3.2-20.6.5-29.1C88.3 18 80.6 6.3 74.8 2.2 73.1.9 73 1 73.7 3.7z"></path></svg>
+                    4.6.0                </a>
+            </span>
+        </h1>
+
+        <!-- Open/Close Toggle -->
+        <a id="debug-bar-link" role="button" title="Open/Close">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEPSURBVEhL7ZVLDoJAEEThRuoGDwSEG+jCuFU34s3AK3APP1VDDSGMqI1xx0s6M/2rnlHEaMZElmWrPM+vsDvsYbQ7+us0TReSC2EBrEHxCevRYuppYLXkQpC8sVCuGfTvqSE3hFdFwUGuGfRvqSE35NUAfKZrbQNQm2jrMA+gOK+M+FmhDsRL5voHMA8gFGecq0JOXLWlQg7E7AMIxZnjOiZOEJ82gFCcedUE4gS56QP8yf8ywItz7e+RituKlkkDBoIOH4Nd4HZD4NsGYJ/Abn1xEVOcuZ8f0zc/tHiYmzTAwscBvDIK/veyQ9K/rnewjdF26q0kF1IUxZIFPAVW98x/a+qp8L2M/+HMhETRE6S8TxpZ7KGXAAAAAElFTkSuQmCC">
+        </a>
+    </div>
+
+    <!-- Timeline -->
+    <div id="ci-timeline" class="tab">
+        <table class="timeline">
+            <thead>
+            <tr>
+                <th class="debug-bar-width30">NAME</th>
+                <th class="debug-bar-width10">COMPONENT</th>
+                <th class="debug-bar-width10">DURATION</th>
+                                    <th>0 ms</th>
+                                    <th>10 ms</th>
+                                    <th>20 ms</th>
+                                    <th>30 ms</th>
+                            </tr>
+            </thead>
+            <tbody>
+            <tr class="timeline-parent" id="timeline-0_parent" data-toggle="childrows" data-child="timeline-0"><td class=" debug-bar-level-0"><nav></nav>Bootstrap</td><td class="">Timer</td><td class="debug-bar-alignRight">20.06 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-0" title="50.14%"></span></td></tr><tr class="child-row  debug-bar-ndisplay" id="timeline-0_children"><td colspan="7" class="child-container"><table class="timeline"><tbody><tr><td class="debug-bar-width30 debug-bar-level-1">Event: pre_system</td><td class="debug-bar-width10">Events</td><td class="debug-bar-width10 debug-bar-alignRight">8.55 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-1" title="21.38%"></span></td></tr></tbody></table></td></tr><tr><td class=" debug-bar-level-0">Required Before Filters</td><td class="">Timer</td><td class="debug-bar-alignRight">2.69 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-2" title="6.72%"></span></td></tr><tr><td class=" debug-bar-level-0">Routing</td><td class="">Timer</td><td class="debug-bar-alignRight">2.01 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-3" title="5.03%"></span></td></tr><tr><td class=" debug-bar-level-0">Before Filters</td><td class="">Timer</td><td class="debug-bar-alignRight">0.01 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-4" title="0.04%"></span></td></tr><tr class="timeline-parent timeline-parent-open" id="timeline-5_parent" data-toggle="childrows" data-child="timeline-5"><td class=" debug-bar-level-0"><nav></nav>Controller</td><td class="">Timer</td><td class="debug-bar-alignRight">4.60 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-5" title="11.50%"></span></td></tr><tr class="child-row " id="timeline-5_children"><td colspan="7" class="child-container"><table class="timeline"><tbody><tr><td class="debug-bar-width30 debug-bar-level-1">Controller Constructor</td><td class="debug-bar-width10">Timer</td><td class="debug-bar-width10 debug-bar-alignRight">1.25 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-6" title="3.13%"></span></td></tr><tr><td class="debug-bar-width30 debug-bar-level-1">View: v_template.php</td><td class="debug-bar-width10">Views</td><td class="debug-bar-width10 debug-bar-alignRight">1.48 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-7" title="3.69%"></span></td></tr></tbody></table></td></tr><tr><td class=" debug-bar-level-0">After Filters</td><td class="">Timer</td><td class="debug-bar-alignRight">0.01 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-8" title="0.02%"></span></td></tr><tr><td class=" debug-bar-level-0">Required After Filters</td><td class="">Timer</td><td class="debug-bar-alignRight">0.74 ms</td><td class="debug-bar-noverflow" colspan="4"><span class="timer debug-bar-timeline-9" title="1.86%"></span></td></tr>            </tbody>
+        </table>
+    </div>
+
+    <!-- Collector-provided Tabs -->
+                                                                                                                                <div id="ci-files" class="tab">
+                    <h2>Files <span>( 124 )</span></h2>
+
+                    <table>
+    <tbody>
+    
+        <tr>
+            <td>Common.php</td>
+            <td>APPPATH\Common.php</td>
+        </tr>
+    
+        <tr>
+            <td>App.php</td>
+            <td>APPPATH\Config\App.php</td>
+        </tr>
+    
+        <tr>
+            <td>Autoload.php</td>
+            <td>APPPATH\Config\Autoload.php</td>
+        </tr>
+    
+        <tr>
+            <td>development.php</td>
+            <td>APPPATH\Config\Boot\development.php</td>
+        </tr>
+    
+        <tr>
+            <td>Cache.php</td>
+            <td>APPPATH\Config\Cache.php</td>
+        </tr>
+    
+        <tr>
+            <td>Constants.php</td>
+            <td>APPPATH\Config\Constants.php</td>
+        </tr>
+    
+        <tr>
+            <td>ContentSecurityPolicy.php</td>
+            <td>APPPATH\Config\ContentSecurityPolicy.php</td>
+        </tr>
+    
+        <tr>
+            <td>Cookie.php</td>
+            <td>APPPATH\Config\Cookie.php</td>
+        </tr>
+    
+        <tr>
+            <td>Database.php</td>
+            <td>APPPATH\Config\Database.php</td>
+        </tr>
+    
+        <tr>
+            <td>Events.php</td>
+            <td>APPPATH\Config\Events.php</td>
+        </tr>
+    
+        <tr>
+            <td>Exceptions.php</td>
+            <td>APPPATH\Config\Exceptions.php</td>
+        </tr>
+    
+        <tr>
+            <td>Feature.php</td>
+            <td>APPPATH\Config\Feature.php</td>
+        </tr>
+    
+        <tr>
+            <td>Filters.php</td>
+            <td>APPPATH\Config\Filters.php</td>
+        </tr>
+    
+        <tr>
+            <td>Kint.php</td>
+            <td>APPPATH\Config\Kint.php</td>
+        </tr>
+    
+        <tr>
+            <td>Logger.php</td>
+            <td>APPPATH\Config\Logger.php</td>
+        </tr>
+    
+        <tr>
+            <td>Modules.php</td>
+            <td>APPPATH\Config\Modules.php</td>
+        </tr>
+    
+        <tr>
+            <td>Optimize.php</td>
+            <td>APPPATH\Config\Optimize.php</td>
+        </tr>
+    
+        <tr>
+            <td>Paths.php</td>
+            <td>APPPATH\Config\Paths.php</td>
+        </tr>
+    
+        <tr>
+            <td>Routes.php</td>
+            <td>APPPATH\Config\Routes.php</td>
+        </tr>
+    
+        <tr>
+            <td>Routing.php</td>
+            <td>APPPATH\Config\Routing.php</td>
+        </tr>
+    
+        <tr>
+            <td>Services.php</td>
+            <td>APPPATH\Config\Services.php</td>
+        </tr>
+    
+        <tr>
+            <td>Toolbar.php</td>
+            <td>APPPATH\Config\Toolbar.php</td>
+        </tr>
+    
+        <tr>
+            <td>UserAgents.php</td>
+            <td>APPPATH\Config\UserAgents.php</td>
+        </tr>
+    
+        <tr>
+            <td>View.php</td>
+            <td>APPPATH\Config\View.php</td>
+        </tr>
+    
+        <tr>
+            <td>BaseController.php</td>
+            <td>APPPATH\Controllers\BaseController.php</td>
+        </tr>
+    
+        <tr>
+            <td>Home.php</td>
+            <td>APPPATH\Controllers\Home.php</td>
+        </tr>
+    
+        <tr>
+            <td>v_dashboard.php</td>
+            <td>APPPATH\Views\v_dashboard.php</td>
+        </tr>
+    
+        <tr>
+            <td>v_template.php</td>
+            <td>APPPATH\Views\v_template.php</td>
+        </tr>
+    
+        <tr>
+            <td>index.php</td>
+            <td>FCPATH\index.php</td>
+        </tr>
+    
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ResponseTrait.php</td>
+            <td>SYSTEMPATH\API\ResponseTrait.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Autoloader.php</td>
+            <td>SYSTEMPATH\Autoloader\Autoloader.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">FileLocator.php</td>
+            <td>SYSTEMPATH\Autoloader\FileLocator.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">FileLocatorInterface.php</td>
+            <td>SYSTEMPATH\Autoloader\FileLocatorInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Boot.php</td>
+            <td>SYSTEMPATH\Boot.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CacheFactory.php</td>
+            <td>SYSTEMPATH\Cache\CacheFactory.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CacheInterface.php</td>
+            <td>SYSTEMPATH\Cache\CacheInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">BaseHandler.php</td>
+            <td>SYSTEMPATH\Cache\Handlers\BaseHandler.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">FileHandler.php</td>
+            <td>SYSTEMPATH\Cache\Handlers\FileHandler.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ResponseCache.php</td>
+            <td>SYSTEMPATH\Cache\ResponseCache.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CodeIgniter.php</td>
+            <td>SYSTEMPATH\CodeIgniter.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Common.php</td>
+            <td>SYSTEMPATH\Common.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">AutoloadConfig.php</td>
+            <td>SYSTEMPATH\Config\AutoloadConfig.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">BaseConfig.php</td>
+            <td>SYSTEMPATH\Config\BaseConfig.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">BaseService.php</td>
+            <td>SYSTEMPATH\Config\BaseService.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">DotEnv.php</td>
+            <td>SYSTEMPATH\Config\DotEnv.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Factories.php</td>
+            <td>SYSTEMPATH\Config\Factories.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Factory.php</td>
+            <td>SYSTEMPATH\Config\Factory.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Filters.php</td>
+            <td>SYSTEMPATH\Config\Filters.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Routing.php</td>
+            <td>SYSTEMPATH\Config\Routing.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Services.php</td>
+            <td>SYSTEMPATH\Config\Services.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">View.php</td>
+            <td>SYSTEMPATH\Config\View.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Controller.php</td>
+            <td>SYSTEMPATH\Controller.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CloneableCookieInterface.php</td>
+            <td>SYSTEMPATH\Cookie\CloneableCookieInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Cookie.php</td>
+            <td>SYSTEMPATH\Cookie\Cookie.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CookieInterface.php</td>
+            <td>SYSTEMPATH\Cookie\CookieInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CookieStore.php</td>
+            <td>SYSTEMPATH\Cookie\CookieStore.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Config.php</td>
+            <td>SYSTEMPATH\Database\Config.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Exceptions.php</td>
+            <td>SYSTEMPATH\Debug\Exceptions.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Timer.php</td>
+            <td>SYSTEMPATH\Debug\Timer.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Toolbar.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">BaseCollector.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\BaseCollector.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Database.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Database.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Events.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Events.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Files.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Files.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Logs.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Logs.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Routes.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Routes.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Timers.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Timers.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Views.php</td>
+            <td>SYSTEMPATH\Debug\Toolbar\Collectors\Views.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Events.php</td>
+            <td>SYSTEMPATH\Events\Events.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">DebugToolbar.php</td>
+            <td>SYSTEMPATH\Filters\DebugToolbar.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">FilterInterface.php</td>
+            <td>SYSTEMPATH\Filters\FilterInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Filters.php</td>
+            <td>SYSTEMPATH\Filters\Filters.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ForceHTTPS.php</td>
+            <td>SYSTEMPATH\Filters\ForceHTTPS.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">PageCache.php</td>
+            <td>SYSTEMPATH\Filters\PageCache.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">PerformanceMetrics.php</td>
+            <td>SYSTEMPATH\Filters\PerformanceMetrics.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ContentSecurityPolicy.php</td>
+            <td>SYSTEMPATH\HTTP\ContentSecurityPolicy.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Header.php</td>
+            <td>SYSTEMPATH\HTTP\Header.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">IncomingRequest.php</td>
+            <td>SYSTEMPATH\HTTP\IncomingRequest.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Message.php</td>
+            <td>SYSTEMPATH\HTTP\Message.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">MessageInterface.php</td>
+            <td>SYSTEMPATH\HTTP\MessageInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">MessageTrait.php</td>
+            <td>SYSTEMPATH\HTTP\MessageTrait.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Method.php</td>
+            <td>SYSTEMPATH\HTTP\Method.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">OutgoingRequest.php</td>
+            <td>SYSTEMPATH\HTTP\OutgoingRequest.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">OutgoingRequestInterface.php</td>
+            <td>SYSTEMPATH\HTTP\OutgoingRequestInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Request.php</td>
+            <td>SYSTEMPATH\HTTP\Request.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RequestInterface.php</td>
+            <td>SYSTEMPATH\HTTP\RequestInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RequestTrait.php</td>
+            <td>SYSTEMPATH\HTTP\RequestTrait.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Response.php</td>
+            <td>SYSTEMPATH\HTTP\Response.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ResponseInterface.php</td>
+            <td>SYSTEMPATH\HTTP\ResponseInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ResponseTrait.php</td>
+            <td>SYSTEMPATH\HTTP\ResponseTrait.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">SiteURI.php</td>
+            <td>SYSTEMPATH\HTTP\SiteURI.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">SiteURIFactory.php</td>
+            <td>SYSTEMPATH\HTTP\SiteURIFactory.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">URI.php</td>
+            <td>SYSTEMPATH\HTTP\URI.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">UserAgent.php</td>
+            <td>SYSTEMPATH\HTTP\UserAgent.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">array_helper.php</td>
+            <td>SYSTEMPATH\Helpers\array_helper.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">kint_helper.php</td>
+            <td>SYSTEMPATH\Helpers\kint_helper.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">url_helper.php</td>
+            <td>SYSTEMPATH\Helpers\url_helper.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Logger.php</td>
+            <td>SYSTEMPATH\Log\Logger.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Modules.php</td>
+            <td>SYSTEMPATH\Modules\Modules.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">AutoRouter.php</td>
+            <td>SYSTEMPATH\Router\AutoRouter.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">AutoRouterInterface.php</td>
+            <td>SYSTEMPATH\Router\AutoRouterInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RouteCollection.php</td>
+            <td>SYSTEMPATH\Router\RouteCollection.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RouteCollectionInterface.php</td>
+            <td>SYSTEMPATH\Router\RouteCollectionInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Router.php</td>
+            <td>SYSTEMPATH\Router\Router.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RouterInterface.php</td>
+            <td>SYSTEMPATH\Router\RouterInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Superglobals.php</td>
+            <td>SYSTEMPATH\Superglobals.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Escaper.php</td>
+            <td>SYSTEMPATH\ThirdParty\Escaper\Escaper.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">FacadeInterface.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\FacadeInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Kint.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Kint.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">AbstractRenderer.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\AbstractRenderer.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">AssetRendererTrait.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\AssetRendererTrait.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">CliRenderer.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\CliRenderer.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ConstructableRendererInterface.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\ConstructableRendererInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RendererInterface.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\RendererInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RichRenderer.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\RichRenderer.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">TextRenderer.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Renderer\TextRenderer.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">Utils.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\Utils.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">init.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\init.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">init_helpers.php</td>
+            <td>SYSTEMPATH\ThirdParty\Kint\init_helpers.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">LogLevel.php</td>
+            <td>SYSTEMPATH\ThirdParty\PSR\Log\LogLevel.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">LoggerInterface.php</td>
+            <td>SYSTEMPATH\ThirdParty\PSR\Log\LoggerInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">RendererInterface.php</td>
+            <td>SYSTEMPATH\View\RendererInterface.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">View.php</td>
+            <td>SYSTEMPATH\View\View.php</td>
+        </tr>
+    
+        <tr class="muted">
+            <td class="debug-bar-width20e">ViewDecoratorTrait.php</td>
+            <td>SYSTEMPATH\View\ViewDecoratorTrait.php</td>
+        </tr>
+    
+    </tbody>
+</table>
+                </div>
+                                                            <div id="ci-routes" class="tab">
+                    <h2>Routes <span></span></h2>
+
+                    <h3>Matched Route</h3>
+
+<table>
+    <tbody>
+    
+        <tr>
+            <td>Directory:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Controller:</td>
+            <td>\App\Controllers\Home</td>
+        </tr>
+        <tr>
+            <td>Method:</td>
+            <td>index</td>
+        </tr>
+        <tr>
+            <td>Params:</td>
+            <td>0 / 0</td>
+        </tr>
+        
+    
+    </tbody>
+</table>
+
+
+<h3>Defined Routes</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Route</th>
+            <th>Handler</th>
+        </tr>
+    </thead>
+    <tbody>
+    
+        <tr>
+            <td>GET</td>
+            <td data-debugbar-route="GET" class="debug-bar-pointer" title="http://localhost/">/</td>
+            <td>\App\Controllers\Home::index</td>
+        </tr>
+    
+        <tr>
+            <td>GET</td>
+            <td data-debugbar-route="GET" class="debug-bar-pointer" title="http://localhost/landing">landing</td>
+            <td>\App\Controllers\Home::landingPage</td>
+        </tr>
+    
+        <tr>
+            <td>GET</td>
+            <td data-debugbar-route="GET" class="debug-bar-pointer" title="http://localhost/landing2">landing2</td>
+            <td>\App\Controllers\Home::landingPage2</td>
+        </tr>
+    
+    </tbody>
+</table>
+                </div>
+                                                            <div id="ci-events" class="tab">
+                    <h2>Events <span></span></h2>
+
+                    <table>
+    <thead>
+        <tr>
+            <th class="debug-bar-width6r">Time</th>
+            <th>Event Name</th>
+            <th>Times Called</th>
+        </tr>
+    </thead>
+    <tbody>
+    
+        <tr>
+            <td class="narrow">8.55 ms</td>
+            <td>pre_system</td>
+            <td>1</td>
+        </tr>
+    
+    </tbody>
+</table>
+                </div>
+                                                            <div id="ci-history" class="tab">
+                    <h2>History <span></span></h2>
+
+                    <table>
+    <thead>
+    <tr>
+        <th>Action</th>
+        <th>Datetime</th>
+        <th>Status</th>
+        <th>Method</th>
+        <th>URL</th>
+        <th>Content-Type</th>
+        <th>Is AJAX?</th>
+    </tr>
+    </thead>
+    <tbody>
+    
+        <tr data-active="1" class="current">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739334614.289514">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 04:30:14.289514</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739329091.921450">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:58:11.921450</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739329036.482502">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:57:16.482502</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739329026.163583">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:57:06.163583</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739329022.795540">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:57:02.795540</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739326836.238600">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:20:36.238600</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739326646.064080">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-12 02:17:26.064080</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739266199.874969">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 09:29:59.874969</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739265119.527314">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 09:11:59.527314</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing2</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739265092.123421">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 09:11:32.123421</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739265086.473924">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 09:11:26.473924</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263986.086242">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:53:06.086242</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing2</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263984.356770">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:53:04.356770</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263972.099743">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:52:52.099743</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263928.744827">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:52:08.744827</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263926.806865">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:52:06.806865</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263923.582237">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:52:03.582237</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263893.797657">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:51:33.797657</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/landing</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263888.580842">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:51:28.580842</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home/VectorPage</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+        <tr data-active="">
+            <td class="debug-bar-width70p">
+                <button class="ci-history-load" data-time="1739263881.951795">Load</button>
+            </td>
+            <td class="debug-bar-width190p">2025-02-11 08:51:21.951795</td>
+            <td>200</td>
+            <td>GET</td>
+            <td>http://localhost/project-webgis/public/index.php/Home/VectorPage</td>
+            <td>text/html; charset=UTF-8</td>
+            <td>No</td>
+        </tr>
+    
+    </tbody>
+</table>
+                </div>
+                        
+    <!-- In & Out -->
+    <div id="ci-vars" class="tab">
+
+        <!-- VarData from Collectors -->
+                    
+                <a class="debug-bar-vars" data-toggle="datatable" data-table="view-data">
+                    <h2>View Data</h2>
+                </a>
+
+                
+                    <table id="view-data_table">
+                        <tbody>
+                                                    <tr>
+                                <td>judul</td>
+                                <td>Dashboard</td>
+                            </tr>
+                                                    <tr>
+                                <td>page</td>
+                                <td>v_dashboard</td>
+                            </tr>
+                                                </tbody>
+                    </table>
+
+                                    
+        <!-- Session -->
+        <a class="debug-bar-vars" data-toggle="datatable" data-table="session">
+            <h2>Session User Data</h2>
+        </a>
+
+                    <p class="muted">Session doesn't seem to be active.</p>
+        
+        <h2>Request <span>( HTTP/1.1 )</span></h2>
+
+        
+        
+                    <a class="debug-bar-vars" data-toggle="datatable" data-table="request_headers">
+                <h3>Headers</h3>
+            </a>
+
+            <table id="request_headers_table">
+                <tbody>
+                                    <tr>
+                        <td>Host</td>
+                        <td>localhost</td>
+                    </tr>
+                                    <tr>
+                        <td>Connection</td>
+                        <td>keep-alive</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Ch-Ua</td>
+                        <td>"Not A(Brand";v="8", "Chromium";v="132", "Google Chrome";v="132"</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Ch-Ua-Mobile</td>
+                        <td>?0</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Ch-Ua-Platform</td>
+                        <td>"Windows"</td>
+                    </tr>
+                                    <tr>
+                        <td>Upgrade-Insecure-Requests</td>
+                        <td>1</td>
+                    </tr>
+                                    <tr>
+                        <td>User-Agent</td>
+                        <td>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36</td>
+                    </tr>
+                                    <tr>
+                        <td>Accept</td>
+                        <td>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Fetch-Site</td>
+                        <td>same-origin</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Fetch-Mode</td>
+                        <td>navigate</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Fetch-User</td>
+                        <td>?1</td>
+                    </tr>
+                                    <tr>
+                        <td>Sec-Fetch-Dest</td>
+                        <td>document</td>
+                    </tr>
+                                    <tr>
+                        <td>Referer</td>
+                        <td>http://localhost/project-webgis/public/landing</td>
+                    </tr>
+                                    <tr>
+                        <td>Accept-Encoding</td>
+                        <td>gzip, deflate, br, zstd</td>
+                    </tr>
+                                    <tr>
+                        <td>Accept-Language</td>
+                        <td>en-US,en;q=0.9</td>
+                    </tr>
+                                    <tr>
+                        <td>Cookie</td>
+                        <td>_gcl_au=1.1.120993145.1738761772; _ga=GA1.1.147238460.1738761772; _ga_YSX1HV0KT8=GS1.1.1738761771.1.1.1738762178.60.0.0; debug-bar-state=minimized</td>
+                    </tr>
+                                </tbody>
+            </table>
+        
+                    <a class="debug-bar-vars" data-toggle="datatable" data-table="cookie">
+                <h3>Cookies</h3>
+            </a>
+
+            <table id="cookie_table">
+                <tbody>
+                                    <tr>
+                        <td>_gcl_au</td>
+                        <td>1.1.120993145.1738761772</td>
+                    </tr>
+                                    <tr>
+                        <td>_ga</td>
+                        <td>GA1.1.147238460.1738761772</td>
+                    </tr>
+                                    <tr>
+                        <td>_ga_YSX1HV0KT8</td>
+                        <td>GS1.1.1738761771.1.1.1738762178.60.0.0</td>
+                    </tr>
+                                    <tr>
+                        <td>debug-bar-state</td>
+                        <td>minimized</td>
+                    </tr>
+                                </tbody>
+            </table>
+        
+        <h2>Response
+            <span>( 200 - OK )</span>
+        </h2>
+
+                    <a class="debug-bar-vars" data-toggle="datatable" data-table="response_headers">
+                <h3>Headers</h3>
+            </a>
+
+            <table id="response_headers_table">
+                <tbody>
+                                    <tr>
+                        <td>Cache-Control</td>
+                        <td>no-store, max-age=0, no-cache</td>
+                    </tr>
+                                    <tr>
+                        <td>Content-Type</td>
+                        <td>text/html; charset=UTF-8</td>
+                    </tr>
+                                </tbody>
+            </table>
+            </div>
+
+    <!-- Config Values -->
+    <div id="ci-config" class="tab">
+        <h2>System Configuration</h2>
+
+        <p class="debug-bar-alignRight">
+    <a href="https://codeigniter.com/user_guide/" target="_blank">Read the CodeIgniter docs...</a>
+</p>
+
+<table>
+    <tbody>
+        <tr>
+            <td>CodeIgniter Version:</td>
+            <td>4.6.0</td>
+        </tr>
+        <tr>
+            <td>PHP Version:</td>
+            <td>8.2.12</td>
+        </tr>
+        <tr>
+            <td>PHP SAPI:</td>
+            <td>apache2handler</td>
+        </tr>
+        <tr>
+            <td>Environment:</td>
+            <td>development</td>
+        </tr>
+        <tr>
+            <td>Base URL:</td>
+            <td>
+                                    http://localhost/project-webgis/public/
+                            </td>
+        </tr>
+        <tr>
+            <td>Timezone:</td>
+            <td>UTC</td>
+        </tr>
+        <tr>
+            <td>Locale:</td>
+            <td>en</td>
+        </tr>
+        <tr>
+            <td>Content Security Policy Enabled:</td>
+            <td> No </td>
+        </tr>
+    </tbody>
+</table>
+    </div>
+</div></div><span id="PING_IFRAME_FORM_DETECTION" style="display: none;"></span><span id="PING_CONTENT_DLS_POPUP" style="display: none;"></span><div style="background-color: transparent; border: none; bottom: 15px; display: block; margin: 0px; opacity: 1; padding: 0px; position: fixed; right: 15px; z-index: 2147483647;"><template shadowrootmode="closed"><style>/*!
+ * 
+ *     MCAFEE RESTRICTED CONFIDENTIAL
+ *     Copyright (c) 2025 McAfee, LLC
+ *
+ *     The source code contained or described herein and all documents related
+ *     to the source code ("Material") are owned by McAfee or its
+ *     suppliers or licensors. Title to the Material remains with McAfee
+ *     or its suppliers and licensors. The Material contains trade
+ *     secrets and proprietary and confidential information of McAfee or its
+ *     suppliers and licensors. The Material is protected by worldwide copyright
+ *     and trade secret laws and treaty provisions. No part of the Material may
+ *     be used, copied, reproduced, modified, published, uploaded, posted,
+ *     transmitted, distributed, or disclosed in any way without McAfee's prior
+ *     express written permission.
+ *
+ *     No license under any patent, copyright, trade secret or other intellectual
+ *     property right is granted to or conferred upon you by disclosure or
+ *     delivery of the Materials, either expressly, by implication, inducement,
+ *     estoppel or otherwise. Any license under such intellectual property rights
+ *     must be expressed and approved by McAfee in writing.
+ *
+ */
+@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Thin.ttf") format("truetype");font-weight:100;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-ThinItalic.ttf") format("truetype");font-weight:100;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-ExtraLight.ttf") format("truetype");font-weight:200;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-ExtraLightItalic.ttf") format("truetype");font-weight:200;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Light.ttf") format("truetype");font-weight:300;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-LightItalic.ttf") format("truetype");font-weight:300;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Regular.ttf") format("truetype");font-weight:400;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Italic.ttf") format("truetype");font-weight:400;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Medium.ttf") format("truetype");font-weight:500;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-MediumItalic.ttf") format("truetype");font-weight:500;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-SemiBold.ttf") format("truetype");font-weight:600;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-SemiBoldItalic.ttf") format("truetype");font-weight:600;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Bold.ttf") format("truetype");font-weight:700;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-BoldItalic.ttf") format("truetype");font-weight:700;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-ExtraBold.ttf") format("truetype");font-weight:800;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-ExtraBoldItalic.ttf") format("truetype");font-weight:800;font-style:italic}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-Black.ttf") format("truetype");font-weight:900;font-style:normal}@font-face{font-family:"McAfeePoppins";src:url("../../../fonts/Poppins-BlackItalic.ttf") format("truetype");font-weight:900;font-style:italic}*{border:0;box-sizing:border-box;font:inherit;font-family:"McAfeePoppins",Helvetica,Arial;font-size:100%;margin:0;padding:0;vertical-align:baseline;outline:none}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}html,body{background-color:#f5f6fa;font-family:"McAfeePoppins",Helvetica,Arial;line-height:1;height:100%;width:100%}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:"";content:none}table{border-collapse:collapse;border-spacing:0}b{font-weight:bold}img{display:block}.dls__container{align-items:center;display:flex;margin:0 auto;margin-top:50px;position:relative}.dls__popup__expanded{align-items:center;overflow:hidden;border-radius:100px;cursor:pointer;display:flex;left:0;padding:15px;position:absolute;height:95px;width:383px;background-color:#fff;transition:all .3s ease-in-out}.dls__popup__expanded .dls__icon{height:65px;width:73px}.content{margin-left:12px}.content .content__images{display:flex;align-items:center;width:250px}.content .content__images .seperator__line{margin-left:5px;margin-right:10px}.content .content__images #dls_close_icon{cursor:pointer;margin-left:auto;margin-right:0px}.content p{font-family:"McAfeePoppins",Helvetica,Arial;font-weight:"400";font-size:14px;line-height:20px;margin-top:8px;color:#4258ff;width:250px;cursor:pointer}.shield{overflow:hidden;box-shadow:0px 2px 4px 0px rgba(33,41,52,.12),0px -1px 2px 0px rgba(0,0,0,.08);align-items:center;border-radius:100px;bottom:0;display:flex;height:95px;justify-content:center;position:absolute;right:0;width:383px;transition:all .3s ease-in-out}.shield__circle{display:flex;justify-content:center;align-items:center;width:55px;height:55px;background-color:#c01818;transition:all .6s ease-in-out .2s;z-index:1;opacity:0}
+
+/*# sourceMappingURL=../sourceMap/chrome/css/download_scan_popup.css.map*/</style><div class="dls__container">
+  <div class="shield" style="background: transparent; opacity: 0.1; display: none;">
+    <div class="shield__circle" style="opacity: 1;">
+      <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/mcafee_logo_white.svg?secret=nieql2" x-mcsrc="" id="dls_ballon_icon" x-mcsrcparsed="true">
+    </div>
+    <div class="dls__popup__expanded" style="opacity: 0;">
+      <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/download_scan_icon.svg?secret=nieql2" x-mcsrc="" class="dls__icon" x-mcsrcparsed="true">
+      <div class="content">
+        <div class="content__images">
+          <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/mcafee_logo_red.svg?secret=nieql2" x-mcsrc="" id="dls_mcafee_logo" x-mcsrcparsed="true">
+          <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/seperator_line.svg?secret=nieql2" x-mcsrc="" class="seperator__line" x-mcsrcparsed="true">
+          <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/webadvisor.svg?secret=nieql2" x-mcsrc="" x-mcsrcparsed="true">
+          <img src="chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/close-outline.svg?secret=nieql2" x-mcsrc="" id="dls_close_icon" x-mcsrcparsed="true">
+        </div>
+        <p id="download_scan_popup_expanded_descriptions">Your download's being scanned. We'll let you know if there's an issue.</p>
+      </div>
+    </div>
+  </div>
+</div><style>/*!
+ * 
+ *     MCAFEE RESTRICTED CONFIDENTIAL
+ *     Copyright (c) 2025 McAfee, LLC
+ *
+ *     The source code contained or described herein and all documents related
+ *     to the source code ("Material") are owned by McAfee or its
+ *     suppliers or licensors. Title to the Material remains with McAfee
+ *     or its suppliers and licensors. The Material contains trade
+ *     secrets and proprietary and confidential information of McAfee or its
+ *     suppliers and licensors. The Material is protected by worldwide copyright
+ *     and trade secret laws and treaty provisions. No part of the Material may
+ *     be used, copied, reproduced, modified, published, uploaded, posted,
+ *     transmitted, distributed, or disclosed in any way without McAfee's prior
+ *     express written permission.
+ *
+ *     No license under any patent, copyright, trade secret or other intellectual
+ *     property right is granted to or conferred upon you by disclosure or
+ *     delivery of the Materials, either expressly, by implication, inducement,
+ *     estoppel or otherwise. Any license under such intellectual property rights
+ *     must be expressed and approved by McAfee in writing.
+ *
+ */
+.mc-interactive-balloon{position:absolute;right:-50px;bottom:8px;box-shadow:rgba(0,0,0,.12) 0px 0px 10px;height:40px;width:40px;background:#1671ee;border-radius:20px;display:flex;justify-content:center;align-items:center}
+
+/*# sourceMappingURL=../sourceMap/chrome/css/interactive_balloon.css.map*/</style></template></div></body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

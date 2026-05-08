@@ -46,8 +46,27 @@ class Home extends BaseController
         return view('v_landing', ['show_header' => true]); // v_landing.php adalah halaman baru
     }
 
+    public function landingPage2()
+    {
+        return view('v_landing2', ['show_header' => true]); // v_landing.php adalah halaman baru
+    }
+
     public function VectorPage()
     {
         return view('v_2d', ['show_header' => true]); // v_landing.php adalah halaman baru
     }
+
+    //     public function webmap()
+    // {
+    //     $data = [
+    //         'title'   => 'WebMap Gravport',
+    //         'active'  => 'webmap',   // kalau kamu pakai highlight menu
+    //     ];
+
+    //     return view('v_webmap', $data);
+    //     // ATAU kalau v_template-mu pakai include:
+    //     // $data['content'] = 'webmap';
+    //     // return view('layouts/v_template', $data);
+    // }
 }
+

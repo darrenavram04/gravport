@@ -1,0 +1,184 @@
+CRITICAL - 2026-01-28 06:20:13 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/mockup]
+in APPPATH\Models\MockUpDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\MockupDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\MockupDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(53): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\MockupDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(21): App\Controllers\Catalog->renderCatalog('mockup')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->mockup()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:20:25 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/mockup]
+in APPPATH\Models\MockUpDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\MockupDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\MockupDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(53): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\MockupDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(21): App\Controllers\Catalog->renderCatalog('mockup')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->mockup()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-01-28 06:20:32 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-01-28 06:20:38 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/mockup]
+in APPPATH\Models\MockUpDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\MockupDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\MockupDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(53): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\MockupDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(21): App\Controllers\Catalog->renderCatalog('mockup')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->mockup()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:21:23 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/gravport]
+in APPPATH\Models\GravportDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\GravportDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\GravportDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(52): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\GravportDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(26): App\Controllers\Catalog->renderCatalog('gravport')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->gravport()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:25:51 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/gravport]
+in APPPATH\Models\GravportDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\GravportDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\GravportDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(52): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\GravportDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(26): App\Controllers\Catalog->renderCatalog('gravport')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->gravport()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:39:37 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/gravport]
+in APPPATH\Models\GravportDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\GravportDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\GravportDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(52): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\GravportDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(26): App\Controllers\Catalog->renderCatalog('gravport')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->gravport()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:39:38 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/gravport]
+in APPPATH\Models\GravportDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\GravportDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\GravportDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(52): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\GravportDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(26): App\Controllers\Catalog->renderCatalog('gravport')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->gravport()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:49:33 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/gravport]
+in APPPATH\Models\GravportDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\GravportDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\GravportDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(52): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\GravportDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(26): App\Controllers\Catalog->renderCatalog('gravport')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->gravport()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:49:49 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/mockup]
+in APPPATH\Models\MockUpDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\MockupDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\MockupDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(53): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\MockupDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(21): App\Controllers\Catalog->renderCatalog('mockup')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->mockup()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 06:53:05 --> Error: Class "App\Models\BaseDatasetModel" not found
+[Method: GET, Route: catalog/mockup]
+in APPPATH\Models\MockUpDatasetModel.php on line 5.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(316): include_once()
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\geoportal\\app\\Models\\MockupDatasetModel.php')
+ 3 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\MockupDatasetModel')
+ 4 APPPATH\Controllers\Catalog.php(53): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\MockupDatasetModel')
+ 5 APPPATH\Controllers\Catalog.php(21): App\Controllers\Catalog->renderCatalog('mockup')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->mockup()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2026-01-28 06:56:47 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:56:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:56:53 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:56:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:05 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:09 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:11 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:12 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:15 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 06:57:27 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-01-28 07:41:05 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-01-28 08:07:18 --> ArgumentCountError: Too few arguments to function App\Controllers\Catalog::view(), 1 passed in C:\xampp\htdocs\geoportal\system\CodeIgniter.php on line 933 and exactly 2 expected
+[Method: GET, Route: catalog/view/8]
+in APPPATH\Controllers\Catalog.php on line 73.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->view('8')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 08:15:00 --> ArgumentCountError: Too few arguments to function App\Controllers\Catalog::view(), 1 passed in C:\xampp\htdocs\geoportal\system\CodeIgniter.php on line 933 and exactly 2 expected
+[Method: GET, Route: catalog/view/8]
+in APPPATH\Controllers\Catalog.php on line 73.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->view('8')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-01-28 08:15:02 --> ArgumentCountError: Too few arguments to function App\Controllers\Catalog::download(), 1 passed in C:\xampp\htdocs\geoportal\system\CodeIgniter.php on line 933 and exactly 2 expected
+[Method: GET, Route: catalog/download/8]
+in APPPATH\Controllers\Catalog.php on line 90.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Catalog->download('8')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Catalog))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
