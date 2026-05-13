@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GravPort — Low-Fidelity Wireframe</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:#E6E6E6;color:#222;font-size:13px;line-height:1.4}
+.doc{max-width:1040px;margin:0 auto;padding:48px 32px}
+
+/* Cover */
+.cover{background:#fff;border:1px solid #C8C8C8;padding:56px 48px;text-align:center;margin-bottom:64px}
+.ey{font-size:8px;text-transform:uppercase;letter-spacing:3px;color:#BBBBBB}
+.rule{width:40px;height:1px;background:#CCCCCC;margin:14px auto}
+.cover h1{font-size:26px;font-weight:700;color:#111;letter-spacing:-.5px;margin-bottom:6px}
+.cover .sub{font-size:11px;color:#AAA;margin-bottom:28px}
+.meta-row{display:flex;gap:40px;justify-content:center;font-size:9px;color:#CCCCCC;text-transform:uppercase;letter-spacing:1px}
+
+/* Page frame wrapper */
+.pg-wrap{margin-bottom:80px}
+.pg-label{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.pg-num{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#E8E8E8;border:1px solid #CCCCCC;color:#999;padding:2px 8px}
+.pg-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#444}
+.pg-route{font-size:9px;color:#CCCCCC;font-family:monospace;margin-left:auto}
+.pg{background:#fff;border:1.5px solid #BBBBBB;overflow:hidden}
+
+/* Placeholders */
+.ph{background:#EBEBEB;border:1px dashed #C8C8C8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#C8C8C8;font-size:9px;text-align:center}
+.ph-hatch{background-image:repeating-linear-gradient(45deg,#EAEAEA 0,#EAEAEA 4px,#F4F4F4 4px,#F4F4F4 9px);border:1px solid #D0D0D0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#CCCCCC;font-size:9px;text-align:center}
+.ph-icon{font-size:20px;color:#D0D0D0}
+
+/* Navbar */
+.nb{height:44px;background:#F4F4F4;border-bottom:1.5px solid #D0D0D0;display:flex;align-items:center;padding:0 18px;gap:5px;flex-shrink:0}
+.nb-logo{width:22px;height:22px;background:#CCCCCC;border-radius:3px;flex-shrink:0}
+.nb-brand{font-size:11px;font-weight:700;color:#444;margin-right:12px}
+.nb-lnk{font-size:9px;color:#888;padding:0 5px;white-space:nowrap}
+.nb-lnk.on{font-weight:700;color:#333;border-bottom:2px solid #888;padding-bottom:2px}
+.nb-sp{flex:1}
+.nb-btn{font-size:9px;padding:3px 10px;border:1px solid #CCCCCC;border-radius:2px;color:#666;background:#fff}
+.nb-btn.solid{background:#D8D8D8;border-color:#AAAAAA;color:#333}
+
+/* Layout */
+.row{display:flex}
+.col{display:flex;flex-direction:column}
+.f1{flex:1;min-width:0}.f2{flex:2;min-width:0}.f3{flex:3;min-width:0}.f4{flex:4;min-width:0}
+
+/* Sidebar */
+.sb{width:220px;flex-shrink:0;background:#F8F8F8;border-right:1px solid #E4E4E4;padding:12px 11px;overflow:hidden}
+.sb.w240{width:240px}.sb.w200{width:200px}
+.sb-sec{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #EEEEEE}
+.sb-sec:last-child{border-bottom:none;margin-bottom:0}
+.sb-hd{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#CCCCCC;margin-bottom:7px}
+
+/* Form */
+.inp{height:27px;border:1px solid #D8D8D8;background:#fff;padding:0 9px;font-size:9px;color:#AAAAAA;display:flex;align-items:center;margin-bottom:7px;width:100%}
+.sel{height:27px;border:1px solid #D8D8D8;background:#fff;padding:0 9px;font-size:9px;color:#AAAAAA;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;width:100%}
+.sel::after{content:'▾';font-size:10px;color:#CCCCCC}
+.txa{border:1px solid #D8D8D8;background:#fff;padding:7px 9px;font-size:9px;color:#AAAAAA;width:100%;height:56px;margin-bottom:7px;display:block}
+.lbl{font-size:9px;font-weight:600;color:#555;margin-bottom:3px;display:block}
+.fg{margin-bottom:10px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 13px;border:1px solid #AAAAAA;font-size:9px;color:#444;background:#fff;border-radius:2px;white-space:nowrap;cursor:pointer}
+.btn.fill{background:#D8D8D8;border-color:#AAAAAA}
+.btn.dk{background:#888;color:#fff;border-color:#666}
+.btn.sm{padding:3px 9px;font-size:8px}
+.btn.xs{padding:2px 7px;font-size:8px}
+.btn.full{width:100%}
+.btn.dk.full{background:#888;color:#fff;border-color:#666;padding:8px 13px}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap}
+
+/* Type */
+.h1{font-size:22px;font-weight:700;color:#111;letter-spacing:-.5px;line-height:1.1}
+.h2{font-size:17px;font-weight:700;color:#222}
+.h3{font-size:13px;font-weight:700;color:#333}
+.h4{font-size:11px;font-weight:700;color:#444}
+.eyrow{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#BBBBBB}
+.body{font-size:10px;color:#777;line-height:1.5}
+.sm{font-size:8px;color:#AAAAAA;line-height:1.4}
+.cap{font-size:9px;color:#999}
+
+/* Badges */
+.chip{display:inline-block;font-size:8px;padding:2px 7px;border:1px solid #CCCCCC;border-radius:11px;color:#888;margin:2px}
+.chip.dk{background:#E8E8E8;border-color:#BBBBBB;color:#555}
+.badge{display:inline-block;font-size:8px;padding:1px 6px;border:1px solid #CCCCCC;background:#F2F2F2;color:#666;border-radius:2px}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{background:#F4F4F4;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding:6px 10px;border:1px solid #E4E4E4;text-align:left}
+.tbl td{font-size:9px;color:#555;padding:7px 10px;border:1px solid #EEEEEE}
+.tbl tr:nth-child(even) td{background:#FAFAFA}
+
+/* Card */
+.card{border:1px solid #E4E4E4;padding:12px;background:#fff}
+.card-sm{border:1px solid #E4E4E4;padding:10px;background:#fff}
+
+/* Misc */
+.hr{border:none;border-top:1px solid #EEEEEE;margin:8px 0}
+.ri,.ci{display:flex;align-items:center;gap:5px;font-size:9px;color:#555;margin-bottom:4px}
+.rd{width:10px;height:10px;border:1px solid #AAAAAA;border-radius:50%;flex-shrink:0}
+.rd.on{background:#888;border-color:#666}
+.cb{width:10px;height:10px;border:1px solid #AAAAAA;flex-shrink:0}
+.cb.on{background:#888;border-color:#666}
+.tabs{display:flex;border-bottom:1px solid #E0E0E0;margin-bottom:10px}
+.tab{font-size:9px;padding:5px 12px;color:#AAA;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:#333;border-bottom-color:#888;font-weight:600}
+.tb{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#F6F6F6;border-bottom:1px solid #E4E4E4;flex-shrink:0}
+.stat-g{display:flex}
+.stat-c{flex:1;padding:10px 6px;text-align:center;border:1px solid #EEEEEE;background:#FAFAFA}
+.stat-c+.stat-c{margin-left:-1px}
+.stat-n{font-size:16px;font-weight:700;color:#555;line-height:1}
+.stat-l{font-size:7px;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.alert{background:#F6F6F6;border:1px solid #E0E0E0;border-left:3px solid #CCCCCC;padding:7px 10px;font-size:9px;color:#888}
+.info-row{display:flex;gap:6px;font-size:9px;margin-bottom:5px}
+.info-lbl{font-weight:600;color:#AAAAAA;min-width:80px;flex-shrink:0}
+.info-val{color:#666}
+.legend-wrap{border:1px solid #E0E0E0;padding:8px;background:#fff}
+.legend-bar{height:10px;background:linear-gradient(to right,#E0E0E0,#888);margin:5px 0;border:1px solid #CCCCCC}
+.legend-sc{display:flex;justify-content:space-between;font-size:7px;color:#CCCCCC}
+.pag{display:flex;align-items:center;gap:4px;padding:10px;justify-content:center;font-size:9px;color:#AAA}
+.pg-btn{width:24px;height:24px;border:1px solid #DDDDDD;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;background:#fff}
+.pg-btn.on{background:#DDDDDD;font-weight:700;color:#333}
+
+/* Grids */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+/* Spacing */
+.p8{padding:8px}.p10{padding:10px}.p12{padding:12px}.p14{padding:14px}.p16{padding:16px}.p20{padding:20px}.p24{padding:24px}.p28{padding:28px}.p32{padding:32px}
+.mb4{margin-bottom:4px}.mb6{margin-bottom:6px}.mb8{margin-bottom:8px}.mb10{margin-bottom:10px}.mb12{margin-bottom:12px}.mb14{margin-bottom:14px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+.mt4{margin-top:4px}.mt6{margin-top:6px}.mt8{margin-top:8px}.mt12{margin-top:12px}
+.gap4{gap:4px}.gap6{gap:6px}.gap8{gap:8px}.gap10{gap:10px}.gap12{gap:12px}.gap16{gap:16px}.gap20{gap:20px}
+.tc{text-align:center}.w100{width:100%}.rel{position:relative}.abs{position:absolute}
+
+/* Flow diagram */
+.flow-wrap{background:#fff;border:1px solid #C8C8C8;padding:28px 24px;margin-bottom:64px}
+.flow-title{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#CCCCCC;text-align:center;margin-bottom:20px}
+
+/* Section divider */
+.sec-div{display:flex;align-items:center;gap:12px;margin-bottom:24px;margin-top:16px}
+.sec-div-line{flex:1;height:1px;background:#DDDDDD}
+.sec-div-label{font-size:9px;text-transform:uppercase;letter-spacing:3px;color:#CCCCCC}
+
+/* Admin card */
+.admin-card{border:1px solid #E4E4E4;padding:16px;background:#fff}
+.admin-card-icon{width:32px;height:32px;background:#EBEBEB;border:1px solid #DDDDDD;display:flex;align-items:center;justify-content:center;font-size:14px;color:#CCCCCC;margin-bottom:10px}
+
+/* Breadcrumb */
+.bc{font-size:9px;color:#BBBBBB;padding:8px 16px;background:#F8F8F8;border-bottom:1px solid #EEEEEE}
+.bc span{margin:0 4px;color:#CCCCCC}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- ═══════ COVER ═══════ -->
+<div class="cover">
+  <div class="ey">System Design Document · Low-Fidelity Wireframe</div>
+  <div class="rule"></div>
+  <h1>GravPort Geoportal</h1>
+  <p class="sub">Wireframe Reference — 9 Pages</p>
+  <div class="meta-row">
+    <span>FAA &amp; CBA Gravity Data</span>
+    <span>Jawa–Bali Coverage</span>
+    <span>ITB · Waskita Internship</span>
+    <span>2024</span>
+  </div>
+</div>
+
+<!-- ═══════ FLOW DIAGRAM ═══════ -->
+<div class="flow-wrap">
+  <div class="flow-title">Navigation Flow Diagram</div>
+  <svg viewBox="0 0 960 370" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block" font-family="Segoe UI,Arial,sans-serif">
+    <defs>
+      <marker id="a" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#AAAAAA"/></marker>
+      <marker id="ad" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#CCCCCC"/></marker>
+    </defs>
+    <!-- arrows -->
+    <line x1="450" y1="66" x2="175" y2="120" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="475" y1="67" x2="455" y2="120" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="520" y1="66" x2="715" y2="120" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="145" y1="158" x2="145" y2="212" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="210" y1="140" x2="355" y2="140" stroke="#CCCCCC" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ad)"/>
+    <line x1="425" y1="158" x2="425" y2="212" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="715" y1="158" x2="715" y2="212" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="118" y1="250" x2="80" y2="302" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="145" y1="250" x2="215" y2="302" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <line x1="172" y1="250" x2="345" y2="302" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <!-- nodes -->
+    <rect x="380" y="28" width="140" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="450" y="43" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">01</text>
+    <text x="450" y="58" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Landing Page</text>
+    <rect x="80" y="120" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="145" y="135" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">02</text>
+    <text x="145" y="150" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Login Page</text>
+    <rect x="355" y="120" width="140" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="425" y="135" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">03</text>
+    <text x="425" y="150" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Geodashboard</text>
+    <rect x="650" y="120" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="715" y="135" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">05</text>
+    <text x="715" y="150" text-anchor="middle" font-size="10" fill="#333" font-weight="600">View Data</text>
+    <rect x="80" y="212" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="145" y="227" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">06</text>
+    <text x="145" y="242" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Admin Dashboard</text>
+    <rect x="355" y="212" width="140" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="425" y="227" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">04</text>
+    <text x="425" y="242" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Route Analysis</text>
+    <rect x="650" y="212" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="715" y="227" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">05b</text>
+    <text x="715" y="242" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Dataset Preview</text>
+    <rect x="15" y="302" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="80" y="317" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">07</text>
+    <text x="80" y="332" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Update Table</text>
+    <rect x="155" y="302" width="130" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="220" y="317" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">08</text>
+    <text x="220" y="332" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Update Geo Data</text>
+    <rect x="295" y="302" width="140" height="38" fill="#fff" stroke="#AAAAAA" stroke-width="1.5" rx="2"/>
+    <text x="365" y="317" text-anchor="middle" font-size="8" fill="#BBBBBB" font-weight="700" letter-spacing="1">09</text>
+    <text x="365" y="332" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Update Tabular</text>
+    <!-- legend -->
+    <line x1="710" y1="310" x2="745" y2="310" stroke="#AAAAAA" stroke-width="1.2" marker-end="url(#a)"/>
+    <text x="752" y="314" font-size="8" fill="#AAAAAA">Direct navigation</text>
+    <line x1="710" y1="328" x2="745" y2="328" stroke="#CCCCCC" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ad)"/>
+    <text x="752" y="332" font-size="8" fill="#CCCCCC">Role-based (admin)</text>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 01 — LANDING PAGE
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">01</span>
+    <span class="pg-name">Landing Page</span>
+    <span class="pg-route">route: /</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk on">Home</span>
+      <span class="nb-lnk">About</span>
+      <span class="nb-lnk">Tools</span>
+      <span class="nb-lnk">Team</span>
+      <span class="nb-lnk">Dataset</span>
+      <span class="nb-lnk">WebMap</span>
+      <span class="nb-lnk">Metadata</span>
+      <span class="nb-lnk">Contacts</span>
+      <div class="nb-sp"></div>
+      <span class="nb-btn">Sign Up</span>
+      <span class="nb-btn solid">Login</span>
+    </div>
+    <!-- Hero -->
+    <div class="ph-hatch" style="height:200px">
+      <div class="ph-icon">▶</div>
+      <div class="ey mb6" style="color:#D0D0D0">[ Hero — Video Background ]</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;text-shadow:0 1px 4px #00000050;margin-bottom:6px">We Are Geospatialists</div>
+      <div style="font-size:10px;color:#E0E0E0;margin-bottom:14px">Geoportal FAA dan CBA level 1–2 untuk preview, filter area, dan unduh cepat</div>
+      <span class="btn fill" style="font-size:10px;padding:6px 18px;background:#E8E8E8;border-color:#CCCCCC">Open Catalog  →</span>
+    </div>
+    <!-- Dataset Carousel Section -->
+    <div style="padding:24px 28px;background:#FAFAFA;border-bottom:1px solid #EEEEEE">
+      <div class="eyrow mb6">Featured Datasets</div>
+      <div class="h3 mb16">Explore Available Datasets</div>
+      <div class="grid4 mb8">
+        <div class="card-sm"><div class="badge mb8">NATIONAL</div><div class="h4 mb4">FAA Level 1</div><div class="sm mb8">Scatter · Jawa–Bali · ~24,000 pts</div><div class="hr"></div><div class="btn-row mt8"><span class="btn sm">View</span><span class="btn sm fill">↓ DL</span></div></div>
+        <div class="card-sm"><div class="badge mb8">NATIONAL</div><div class="h4 mb4">CBA Level 1</div><div class="sm mb8">Scatter · Jawa–Bali · ~24,000 pts</div><div class="hr"></div><div class="btn-row mt8"><span class="btn sm">View</span><span class="btn sm fill">↓ DL</span></div></div>
+        <div class="card-sm"><div class="badge mb8">REGIONAL</div><div class="h4 mb4">FAA Level 2</div><div class="sm mb8">Grid · Jawa Barat · ~12,800 pts</div><div class="hr"></div><div class="btn-row mt8"><span class="btn sm">View</span><span class="btn sm fill">↓ DL</span></div></div>
+        <div class="card-sm"><div class="badge mb8">REGIONAL</div><div class="h4 mb4">CBA Level 2</div><div class="sm mb8">Grid · Jawa Barat · ~12,800 pts</div><div class="hr"></div><div class="btn-row mt8"><span class="btn sm">View</span><span class="btn sm fill">↓ DL</span></div></div>
+      </div>
+      <div class="tc"><span class="btn fill" style="margin-top:8px">View All in Catalog →</span></div>
+    </div>
+    <!-- About Section -->
+    <div style="padding:24px 28px;border-bottom:1px solid #EEEEEE">
+      <div class="eyrow mb6">About</div>
+      <div class="row gap20">
+        <div class="ph" style="width:200px;height:140px;flex-shrink:0;font-size:9px">[ Survey Activity<br>Photo ]</div>
+        <div class="f1">
+          <div class="tabs">
+            <span class="tab on">Free Air Anomaly</span>
+            <span class="tab">Complete Bouguer</span>
+            <span class="tab">Integrasi</span>
+          </div>
+          <div class="body mb12">Gravimetri udara (FAA) merupakan metode pengukuran percepatan gravitasi dari platform udara yang memungkinkan pemetaan anomali gravitasi secara efisien di area yang luas...</div>
+          <div class="stat-g">
+            <div class="stat-c"><div class="stat-n">34</div><div class="stat-l">Provinsi</div></div>
+            <div class="stat-c"><div class="stat-n">4</div><div class="stat-l">Format</div></div>
+            <div class="stat-c"><div class="stat-n">2</div><div class="stat-l">Level</div></div>
+            <div class="stat-c"><div class="stat-n">2</div><div class="stat-l">Dataset Type</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Tools -->
+    <div style="padding:24px 28px;background:#FAFAFA;border-bottom:1px solid #EEEEEE">
+      <div class="eyrow mb6">Tools</div>
+      <div class="h3 mb16">Software & Workflows</div>
+      <div class="grid4">
+        <div class="card-sm tc"><div class="ph" style="height:56px;margin-bottom:8px;font-size:9px">[ Logo ]</div><div class="h4 mb4">Civil 3D</div><div class="sm">3D modeling &amp; design</div></div>
+        <div class="card-sm tc"><div class="ph" style="height:56px;margin-bottom:8px;font-size:9px">[ Logo ]</div><div class="h4 mb4">ArcGIS Pro</div><div class="sm">GIS analysis platform</div></div>
+        <div class="card-sm tc"><div class="ph" style="height:56px;margin-bottom:8px;font-size:9px">[ Logo ]</div><div class="h4 mb4">Agisoft</div><div class="sm">Photogrammetry suite</div></div>
+        <div class="card-sm tc"><div class="ph" style="height:56px;margin-bottom:8px;font-size:9px">[ Logo ]</div><div class="h4 mb4">RedToolBox</div><div class="sm">Data processing</div></div>
+      </div>
+    </div>
+    <!-- Team -->
+    <div style="padding:24px 28px;border-bottom:1px solid #EEEEEE">
+      <div class="eyrow mb6">Team</div>
+      <div class="h3 mb16">Research Team Members</div>
+      <div class="grid4">
+        <div class="card-sm tc"><div class="ph" style="width:52px;height:52px;border-radius:50%;margin:0 auto 8px;font-size:8px;overflow:hidden">Photo</div><div class="h4 mb4" style="font-size:10px">Member Name</div><div class="sm mb8">ITB · 2021</div><div class="btn-row" style="justify-content:center"><span class="btn xs">in</span><span class="btn xs">IG</span></div></div>
+        <div class="card-sm tc"><div class="ph" style="width:52px;height:52px;border-radius:50%;margin:0 auto 8px;font-size:8px;overflow:hidden">Photo</div><div class="h4 mb4" style="font-size:10px">Member Name</div><div class="sm mb8">ITB · 2021</div><div class="btn-row" style="justify-content:center"><span class="btn xs">in</span><span class="btn xs">IG</span></div></div>
+        <div class="card-sm tc"><div class="ph" style="width:52px;height:52px;border-radius:50%;margin:0 auto 8px;font-size:8px;overflow:hidden">Photo</div><div class="h4 mb4" style="font-size:10px">Member Name</div><div class="sm mb8">ITB · 2021</div><div class="btn-row" style="justify-content:center"><span class="btn xs">in</span><span class="btn xs">IG</span></div></div>
+        <div class="card-sm tc"><div class="ph" style="width:52px;height:52px;border-radius:50%;margin:0 auto 8px;font-size:8px;overflow:hidden">Photo</div><div class="h4 mb4" style="font-size:10px">Member Name</div><div class="sm mb8">ITB · 2021</div><div class="btn-row" style="justify-content:center"><span class="btn xs">in</span><span class="btn xs">IG</span></div></div>
+      </div>
+    </div>
+    <!-- Contact + Footer -->
+    <div style="padding:24px 28px;background:#F6F6F6">
+      <div class="eyrow mb6">Contact</div>
+      <div class="row gap20">
+        <div class="f1">
+          <div class="fg"><span class="lbl">Name</span><div class="inp">Full name</div></div>
+          <div class="fg"><span class="lbl">Email</span><div class="inp">email@domain.com</div></div>
+          <div class="fg"><span class="lbl">Message</span><div class="txa">Your message...</div></div>
+          <span class="btn fill">Send Message</span>
+        </div>
+        <div style="width:220px;flex-shrink:0;padding-top:4px">
+          <div class="h4 mb8">GravPort</div>
+          <div class="body mb4">Geoportal Waskita Internship</div>
+          <div class="body mb4">Institut Teknologi Bandung</div>
+          <div class="hr"></div>
+          <div class="sm mt8">© 2024 Waskita-internship</div>
+          <div class="btn-row mt8"><span class="btn xs">Activity</span><span class="btn xs">Contact</span><span class="btn xs">Help</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 02 — LOGIN PAGE
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">02</span>
+    <span class="pg-name">Login Page</span>
+    <span class="pg-route">route: /login</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <div class="nb-sp"></div>
+      <span class="nb-btn">Sign Up</span>
+      <span class="nb-btn solid">Login</span>
+    </div>
+    <div class="row" style="min-height:460px">
+      <!-- Left panel -->
+      <div style="width:44%;background:#F4F4F4;border-right:1px solid #E4E4E4;padding:36px 32px;display:flex;flex-direction:column;justify-content:center">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px">
+          <div class="ph" style="width:36px;height:36px;flex-shrink:0;font-size:8px">Logo</div>
+          <div><div class="h4" style="font-size:10px;margin-bottom:2px">GravPort</div><div class="sm">Jawa–Bali Geoportal</div></div>
+        </div>
+        <div class="badge mb12" style="display:inline-block;width:fit-content">Geoportal Access</div>
+        <div class="h2 mb8">Masuk ke workspace<br>GravPort</div>
+        <div class="body mb24">Akses data gravitasi FAA dan CBA untuk area Jawa–Bali dengan autentikasi aman berbasis role.</div>
+        <div class="stat-g">
+          <div class="stat-c"><div class="stat-n" style="font-size:12px">L1/L2</div><div class="stat-l">Katalog</div></div>
+          <div class="stat-c"><div class="stat-n" style="font-size:12px">ADM</div><div class="stat-l">Admin</div></div>
+          <div class="stat-c"><div class="stat-n" style="font-size:12px">RBAC</div><div class="stat-l">Workflow</div></div>
+        </div>
+      </div>
+      <!-- Right panel -->
+      <div style="flex:1;padding:36px 32px;display:flex;flex-direction:column;justify-content:center">
+        <div class="eyrow mb4">Secure Sign In</div>
+        <div class="h2 mb20">Masuk ke akun Anda</div>
+        <div class="alert mb16">[ Flash message area — error / success ]</div>
+        <div class="fg"><span class="lbl">Email Address</span><div class="inp">admin@gravport.test</div></div>
+        <div class="fg"><span class="lbl">Password</span><div class="inp">••••••••••••</div></div>
+        <span class="btn dk full mb12">Login to GravPort</span>
+        <div class="alert" style="margin-bottom:14px">
+          <div class="sm" style="font-weight:600;margin-bottom:3px">Demo credentials</div>
+          <div class="sm">admin@gravport.test / [password]</div>
+        </div>
+        <div class="tc">
+          <span class="btn xs">Create account</span>
+          <span style="font-size:9px;color:#CCCCCC;margin:0 6px">·</span>
+          <span class="btn xs">← Back to home</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 03 — GEODASHBOARD / WEBMAP
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">03</span>
+    <span class="pg-name">Geodashboard / WebMap</span>
+    <span class="pg-route">route: /webmap</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk">Home</span>
+      <span class="nb-lnk">Dataset</span>
+      <span class="nb-lnk on">WebMap</span>
+      <span class="nb-lnk">Metadata</span>
+      <div class="nb-sp"></div>
+      <span class="nb-btn solid">Logout</span>
+    </div>
+    <div class="row" style="height:580px">
+      <!-- Sidebar -->
+      <div class="sb w240">
+        <!-- Hero card -->
+        <div class="sb-sec">
+          <div class="eyrow mb4">WebMap</div>
+          <div class="h4 mb4">Interactive Map</div>
+          <div class="sm">Pilih data, tentukan area, lalu unduh hasilnya</div>
+        </div>
+        <!-- Data selection -->
+        <div class="sb-sec">
+          <div class="sb-hd">Anomaly Type</div>
+          <div class="ri mb6"><span class="rd on"></span>Free Air Anomaly (FAA)</div>
+          <div class="ri mb6"><span class="rd"></span>Complete Bouguer (CBA)</div>
+          <div class="sb-hd mt8">Data Level</div>
+          <div style="display:flex;gap:8px">
+            <div class="ri"><span class="rd on"></span>Level 1</div>
+            <div class="ri"><span class="rd"></span>Level 2</div>
+          </div>
+          <div class="sb-hd mt8">Organisation</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <div class="ri"><span class="rd on"></span>All</div>
+            <div class="ri"><span class="rd"></span>ITB</div>
+            <div class="ri"><span class="rd"></span>BIG</div>
+          </div>
+        </div>
+        <!-- Spatial filter -->
+        <div class="sb-sec">
+          <div class="sb-hd">Spatial Filter</div>
+          <div class="tabs" style="margin-bottom:8px">
+            <span class="tab on">Provinsi</span>
+            <span class="tab">Draw</span>
+            <span class="tab">Upload</span>
+          </div>
+          <div class="sel">AOI Provinsi</div>
+          <div class="sm">Select province for area of interest</div>
+        </div>
+        <!-- Dataset info -->
+        <div class="sb-sec">
+          <div class="sb-hd">Active Dataset</div>
+          <div style="display:flex;gap:4px;margin-bottom:6px">
+            <span class="badge">FAA</span><span class="badge">Level 1</span><span class="badge">Available</span>
+          </div>
+          <div class="h4 mb4" style="font-size:10px">FAA Level 1 — Jawa–Bali</div>
+          <div class="sm mb8">Scatter point dataset from airborne gravity survey</div>
+          <div class="stat-g">
+            <div class="stat-c"><div class="stat-n" style="font-size:14px">—</div><div class="stat-l">Fitur</div></div>
+            <div class="stat-c"><div class="stat-n" style="font-size:14px">VP</div><div class="stat-l">Area</div></div>
+          </div>
+        </div>
+        <!-- Actions -->
+        <div>
+          <div class="sb-hd">Download</div>
+          <span class="btn full mb6">↓ Unduh Vector</span>
+          <span class="btn full mb6">↓ Unduh Raster</span>
+          <span class="btn full">↓ Unduh Metadata</span>
+        </div>
+      </div>
+      <!-- Main map area -->
+      <div class="f1 col">
+        <!-- Toolbar -->
+        <div class="tb">
+          <div class="inp" style="flex:1;margin-bottom:0">🔍  Cari lokasi atau ketik: -6.9, 107.6</div>
+          <span class="btn fill">Search</span>
+          <span style="flex:1"></span>
+          <span class="btn xs">Layers</span>
+          <span class="btn xs">Basemap</span>
+        </div>
+        <!-- Map -->
+        <div class="ph-hatch" style="flex:1;position:relative">
+          <div class="ph-icon">⊕</div>
+          <div class="ey" style="color:#D0D0D0">[ Leaflet Map Container ]</div>
+          <div class="sm" style="color:#CCCCCC">OpenStreetMap basemap · GeoJSON layer · Draw toolbar</div>
+          <!-- Legend overlay -->
+          <div style="position:absolute;bottom:12px;right:12px;width:160px">
+            <div class="legend-wrap">
+              <div class="sm" style="font-weight:700;margin-bottom:4px;color:#888">Legenda</div>
+              <div class="legend-bar"></div>
+              <div class="legend-sc"><span>Min</span><span>Value (mGal)</span><span>Max</span></div>
+              <div class="sm mt4" style="color:#AAAAAA">Preview layer aktif</div>
+            </div>
+          </div>
+          <!-- Draw toolbar indicator -->
+          <div style="position:absolute;top:8px;right:8px">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span class="btn xs">▭</span>
+              <span class="btn xs">○</span>
+              <span class="btn xs">✎</span>
+              <span class="btn xs">✕</span>
+            </div>
+          </div>
+          <!-- Status bar -->
+          <div style="position:absolute;bottom:12px;left:12px;background:rgba(255,255,255,.85);border:1px solid #DDDDDD;padding:4px 8px;font-size:8px;color:#888">
+            Geser atau zoom peta untuk memuat area…
+          </div>
+        </div>
+      </div>
+      <!-- Detail drawer (collapsed) -->
+      <div style="width:44px;background:#F8F8F8;border-left:1px solid #E4E4E4;display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:4px">
+        <div class="sm" style="writing-mode:vertical-rl;transform:rotate(180deg);color:#CCCCCC;letter-spacing:1px;text-transform:uppercase;font-size:7px;margin-top:8px">Feature Details</div>
+        <span style="font-size:16px;color:#DDDDDD;margin-top:auto;margin-bottom:8px">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 04 — ROUTE ANALYSIS
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">04</span>
+    <span class="pg-name">Route Analysis</span>
+    <span class="pg-route">route: /webmap/route</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk on">WebMap</span>
+      <span class="nb-lnk">Dataset</span>
+      <div class="nb-sp"></div>
+      <span class="badge" style="font-size:9px;padding:2px 8px">Route Analysis Mode</span>
+      <span class="nb-btn solid" style="margin-left:8px">Logout</span>
+    </div>
+    <div class="row" style="height:560px">
+      <!-- Sidebar -->
+      <div class="sb w240">
+        <div class="sb-sec">
+          <div class="eyrow mb4">Analysis Tool</div>
+          <div class="h4 mb4">Route / Transect</div>
+          <div class="sm">Plot gravity values along a user-defined route</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Route Definition</div>
+          <div class="fg"><span class="lbl">Start Point</span><div class="inp">-6.900, 107.600</div></div>
+          <div class="fg"><span class="lbl">End Point</span><div class="inp">-7.200, 110.400</div></div>
+          <div class="fg"><span class="lbl">Sample Interval (km)</span><div class="sel">Every 5 km</div></div>
+          <span class="btn fill full mb6">Draw on Map</span>
+          <span class="btn full">Clear Route</span>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Analysis Type</div>
+          <div class="ri mb6"><span class="rd on"></span>Transect Profile</div>
+          <div class="ri mb6"><span class="rd"></span>Buffer Zone</div>
+          <div class="ri mb6"><span class="rd"></span>Corridor Analysis</div>
+          <div class="sb-hd mt8">Dataset</div>
+          <div class="ci mb4"><span class="cb on"></span>Free Air Anomaly</div>
+          <div class="ci mb4"><span class="cb"></span>Complete Bouguer</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Profile Statistics</div>
+          <div class="info-row"><span class="info-lbl">Route Length</span><span class="info-val">— km</span></div>
+          <div class="info-row"><span class="info-lbl">Sample Pts</span><span class="info-val">—</span></div>
+          <div class="info-row"><span class="info-lbl">Min Value</span><span class="info-val">— mGal</span></div>
+          <div class="info-row"><span class="info-lbl">Max Value</span><span class="info-val">— mGal</span></div>
+          <div class="info-row"><span class="info-lbl">Mean Value</span><span class="info-val">— mGal</span></div>
+        </div>
+        <span class="btn fill full mb6">↓ Export Profile (CSV)</span>
+        <span class="btn full">↓ Export Chart (PNG)</span>
+      </div>
+      <!-- Main area -->
+      <div class="f1 col">
+        <!-- Toolbar -->
+        <div class="tb">
+          <span class="btn xs fill">← Back to WebMap</span>
+          <span style="flex:1"></span>
+          <span class="btn xs">FAA Active</span>
+          <span class="btn xs">Level 1</span>
+          <span class="btn xs">Zoom Route</span>
+        </div>
+        <!-- Map (upper 60%) -->
+        <div class="ph-hatch" style="flex:3;position:relative">
+          <div class="ph-icon">⊕</div>
+          <div class="ey" style="color:#D0D0D0">[ Map — Route drawn as dashed line ]</div>
+          <div class="sm" style="color:#CCCCCC">Gravity scatter overlay · Start ● and End ● markers</div>
+          <!-- Route indicator -->
+          <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 600 220" preserveAspectRatio="none">
+            <line x1="80" y1="60" x2="520" y2="160" stroke="#888" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <circle cx="80" cy="60" r="5" fill="none" stroke="#888" stroke-width="1.5"/>
+            <circle cx="520" cy="160" r="5" fill="none" stroke="#888" stroke-width="1.5"/>
+            <text x="86" y="52" font-size="8" fill="#999" font-family="sans-serif">A</text>
+            <text x="526" y="152" font-size="8" fill="#999" font-family="sans-serif">B</text>
+          </svg>
+          <div style="position:absolute;bottom:8px;right:8px;width:140px">
+            <div class="legend-wrap">
+              <div class="sm" style="font-weight:700;margin-bottom:4px;color:#888">Legenda</div>
+              <div class="legend-bar"></div>
+              <div class="legend-sc"><span>Min</span><span>mGal</span><span>Max</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Profile chart (lower 40%) -->
+        <div style="flex:2;border-top:1px solid #E4E4E4;background:#FAFAFA;padding:10px 12px">
+          <div class="row" style="align-items:center;margin-bottom:8px">
+            <div class="h4" style="font-size:10px">Gravity Profile Along Route A → B</div>
+            <span style="flex:1"></span>
+            <span class="btn xs">Export</span>
+          </div>
+          <div class="ph-hatch" style="height:110px">
+            <div class="ph-icon" style="font-size:14px">📈</div>
+            <div class="ey" style="color:#D0D0D0">[ Line Chart — Distance (km) vs Gravity (mGal) ]</div>
+            <div class="sm" style="color:#CCCCCC">X-axis: distance along route · Y-axis: gravity anomaly value</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 05 — VIEW DATA / CATALOG
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">05</span>
+    <span class="pg-name">View Data — Catalog</span>
+    <span class="pg-route">route: /catalog</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk">Home</span>
+      <span class="nb-lnk on">Dataset</span>
+      <span class="nb-lnk">WebMap</span>
+      <div class="nb-sp"></div>
+      <span class="nb-btn">Sign Up</span>
+      <span class="nb-btn solid">Login</span>
+    </div>
+    <!-- Page header -->
+    <div style="padding:20px 24px 12px;border-bottom:1px solid #EEEEEE">
+      <div class="eyrow mb4">Browse Datasets</div>
+      <div class="h2" style="font-size:20px">Data Catalog</div>
+    </div>
+    <!-- Toolbar: filter pills + view toggle -->
+    <div class="tb" style="flex-wrap:wrap;gap:6px">
+      <span class="chip dk">Scope: All</span>
+      <span class="chip">Data: All</span>
+      <span class="chip">Level: All</span>
+      <span class="chip">Properties: All</span>
+      <span style="flex:1"></span>
+      <span class="btn xs fill">⊞ Cards</span>
+      <span class="btn xs">≡ Table</span>
+    </div>
+    <!-- Main content row -->
+    <div class="row" style="min-height:480px">
+      <!-- Filter sidebar -->
+      <div class="sb">
+        <div class="sb-sec">
+          <div class="sb-hd">Search</div>
+          <div class="inp">🔍 Cari dataset...</div>
+          <div class="sb-hd mt4">Items per page</div>
+          <div class="sel">10 per page</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Data Type</div>
+          <div class="ci mb4"><span class="cb on"></span>FAA (Free Air)</div>
+          <div class="ci mb4"><span class="cb on"></span>CBA (Bouguer)</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Data Level</div>
+          <div class="ci mb4"><span class="cb on"></span>Level 1</div>
+          <div class="ci mb4"><span class="cb on"></span>Level 2</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Properties</div>
+          <div class="ci mb4"><span class="cb"></span>Downloadable</div>
+          <div class="ci mb4"><span class="cb"></span>Viewable</div>
+        </div>
+        <div class="sb-sec">
+          <div class="sb-hd">Spatial Scope</div>
+          <div class="ci mb4"><span class="cb on"></span>National</div>
+          <div class="ci mb4"><span class="cb on"></span>Regional</div>
+          <div class="ci mb4"><span class="cb"></span>Local</div>
+        </div>
+        <div class="btn-row">
+          <span class="btn fill sm">Apply</span>
+          <span class="btn sm">Reset</span>
+        </div>
+      </div>
+      <!-- Results panel -->
+      <div class="f1 p16">
+        <div class="sm mb12" style="color:#BBBBBB">Showing 4 of 8 datasets</div>
+        <div class="grid2 mb12">
+          <!-- Card 1 -->
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span class="chip dk">NATIONAL</span>
+              <span class="chip">FAA</span>
+              <span class="chip">L1</span>
+            </div>
+            <div class="h4 mb4">FAA Level 1 — Jawa Bali</div>
+            <div class="sm mb4">Schema: gravity.faa_l1 · Backend: PostgreSQL</div>
+            <div class="info-row"><span class="info-lbl">Coverage</span><span class="info-val">Indonesia</span></div>
+            <div class="info-row"><span class="info-lbl">Items</span><span class="info-val">~24,000 pts</span></div>
+            <div class="hr"></div>
+            <div class="btn-row mt8">
+              <span class="btn sm fill">View</span>
+              <span class="btn sm">↓ Download</span>
+              <span class="btn sm">Metadata</span>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span class="chip dk">NATIONAL</span>
+              <span class="chip">CBA</span>
+              <span class="chip">L1</span>
+            </div>
+            <div class="h4 mb4">CBA Level 1 — Jawa Bali</div>
+            <div class="sm mb4">Schema: gravity.cba_l1 · Backend: PostgreSQL</div>
+            <div class="info-row"><span class="info-lbl">Coverage</span><span class="info-val">Indonesia</span></div>
+            <div class="info-row"><span class="info-lbl">Items</span><span class="info-val">~24,000 pts</span></div>
+            <div class="hr"></div>
+            <div class="btn-row mt8">
+              <span class="btn sm fill">View</span>
+              <span class="btn sm">↓ Download</span>
+              <span class="btn sm">Metadata</span>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span class="chip dk">REGIONAL</span>
+              <span class="chip">FAA</span>
+              <span class="chip">L2</span>
+            </div>
+            <div class="h4 mb4">FAA Level 2 — Jawa Barat</div>
+            <div class="sm mb4">Schema: gravity.faa_l2 · Backend: PostgreSQL</div>
+            <div class="info-row"><span class="info-lbl">Coverage</span><span class="info-val">Jawa Barat</span></div>
+            <div class="info-row"><span class="info-lbl">Items</span><span class="info-val">~12,800 pts</span></div>
+            <div class="hr"></div>
+            <div class="btn-row mt8">
+              <span class="btn sm fill">View</span>
+              <span class="btn sm">↓ Download</span>
+              <span class="btn sm">Metadata</span>
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span class="chip dk">REGIONAL</span>
+              <span class="chip">CBA</span>
+              <span class="chip">L2</span>
+            </div>
+            <div class="h4 mb4">CBA Level 2 — Jawa Barat</div>
+            <div class="sm mb4">Schema: gravity.cba_l2 · Backend: PostgreSQL</div>
+            <div class="info-row"><span class="info-lbl">Coverage</span><span class="info-val">Jawa Barat</span></div>
+            <div class="info-row"><span class="info-lbl">Items</span><span class="info-val">~12,800 pts</span></div>
+            <div class="hr"></div>
+            <div class="btn-row mt8">
+              <span class="btn sm fill">View</span>
+              <span class="btn sm">↓ Download</span>
+              <span class="btn sm">Metadata</span>
+            </div>
+          </div>
+        </div>
+        <!-- Pagination -->
+        <div class="pag">
+          <span class="pg-btn">‹</span>
+          <span class="pg-btn on">1</span>
+          <span class="pg-btn">2</span>
+          <span class="pg-btn">›</span>
+          <span style="margin-left:8px">Page 1 of 2 · 8 datasets</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 05b — DATASET PREVIEW / VIEW
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">05b</span>
+    <span class="pg-name">Dataset Preview</span>
+    <span class="pg-route">route: /catalog/view/:id</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk">Home</span>
+      <span class="nb-lnk on">Dataset</span>
+      <span class="nb-lnk">WebMap</span>
+      <div class="nb-sp"></div>
+      <span class="nb-btn solid">Login</span>
+    </div>
+    <div class="bc">Catalog <span>›</span> FAA Level 1 — Jawa Bali</div>
+    <div class="row" style="min-height:460px">
+      <!-- Info sidebar -->
+      <div class="sb w240" style="padding:16px 14px">
+        <div class="eyrow mb4">Dataset Preview</div>
+        <div class="h3 mb8">FAA Level 1 — Jawa Bali</div>
+        <div class="body mb12">Preview terhubung langsung ke sumber aktif WebMap. Geser peta untuk memuat data area baru.</div>
+        <div class="hr"></div>
+        <div class="info-row mt8"><span class="info-lbl">Scope</span><span class="info-val">National</span></div>
+        <div class="info-row"><span class="info-lbl">Coverage</span><span class="info-val">Jawa–Bali</span></div>
+        <div class="info-row"><span class="info-lbl">Backend</span><span class="info-val">PostgreSQL</span></div>
+        <div class="info-row"><span class="info-lbl">Source</span><span class="info-val">gravity.faa_l1</span></div>
+        <div class="info-row"><span class="info-lbl">Items</span><span class="info-val">~24,000 pts</span></div>
+        <div class="hr"></div>
+        <div class="alert mt8">Preview mengikuti viewport aktif peta</div>
+        <div class="col gap6 mt12">
+          <span class="btn dk full">↓ Download Dataset</span>
+          <span class="btn full">↓ Metadata XML</span>
+          <span class="btn full">← Back to Catalog</span>
+        </div>
+      </div>
+      <!-- Map -->
+      <div class="f1">
+        <div class="ph-hatch" style="height:100%;min-height:420px">
+          <div class="ph-icon">⊕</div>
+          <div class="ey" style="color:#D0D0D0">[ Leaflet Map — Dataset Preview ]</div>
+          <div class="sm" style="color:#CCCCCC">GeoJSON points · Color-coded by gravity value · Cluster at low zoom</div>
+          <div style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.85);border:1px solid #DDD;padding:4px 8px;font-size:8px;color:#888" class="abs">Geser atau zoom peta untuk memuat area…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 06 — ADMIN DASHBOARD
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">06</span>
+    <span class="pg-name">Admin Dashboard</span>
+    <span class="pg-route">route: /dataset/manage</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk">Home</span>
+      <span class="nb-lnk">Dataset</span>
+      <span class="nb-lnk">WebMap</span>
+      <span class="nb-lnk on">Admin</span>
+      <div class="nb-sp"></div>
+      <span class="badge" style="font-size:9px;padding:2px 8px;background:#E8E8E8">ADMIN</span>
+      <span class="nb-btn solid" style="margin-left:8px">Logout</span>
+    </div>
+    <div class="p24">
+      <div class="alert mb16">[ Flash message — import result / error ]</div>
+      <div class="eyrow mb4">Admin Area</div>
+      <div class="h2 mb24">Admin Hub</div>
+      <div class="grid3">
+        <!-- Card 1: Metadata -->
+        <div class="admin-card">
+          <div class="admin-card-icon">📋</div>
+          <span class="badge mb8">Metadata</span>
+          <div class="h4 mb4">Metadata Workspace</div>
+          <div class="body mb12">Submit and manage ISO 19115 metadata for gravity datasets</div>
+          <span class="btn fill full">Buka Metadata →</span>
+        </div>
+        <!-- Card 2: Import L1 -->
+        <div class="admin-card">
+          <div class="admin-card-icon">☁</div>
+          <span class="badge mb8">Level 1</span>
+          <div class="h4 mb4">Import Package (L1)</div>
+          <div class="sm mb4">Package: <span style="color:#666">gravity_2024_l1.zip</span></div>
+          <div class="info-row" style="margin-bottom:3px"><span class="info-lbl">FAA CSV</span><span class="info-val">3 files</span></div>
+          <div class="info-row" style="margin-bottom:8px"><span class="info-lbl">CBA CSV</span><span class="info-val">3 files</span></div>
+          <span class="btn dk full">Import ke PostgreSQL →</span>
+        </div>
+        <!-- Card 3: Raster L2 -->
+        <div class="admin-card">
+          <div class="admin-card-icon">🗺</div>
+          <span class="badge mb8">Level 2</span>
+          <div class="h4 mb4">Raster Ready (L2)</div>
+          <div class="info-row" style="margin-bottom:3px"><span class="info-lbl">FAA TIFF</span><span class="info-val">faa_l2.tif</span></div>
+          <div class="info-row" style="margin-bottom:8px"><span class="info-lbl">CBA TIFF</span><span class="info-val">cba_l2.tif</span></div>
+          <span class="btn full">Buka WebMap →</span>
+        </div>
+        <!-- Card 4: Guidebook -->
+        <div class="admin-card">
+          <div class="admin-card-icon">📄</div>
+          <span class="badge mb8">Guidebook</span>
+          <div class="h4 mb4">View PDF Guidebook</div>
+          <div class="body mb12">System usage documentation and metadata field reference guide</div>
+          <span class="btn full">Open Guidebook ↗</span>
+        </div>
+        <!-- Card 5: Catalog -->
+        <div class="admin-card">
+          <div class="admin-card-icon">📂</div>
+          <span class="badge mb8">Catalog</span>
+          <div class="h4 mb4">Dataset Catalog</div>
+          <div class="body mb12">Browse all registered datasets in the public catalog interface</div>
+          <span class="btn fill full">Buka Catalog →</span>
+        </div>
+        <!-- Card 6: WebMap -->
+        <div class="admin-card">
+          <div class="admin-card-icon">⊕</div>
+          <span class="badge mb8">WebMap</span>
+          <div class="h4 mb4">Interactive WebMap</div>
+          <div class="body mb12">Visualize gravity data spatially, apply filters, and export results</div>
+          <span class="btn fill full">Buka WebMap →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 07 — UPDATE TABLE
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">07</span>
+    <span class="pg-name">Update Table</span>
+    <span class="pg-route">route: /dataset/manage/table</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk on">Admin</span>
+      <div class="nb-sp"></div>
+      <span class="badge" style="font-size:9px;padding:2px 8px;background:#E8E8E8">ADMIN</span>
+      <span class="nb-btn solid" style="margin-left:8px">Logout</span>
+    </div>
+    <div class="bc">Admin Hub <span>›</span> Dataset Management <span>›</span> Update Table</div>
+    <div class="p20">
+      <div class="row" style="align-items:center;margin-bottom:20px">
+        <div>
+          <div class="eyrow mb4">Data Management</div>
+          <div class="h2">Update Dataset Table</div>
+        </div>
+        <span style="flex:1"></span>
+        <span class="btn fill">+ Add New Record</span>
+      </div>
+      <!-- Toolbar -->
+      <div class="tb mb12" style="background:#fff;border:1px solid #E4E4E4;border-radius:2px">
+        <div class="inp" style="flex:1;margin-bottom:0;max-width:280px">🔍 Search datasets...</div>
+        <span class="sel" style="width:140px;margin-bottom:0">Filter by Type</span>
+        <span class="sel" style="width:120px;margin-bottom:0">Filter by Level</span>
+        <span style="flex:1"></span>
+        <span class="btn xs">Export</span>
+        <span class="btn xs fill">Import CSV</span>
+      </div>
+      <!-- Table -->
+      <div style="border:1px solid #E4E4E4;overflow:hidden;margin-bottom:12px">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Dataset Name</th>
+              <th>Type</th>
+              <th>Level</th>
+              <th>Scope</th>
+              <th>Province</th>
+              <th>Records</th>
+              <th>Status</th>
+              <th style="width:130px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>FAA Level 1 — Jawa Bali</td>
+              <td><span class="badge">FAA</span></td>
+              <td><span class="badge">L1</span></td>
+              <td>National</td>
+              <td>Jawa–Bali</td>
+              <td>24,012</td>
+              <td><span class="badge" style="background:#E8E8E8">Active</span></td>
+              <td><div class="btn-row"><span class="btn xs fill">Edit</span><span class="btn xs">View</span><span class="btn xs" style="color:#888">Del</span></div></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>CBA Level 1 — Jawa Bali</td>
+              <td><span class="badge">CBA</span></td>
+              <td><span class="badge">L1</span></td>
+              <td>National</td>
+              <td>Jawa–Bali</td>
+              <td>24,012</td>
+              <td><span class="badge" style="background:#E8E8E8">Active</span></td>
+              <td><div class="btn-row"><span class="btn xs fill">Edit</span><span class="btn xs">View</span><span class="btn xs" style="color:#888">Del</span></div></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>FAA Level 2 — Jawa Barat</td>
+              <td><span class="badge">FAA</span></td>
+              <td><span class="badge">L2</span></td>
+              <td>Regional</td>
+              <td>Jawa Barat</td>
+              <td>12,800</td>
+              <td><span class="badge" style="background:#E8E8E8">Active</span></td>
+              <td><div class="btn-row"><span class="btn xs fill">Edit</span><span class="btn xs">View</span><span class="btn xs" style="color:#888">Del</span></div></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>CBA Level 2 — Jawa Barat</td>
+              <td><span class="badge">CBA</span></td>
+              <td><span class="badge">L2</span></td>
+              <td>Regional</td>
+              <td>Jawa Barat</td>
+              <td>12,800</td>
+              <td><span class="badge" style="background:#E8E8E8">Active</span></td>
+              <td><div class="btn-row"><span class="btn xs fill">Edit</span><span class="btn xs">View</span><span class="btn xs" style="color:#888">Del</span></div></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>FAA Level 2 — Jawa Tengah</td>
+              <td><span class="badge">FAA</span></td>
+              <td><span class="badge">L2</span></td>
+              <td>Regional</td>
+              <td>Jawa Tengah</td>
+              <td>—</td>
+              <td><span class="badge">Pending</span></td>
+              <td><div class="btn-row"><span class="btn xs fill">Edit</span><span class="btn xs">View</span><span class="btn xs" style="color:#888">Del</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pag">
+        <span class="pg-btn">‹</span>
+        <span class="pg-btn on">1</span>
+        <span class="pg-btn">2</span>
+        <span class="pg-btn">›</span>
+        <span style="margin-left:8px">Page 1 of 2 · 8 records total</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 08 — UPDATE GEOGRAPHIC DATA
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">08</span>
+    <span class="pg-name">Update Geographic Data</span>
+    <span class="pg-route">route: /dataset/manage/geo</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk on">Admin</span>
+      <div class="nb-sp"></div>
+      <span class="badge" style="font-size:9px;padding:2px 8px;background:#E8E8E8">ADMIN</span>
+      <span class="nb-btn solid" style="margin-left:8px">Logout</span>
+    </div>
+    <div class="bc">Admin Hub <span>›</span> Dataset Management <span>›</span> Update Geographic Data</div>
+    <div class="row" style="min-height:500px">
+      <!-- Form -->
+      <div style="width:360px;flex-shrink:0;border-right:1px solid #E4E4E4;padding:20px 20px">
+        <div class="eyrow mb4">Admin · Spatial Upload</div>
+        <div class="h3 mb16">Update Geographic Data</div>
+        <!-- Dataset selector -->
+        <div class="fg">
+          <span class="lbl">Target Dataset</span>
+          <div class="sel">FAA Level 1 — Jawa Bali</div>
+        </div>
+        <div class="hr mb12"></div>
+        <!-- File upload -->
+        <div class="fg">
+          <span class="lbl">Vector File (ZIP SHP)</span>
+          <div class="ph" style="height:56px;border:1px dashed #CCCCCC;font-size:9px">
+            <div>[ File Drop Zone ]</div>
+            <div class="sm">Drag &amp; drop or click to select .zip (SHP)</div>
+          </div>
+        </div>
+        <div class="fg">
+          <span class="lbl">Coordinate Reference System</span>
+          <div class="sel">WGS 84 — EPSG:4326</div>
+        </div>
+        <div class="fg">
+          <span class="lbl">Import Mode</span>
+          <div class="ri mb4"><span class="rd on"></span>Replace — overwrite existing records</div>
+          <div class="ri"><span class="rd"></span>Append — add to existing records</div>
+        </div>
+        <div class="fg">
+          <span class="lbl">Schema Target</span>
+          <div class="inp">gravity.faa_l1</div>
+        </div>
+        <div class="hr mb12"></div>
+        <div class="fg">
+          <span class="lbl">Notes / Change Description</span>
+          <div class="txa">Describe the nature of this update...</div>
+        </div>
+        <!-- Validation summary -->
+        <div class="alert mb12">
+          <div style="font-size:9px;font-weight:700;margin-bottom:4px;color:#AAAAAA">Validation Status</div>
+          <div class="sm">File not yet uploaded · awaiting validation</div>
+        </div>
+        <div class="btn-row">
+          <span class="btn fill">Validate File</span>
+          <span class="btn dk">Submit Update</span>
+        </div>
+        <span class="btn full mt8">← Back to Admin Hub</span>
+      </div>
+      <!-- Map preview -->
+      <div class="f1 col">
+        <div class="tb">
+          <div class="h4" style="font-size:10px">Current Data Preview</div>
+          <span style="flex:1"></span>
+          <span class="btn xs">Zoom to Layer</span>
+          <span class="btn xs">Toggle New</span>
+        </div>
+        <div class="ph-hatch" style="flex:1">
+          <div class="ph-icon">⊕</div>
+          <div class="ey" style="color:#D0D0D0">[ Map — Current Geographic Data ]</div>
+          <div class="sm" style="color:#CCCCCC">Existing vector layer in blue · Uploaded data preview in orange</div>
+          <!-- Layer legend -->
+          <div style="position:absolute;bottom:10px;right:10px" class="abs">
+            <div class="legend-wrap" style="width:160px">
+              <div class="sm" style="font-weight:700;margin-bottom:6px;color:#888">Layer Legend</div>
+              <div class="ri"><div style="width:12px;height:3px;background:#888;margin-right:4px"></div><span class="sm" style="color:#777">Existing data</span></div>
+              <div class="ri mt4"><div style="width:12px;height:3px;background:#CCCCCC;border:1px dashed #AAA;margin-right:4px"></div><span class="sm" style="color:#777">New upload</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Info strip -->
+        <div style="padding:10px 14px;background:#FAFAFA;border-top:1px solid #EEEEEE">
+          <div class="row gap16">
+            <div class="info-row" style="margin-bottom:0"><span class="info-lbl">Current Records</span><span class="info-val">24,012</span></div>
+            <div class="info-row" style="margin-bottom:0"><span class="info-lbl">New File</span><span class="info-val">— not uploaded</span></div>
+            <div class="info-row" style="margin-bottom:0"><span class="info-lbl">CRS</span><span class="info-val">EPSG:4326</span></div>
+            <div class="info-row" style="margin-bottom:0"><span class="info-lbl">Last Updated</span><span class="info-val">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 09 — UPDATE TABULAR DATA
+═══════════════════════════════════════════════════════ -->
+<div class="pg-wrap">
+  <div class="pg-label">
+    <span class="pg-num">09</span>
+    <span class="pg-name">Update Tabular Data</span>
+    <span class="pg-route">route: /dataset/manage/tabular</span>
+  </div>
+  <div class="pg">
+    <div class="nb">
+      <div class="nb-logo"></div>
+      <span class="nb-brand">GravPort</span>
+      <span class="nb-lnk on">Admin</span>
+      <div class="nb-sp"></div>
+      <span class="badge" style="font-size:9px;padding:2px 8px;background:#E8E8E8">ADMIN</span>
+      <span class="nb-btn solid" style="margin-left:8px">Logout</span>
+    </div>
+    <div class="bc">Admin Hub <span>›</span> Dataset Management <span>›</span> Update Tabular Data</div>
+    <div class="row" style="min-height:520px">
+      <!-- Form -->
+      <div style="width:360px;flex-shrink:0;border-right:1px solid #E4E4E4;padding:20px 20px">
+        <div class="eyrow mb4">Admin · Tabular Upload</div>
+        <div class="h3 mb16">Update Tabular Data</div>
+        <div class="fg">
+          <span class="lbl">Target Dataset</span>
+          <div class="sel">FAA Level 1 — Jawa Bali</div>
+        </div>
+        <div class="hr mb12"></div>
+        <div class="fg">
+          <span class="lbl">Data File (Excel / CSV)</span>
+          <div class="ph" style="height:56px;border:1px dashed #CCCCCC;font-size:9px">
+            <div>[ File Drop Zone ]</div>
+            <div class="sm">Drag &amp; drop or click · .xlsx .xls .csv</div>
+          </div>
+        </div>
+        <div class="hr mb12"></div>
+        <div class="fg">
+          <span class="lbl">Column Mapping</span>
+          <div style="border:1px solid #E4E4E4;padding:8px;background:#FAFAFA;margin-bottom:8px">
+            <div class="row" style="align-items:center;margin-bottom:4px">
+              <span class="sm" style="flex:1;color:#888">File Column</span>
+              <span class="sm" style="font-size:8px;color:#CCCCCC;margin:0 8px">→</span>
+              <span class="sm" style="flex:1;color:#888">DB Column</span>
+            </div>
+            <div class="row gap6 mb4">
+              <div class="inp" style="margin-bottom:0;flex:1">latitude</div>
+              <div style="font-size:9px;color:#CCCCCC;display:flex;align-items:center">→</div>
+              <div class="sel" style="margin-bottom:0;flex:1">lat</div>
+            </div>
+            <div class="row gap6 mb4">
+              <div class="inp" style="margin-bottom:0;flex:1">longitude</div>
+              <div style="font-size:9px;color:#CCCCCC;display:flex;align-items:center">→</div>
+              <div class="sel" style="margin-bottom:0;flex:1">lon</div>
+            </div>
+            <div class="row gap6">
+              <div class="inp" style="margin-bottom:0;flex:1">faa_value</div>
+              <div style="font-size:9px;color:#CCCCCC;display:flex;align-items:center">→</div>
+              <div class="sel" style="margin-bottom:0;flex:1">gravity_val</div>
+            </div>
+          </div>
+        </div>
+        <div class="fg">
+          <span class="lbl">Import Mode</span>
+          <div class="ri mb4"><span class="rd on"></span>Append — add to existing records</div>
+          <div class="ri"><span class="rd"></span>Replace — overwrite all records</div>
+        </div>
+        <div class="fg">
+          <span class="lbl">Notes</span>
+          <div class="txa">Describe this data update...</div>
+        </div>
+        <div class="alert mb12">
+          <div style="font-size:9px;font-weight:700;margin-bottom:4px;color:#AAAAAA">Validation Status</div>
+          <div class="sm">File not yet uploaded · awaiting validation</div>
+        </div>
+        <div class="btn-row">
+          <span class="btn fill">Validate File</span>
+          <span class="btn dk">Submit Update</span>
+        </div>
+        <span class="btn full mt8">← Back to Admin Hub</span>
+      </div>
+      <!-- Table preview -->
+      <div class="f1 col">
+        <div class="tb">
+          <div class="h4" style="font-size:10px">Data Preview</div>
+          <span style="flex:1"></span>
+          <span class="btn xs">Show Existing</span>
+          <span class="btn xs fill">Show New Upload</span>
+        </div>
+        <!-- Sample data table -->
+        <div style="flex:1;overflow:auto;padding:14px">
+          <div class="sm mb8" style="color:#BBBBBB">Showing first 5 rows of existing data · Upload a file to preview new data</div>
+          <div style="border:1px solid #E4E4E4;overflow:hidden">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:40px">ID</th>
+                  <th>Latitude</th>
+                  <th>Longitude</th>
+                  <th>Gravity (mGal)</th>
+                  <th>Elevation (m)</th>
+                  <th>Organisation</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>-6.9021</td><td>107.6012</td><td>978.124</td><td>1240</td><td>ITB</td><td>2023-06-01</td></tr>
+                <tr><td>2</td><td>-6.9134</td><td>107.6201</td><td>977.891</td><td>1310</td><td>ITB</td><td>2023-06-01</td></tr>
+                <tr><td>3</td><td>-7.0012</td><td>107.7340</td><td>979.003</td><td>980</td><td>BIG</td><td>2023-06-02</td></tr>
+                <tr><td>4</td><td>-7.0234</td><td>107.8120</td><td>979.441</td><td>820</td><td>BIG</td><td>2023-06-02</td></tr>
+                <tr><td>5</td><td>-7.1002</td><td>107.9010</td><td>980.112</td><td>640</td><td>ITB</td><td>2023-06-03</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pag" style="padding:8px 0">
+            <span class="pg-btn">‹</span>
+            <span class="pg-btn on">1</span>
+            <span class="pg-btn">›</span>
+            <span style="margin-left:8px">5 of 24,012 rows shown</span>
+          </div>
+          <!-- Stats strip -->
+          <div class="stat-g mt12">
+            <div class="stat-c"><div class="stat-n">24,012</div><div class="stat-l">Total Rows</div></div>
+            <div class="stat-c"><div class="stat-n">7</div><div class="stat-l">Columns</div></div>
+            <div class="stat-c"><div class="stat-n">0</div><div class="stat-l">Null Values</div></div>
+            <div class="stat-c"><div class="stat-n">2</div><div class="stat-l">Sources</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /doc -->
+</body>
+</html>

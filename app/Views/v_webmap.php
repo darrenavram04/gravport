@@ -11,22 +11,119 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=30'); ?>">
   <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css'); ?>">
-  <link rel="stylesheet" href="<?= base_url('site/css/webmap.css'); ?>">
+  <link rel="stylesheet" href="<?= base_url('site/css/webmap.css?v=3'); ?>">
+
+  <style>
+    /* ===== WebMap Cinematic Loader ===== */
+    body.wm-loading { overflow: hidden; }
+    .wm-loader {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #04101d;
+      transform: translateY(0);
+      transition: transform 0.95s cubic-bezier(0.76,0,0.24,1);
+    }
+    .wm-loader.is-done { transform: translateY(-100%); }
+    .wm-loader__brand {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 12px;
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .wm-loader__brand img { width: 46px; height: 46px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(97,212,255,0.4)); }
+    .wm-loader__brand strong { font-family: "Manrope",sans-serif; font-size: 26px; font-weight: 800; color: #fff; }
+    .wm-loader__tag {
+      font-family: "Manrope",sans-serif; font-size: 10px; font-weight: 800;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(97,212,255,0.55); margin-bottom: 28px;
+      opacity: 0; transition: opacity 0.4s 0.2s;
+    }
+    .wm-loader__bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; opacity: 0; transition: opacity 0.3s 0.15s; }
+    .wm-loader__fill { height: 100%; width: 0%; background: linear-gradient(90deg,#61d4ff,#a76025,#ffbf74); border-radius: 999px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1) 0.1s; }
+    .wm-loader__status { font-family: "Manrope",sans-serif; font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 14px; letter-spacing: 0.08em; opacity: 0; transition: opacity 0.4s 0.4s; }
+    .wm-loader.is-visible .wm-loader__brand { opacity: 1; transform: translateY(0); }
+    .wm-loader.is-visible .wm-loader__bar,
+    .wm-loader.is-visible .wm-loader__tag,
+    .wm-loader.is-visible .wm-loader__status { opacity: 1; }
+    .wm-loader.is-loading .wm-loader__fill { width: 100%; }
+
+    /* ===== Sidebar card entrance ===== */
+    .wm-card {
+      opacity: 0;
+      transform: translateX(-18px);
+      transition: opacity 0.5s ease, transform 0.55s cubic-bezier(0.16,1,0.3,1);
+    }
+    .wm-card.card-in { opacity: 1; transform: translateX(0); }
+
+    /* ===== Map stage reveal ===== */
+    .wm-stage {
+      clip-path: inset(0 0 0 100%);
+      transition: clip-path 1s cubic-bezier(0.16,1,0.3,1) 0.55s;
+    }
+    .wm-stage.stage-in { clip-path: inset(0 0 0 0); }
+
+    /* ===== Stat box pulse on update ===== */
+    .wm-stat-box strong {
+      display: inline-block;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), color 0.22s;
+    }
+    .wm-stat-box strong.val-bump {
+      transform: scale(1.18);
+      color: #ffbf74;
+    }
+
+    /* ===== Button shimmer ===== */
+    .wm-primary-btn, .wm-secondary-btn {
+      position: relative; overflow: hidden;
+    }
+    .wm-primary-btn::after, .wm-secondary-btn::after {
+      content: '';
+      position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transform: skewX(-20deg);
+      transition: left 0s;
+    }
+    .wm-primary-btn:hover::after, .wm-secondary-btn:hover::after {
+      left: 160%;
+      transition: left 0.55s ease;
+    }
+
+    /* ===== Scroll progress ===== */
+    .wm-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg,#61d4ff,#a76025); z-index: 9999; pointer-events: none; }
+  </style>
 </head>
-<body>
+<body class="gravport-landing wm-loading">
+
+<div class="wm-loader" id="wmLoader" role="status" aria-label="Loading WebMap">
+  <div class="wm-loader__brand">
+    <img src="<?= base_url('images/itb.png'); ?>" alt="">
+    <strong>GravPort</strong>
+  </div>
+  <p class="wm-loader__tag">WebMap</p>
+  <div class="wm-loader__bar">
+    <div class="wm-loader__fill"></div>
+  </div>
+  <p class="wm-loader__status" id="wmLoaderStatus">Initializing map layers&hellip;</p>
+</div>
+
+<div class="wm-progress" id="wmProgress"></div>
 
 <?= view('partials/site_header', [
   'activePage' => 'webmap',
+  'headerClass' => 'header--solid',
 ]) ?>
 
 <main class="wm-page">
   <aside class="wm-sidebar">
     <div class="wm-card wm-card--hero">
-      <p class="wm-eyebrow">Pengunduhan Data</p>
-      <h1>Gravimetri Interaktif</h1>
+      <p class="wm-eyebrow">WebMap</p>
+      <h1>WebMap</h1>
       <p class="wm-copy">
-        Mulai dari tampilan netral, lalu zoom ke area yang dibutuhkan untuk memuat detail titik atau grid secara ringan.
+        Pilih data, tentukan area, lalu unduh hasilnya.
       </p>
     </div>
 
@@ -126,14 +223,13 @@
           <strong id="featureCount">0</strong>
         </div>
         <div class="wm-stat-box">
-          <span class="wm-stat-label">Filter aktif</span>
-          <strong id="filterLabel">Semua</strong>
+          <span class="wm-stat-label">Area aktif</span>
+          <strong id="filterLabel">Viewport</strong>
         </div>
       </div>
     </div>
 
     <div class="wm-actions">
-      <button id="previewBtn" class="wm-primary-btn" type="button">Preview Layer</button>
       <button id="downloadVectorBtn" class="wm-secondary-btn" type="button">Unduh Vector</button>
       <button id="downloadRasterBtn" class="wm-secondary-btn" type="button">Unduh Raster</button>
       <button id="downloadMetadataBtn" class="wm-secondary-btn" type="button">Unduh Metadata</button>
@@ -198,7 +294,96 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
-<script src="<?= base_url('site/js/webmap.js'); ?>"></script>
+<script src="<?= base_url('site/js/webmap.js?v=2'); ?>"></script>
+
+<script>
+/* ============================================================
+   GravPort WebMap — Creative Layer
+============================================================ */
+(function () {
+
+  /* --- Cinematic loader --- */
+  var loader  = document.getElementById('wmLoader');
+  var statusEl = document.getElementById('wmLoaderStatus');
+  var stage   = document.querySelector('.wm-stage');
+
+  var statusMessages = [
+    'Initializing map layers…',
+    'Loading gravity dataset…',
+    'Preparing WebMap…',
+  ];
+  var msgIdx = 0;
+
+  if (loader) {
+    /* Cycle status messages */
+    var msgTimer = setInterval(function () {
+      msgIdx = (msgIdx + 1) % statusMessages.length;
+      if (statusEl) statusEl.textContent = statusMessages[msgIdx];
+    }, 900);
+
+    setTimeout(function () {
+      loader.classList.add('is-visible');
+      setTimeout(function () {
+        loader.classList.add('is-loading');
+
+        /* Dismiss after bar fills */
+        setTimeout(function () {
+          clearInterval(msgTimer);
+          loader.classList.add('is-done');
+          document.body.classList.remove('wm-loading');
+          triggerPageIn();
+          setTimeout(function () {
+            if (loader.parentNode) loader.parentNode.removeChild(loader);
+          }, 1100);
+        }, 1700);
+      }, 80);
+    }, 50);
+  } else {
+    triggerPageIn();
+  }
+
+  function triggerPageIn() {
+    /* Sidebar cards stagger entrance */
+    document.querySelectorAll('.wm-card').forEach(function (card, i) {
+      setTimeout(function () { card.classList.add('card-in'); }, i * 80);
+    });
+
+    /* Map stage reveal */
+    if (stage) setTimeout(function () { stage.classList.add('stage-in'); }, 120);
+  }
+
+  /* --- Stat box pulse on DOM mutation --- */
+  function patchStatEl(el) {
+    if (!el) return;
+    var prev = el.textContent;
+    var obs = new MutationObserver(function () {
+      if (el.textContent !== prev) {
+        prev = el.textContent;
+        el.classList.remove('val-bump');
+        void el.offsetWidth; /* reflow */
+        el.classList.add('val-bump');
+        setTimeout(function () { el.classList.remove('val-bump'); }, 320);
+      }
+    });
+    obs.observe(el, { characterData: true, childList: true, subtree: true });
+  }
+  patchStatEl(document.getElementById('featureCount'));
+  patchStatEl(document.getElementById('filterLabel'));
+
+  /* --- Scroll progress bar --- */
+  var bar = document.getElementById('wmProgress');
+  if (bar) {
+    window.addEventListener('scroll', function () {
+      var doc = document.documentElement;
+      var pct = doc.scrollHeight > window.innerHeight
+        ? (window.scrollY / (doc.scrollHeight - window.innerHeight)) * 100
+        : 100;
+      bar.style.width = Math.min(100, pct) + '%';
+    }, { passive: true });
+  }
+
+})();
+</script>
 
 </body>
 </html>

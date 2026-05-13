@@ -6,7 +6,7 @@
   <title>GravPort | Admin Hub</title>
 
   <link rel="stylesheet" href="<?= base_url('site/css/bootstrap.css'); ?>">
-  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=26'); ?>">
+  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=31'); ?>">
   <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css'); ?>">
 
   <style>
@@ -19,17 +19,10 @@
       color: #142033;
     }
 
-    .admin-hub-page .site-header {
-      background: rgba(167, 96, 37, 0.94);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-    }
-
     .admin-shell {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 120px 20px 38px;
+      padding: calc(var(--landing-header-offset) + 18px) 20px 38px;
     }
 
     .admin-title {
@@ -144,12 +137,101 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ── ADM LOADER ── */
+    body.adm-loading { overflow: hidden; }
+    .adm-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: #0a0f1e;
+      transition: transform 0.9s cubic-bezier(.76,0,.24,1);
+    }
+    .adm-loader.is-done { transform: translateY(-100%); pointer-events: none; }
+    .adm-loader__grid {
+      position: absolute; inset: 0; opacity: 0.03;
+      background-image: linear-gradient(rgba(167,96,37,1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(167,96,37,1) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .adm-loader__content {
+      position: relative; text-align: center; color: #fff;
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .adm-loader.is-visible .adm-loader__content { opacity: 1; transform: none; }
+    .adm-loader__icon {
+      width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 20px;
+      background: rgba(167,96,37,0.12); border: 1px solid rgba(167,96,37,0.28);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: #a76025;
+    }
+    .adm-loader__name { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+    .adm-loader__status {
+      font-size: 11px; color: rgba(255,255,255,0.42);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 22px; height: 16px;
+      transition: opacity 0.2s;
+    }
+    .adm-loader__bar {
+      width: 180px; height: 2px; border-radius: 999px;
+      background: rgba(255,255,255,0.08); overflow: hidden; margin: 0 auto;
+    }
+    .adm-loader__bar-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #a76025, #ffbf74);
+      transition: width 0.08s linear;
+    }
+
+    /* ── SCROLL PROGRESS ── */
+    .adm-progress {
+      position: fixed; top: 0; left: 0; z-index: 9990;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, #a76025, #ffbf74);
+      transition: width 0.1s linear;
+      pointer-events: none;
+    }
+
+    /* ── PAGE-IN ANIMATION STATE ── */
+    body.adm-loading .admin-title,
+    body.adm-loading .admin-card { opacity: 0; transform: translateY(28px); }
+    .admin-title { transition: opacity 0.7s ease, transform 0.7s ease; }
+    .admin-card  { transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease; }
+
+    /* ── CARD HOVER LIFT ── */
+    .admin-card:hover {
+      transform: translateY(-5px) !important;
+      box-shadow: 0 32px 64px rgba(16,24,40,0.18) !important;
+    }
+    .admin-card { position: relative; overflow: hidden; }
+
+    /* ── LINK SHIMMER ── */
+    .admin-link { position: relative; overflow: hidden; }
+    .admin-link::after {
+      content: ''; position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s ease;
+    }
+    .admin-link:hover::after { left: 160%; }
   </style>
 </head>
-<body class="admin-hub-page">
+<body class="admin-hub-page gravport-landing adm-loading">
+
+<!-- Cinematic Loader -->
+<div class="adm-loader" id="admLoader">
+  <div class="adm-loader__grid"></div>
+  <div class="adm-loader__content">
+    <div class="adm-loader__icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+    <div class="adm-loader__name">Admin Hub</div>
+    <div class="adm-loader__status" id="admStatus">Verifying session…</div>
+    <div class="adm-loader__bar"><div class="adm-loader__bar-fill" id="admBarFill"></div></div>
+  </div>
+</div>
+<div class="adm-progress" id="admProgress"></div>
 
 <?= view('partials/site_header', [
-    'activePage' => '',
+    'activePage' => 'admin',
+    'headerClass' => 'header--solid',
 ]) ?>
 
 <main class="admin-shell">
@@ -301,5 +383,98 @@
   </section>
 </main>
 
+<script>
+(function () {
+  var loader   = document.getElementById('admLoader');
+  var statusEl = document.getElementById('admStatus');
+  var barFill  = document.getElementById('admBarFill');
+  var msgs     = ['Verifying session…', 'Loading workspace…', 'Preparing datasets…', 'Ready.'];
+  var msgIdx   = 0;
+  var barPct   = 0;
+
+  function setMsg(idx) {
+    if (!statusEl) return;
+    statusEl.style.opacity = '0';
+    setTimeout(function () {
+      statusEl.textContent = msgs[idx] || msgs[msgs.length - 1];
+      statusEl.style.opacity = '1';
+    }, 150);
+  }
+
+  function advanceBar(target, cb) {
+    var iv = setInterval(function () {
+      barPct = Math.min(barPct + 3, target);
+      if (barFill) barFill.style.width = barPct + '%';
+      if (barPct >= target) { clearInterval(iv); if (cb) cb(); }
+    }, 18);
+  }
+
+  function triggerPageIn() {
+    var title = document.querySelector('.admin-title');
+    if (title) { title.style.opacity = '1'; title.style.transform = 'none'; }
+    document.querySelectorAll('.admin-card').forEach(function (el, i) {
+      setTimeout(function () {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, i * 75 + 60);
+    });
+  }
+
+  if (loader) {
+    setTimeout(function () {
+      loader.classList.add('is-visible');
+      advanceBar(55, function () {
+        setMsg(1);
+        setTimeout(function () {
+          advanceBar(82, function () {
+            setMsg(2);
+            setTimeout(function () {
+              advanceBar(100, function () {
+                setMsg(3);
+                setTimeout(function () {
+                  loader.classList.add('is-done');
+                  document.body.classList.remove('adm-loading');
+                  triggerPageIn();
+                }, 320);
+              });
+            }, 220);
+          });
+        }, 380);
+      });
+    }, 60);
+  } else {
+    triggerPageIn();
+  }
+
+  /* Scroll progress */
+  var prog = document.getElementById('admProgress');
+  if (prog) {
+    window.addEventListener('scroll', function () {
+      var s = document.documentElement.scrollTop;
+      var h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      prog.style.width = (h > 0 ? (s / h * 100) : 0) + '%';
+    }, { passive: true });
+  }
+
+  /* Card spotlight hover */
+  document.querySelectorAll('.admin-card').forEach(function (card) {
+    var glow = document.createElement('div');
+    glow.style.cssText = [
+      'position:absolute;inset:0;pointer-events:none;border-radius:inherit;',
+      'opacity:0;transition:opacity 0.3s;',
+      'background:radial-gradient(circle 220px at var(--cmx,50%) var(--cmy,50%),',
+      'rgba(167,96,37,0.13),transparent 70%)'
+    ].join('');
+    card.appendChild(glow);
+    card.addEventListener('mousemove', function (e) {
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--cmx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--cmy', (e.clientY - r.top) + 'px');
+      glow.style.opacity = '1';
+    });
+    card.addEventListener('mouseleave', function () { glow.style.opacity = '0'; });
+  });
+})();
+</script>
 </body>
 </html>

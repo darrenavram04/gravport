@@ -14,6 +14,15 @@ final class ExampleDatabaseTest extends CIUnitTestCase
 
     protected $seed = ExampleSeeder::class;
 
+    protected function setUp(): void
+    {
+        if (!property_exists(\Config\Database::class, 'tests')) {
+            $this->markTestSkipped('Koneksi database "tests" belum dikonfigurasi untuk scaffold bawaan CodeIgniter.');
+        }
+
+        parent::setUp();
+    }
+
     public function testModelFindAll(): void
     {
         $model = new ExampleModel();

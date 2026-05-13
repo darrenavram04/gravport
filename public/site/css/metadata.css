@@ -26,18 +26,6 @@ body.metadata-page {
   overflow-x: hidden;
 }
 
-.metadata-page .site-header {
-  background: rgba(6, 14, 28, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.25);
-}
-
-.metadata-page .nav-container {
-  max-width: 1280px;
-}
-
 .metadata-backdrop {
   position: fixed;
   inset: 0;
@@ -74,7 +62,7 @@ body.metadata-page {
   z-index: 1;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 124px 24px 48px;
+  padding: calc(var(--landing-header-offset) + 22px) 24px 48px;
 }
 
 .metadata-topbar {
@@ -144,7 +132,7 @@ body.metadata-page {
 
 .metadata-sidebar {
   position: sticky;
-  top: 106px;
+  top: calc(var(--landing-header-offset) + 8px);
 }
 
 .metadata-card {

@@ -7,16 +7,19 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 $routes->get('landing', 'Home::landingPage');
-$routes->get('landing2', 'Home::landingPage2');
 
 // Auth
 $routes->get('login', 'AuthController::loginForm');
 $routes->post('login', 'AuthController::loginPost');
+$routes->get('signup', 'AuthController::signupForm');
+$routes->post('signup', 'AuthController::signupPost');
 $routes->get('logout', 'AuthController::logout');
 
 // Metadata / admin
 $routes->get('metadata', 'Metadata::index', ['filter' => 'role:admin,user']);
 $routes->post('metadata', 'Metadata::store', ['filter' => 'role:admin,user']);
+
+$routes->get('admin', 'DatasetAdmin::index', ['filter' => 'role:admin']);
 
 $routes->group('dataset', ['filter' => 'role:admin'], static function ($routes) {
     $routes->get('manage', 'DatasetAdmin::index');
@@ -48,9 +51,5 @@ $routes->post('webmap/clip/raster', 'WebMap::clipRaster');
 $routes->get('webmap/download/raster/grid/(:num)', 'WebMap::downloadRasterGrid/$1');
 $routes->get('webmap/download/raster/province/(:num)', 'WebMap::downloadRasterProvince/$1');
 $routes->get('webmap/download/raster/(:num)', 'WebMap::downloadRasterByAOI/$1');
-
-// Test routes kept for local diagnostics
-$routes->get('tes', static fn () => 'ROUTE WORKS');
-$routes->get('tes-download/(:num)', static fn ($id) => 'TES ROUTE OK ID = ' . $id);
 
 $routes->setAutoRoute(false);

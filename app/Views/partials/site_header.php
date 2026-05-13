@@ -16,6 +16,7 @@ $navItems = [
     ['page' => 'catalog', 'label' => 'Dataset', 'href' => site_url('catalog')],
     ['page' => 'webmap', 'label' => 'WebMap', 'href' => site_url('webmap')],
     ['page' => 'metadata', 'label' => 'Metadata', 'href' => site_url('metadata'), 'auth_only' => true],
+    ['page' => 'admin',    'label' => 'Admin Hub', 'href' => site_url('admin'),    'admin_only' => true],
     ['page' => 'contacts', 'label' => 'Contacts', 'href' => $homeUrl . '#contacts', 'data_section' => 'contacts'],
 ];
 ?>
@@ -52,10 +53,11 @@ $navItems = [
 
     <div class="nav-auth">
       <?php if (!$isLoggedIn): ?>
-        <a class="nav-login" href="<?= site_url('login') ?>">Login</a>
+        <a class="nav-login nav-login--primary" href="<?= site_url('signup') ?>">Sign Up</a>
+        <a class="nav-login nav-login--secondary" href="<?= site_url('login') ?>">Login</a>
       <?php else: ?>
-        <span class="nav-role"><?= esc(strtoupper($role)) ?></span>
-        <a class="nav-logout" href="<?= site_url('logout') ?>">Logout</a>
+        <span class="nav-role" style="color:rgba(255,255,255,0.85);font-weight:800;font-size:12px;letter-spacing:.06em;"><?= esc(strtoupper($role)) ?></span>
+        <a class="nav-logout" href="<?= site_url('logout') ?>" style="background:transparent;border:none;box-shadow:none;outline:none;color:rgba(255,255,255,0.78);font-weight:700;text-decoration:none;padding:0 6px;display:inline-flex;align-items:center;">Logout</a>
       <?php endif; ?>
     </div>
 

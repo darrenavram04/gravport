@@ -57,7 +57,7 @@ class GeoportalDatasetRegistry
                 'metadata_level' => 'level2',
                 'summary_unit' => 'mGal',
                 'download_extension' => 'tif',
-                'note' => 'Raster aktif diambil dari PostgreSQL gravport.testing.faa_l2_raster dan dipotong per grid 0.125° x 0.125° mengikuti indeks DEMNAS BIG.',
+                'note' => 'Raster aktif diambil dari PostgreSQL gravport.testing.faa_l2_raster dan dipotong per grid 0.125 derajat x 0.125 derajat mengikuti indeks DEMNAS BIG.',
             ],
             'cba_l2' => [
                 'code' => 'cba_l2',
@@ -73,7 +73,7 @@ class GeoportalDatasetRegistry
                 'metadata_level' => 'level2',
                 'summary_unit' => 'mGal',
                 'download_extension' => 'tif',
-                'note' => 'Raster aktif diambil dari PostgreSQL gravport.testing.cba_l2_raster dan dipotong per grid 0.125° x 0.125° mengikuti indeks DEMNAS BIG.',
+                'note' => 'Raster aktif diambil dari PostgreSQL gravport.testing.cba_l2_raster dan dipotong per grid 0.125 derajat x 0.125 derajat mengikuti indeks DEMNAS BIG.',
             ],
         ];
     }
@@ -162,7 +162,7 @@ class GeoportalDatasetRegistry
         $entries = $this->catalogEntries();
 
         if (!empty($filters['q'])) {
-            $needle = mb_strtolower((string) $filters['q']);
+            $needle = trim(mb_strtolower((string) $filters['q']));
             $entries = array_values(array_filter($entries, static function (array $entry) use ($needle): bool {
                 $haystack = mb_strtolower(
                     implode(' ', [
@@ -188,6 +188,26 @@ class GeoportalDatasetRegistry
         if (!empty($filters['spatial_scope']) && is_array($filters['spatial_scope'])) {
             $allowed = array_map('strval', $filters['spatial_scope']);
             $entries = array_values(array_filter($entries, static fn (array $entry): bool => in_array((string) $entry['spatial_scope'], $allowed, true)));
+        }
+
+        if (!empty($filters['anomaly']) && is_array($filters['anomaly'])) {
+            $allowed = array_map(
+                static fn ($value): string => strtolower(trim((string) $value)),
+                $filters['anomaly']
+            );
+            $entries = array_values(array_filter($entries, static function (array $entry) use ($allowed): bool {
+                return in_array(strtolower((string) ($entry['anomaly_key'] ?? '')), $allowed, true);
+            }));
+        }
+
+        if (!empty($filters['level']) && is_array($filters['level'])) {
+            $allowed = array_map(
+                static fn ($value): string => strtolower(trim((string) $value)),
+                $filters['level']
+            );
+            $entries = array_values(array_filter($entries, static function (array $entry) use ($allowed): bool {
+                return in_array(strtolower((string) ($entry['level_key'] ?? '')), $allowed, true);
+            }));
         }
 
         return $entries;
@@ -220,6 +240,8 @@ class GeoportalDatasetRegistry
             'availability' => $dataset['availability'],
             'type' => $dataset['type'],
             'metadata_level' => $dataset['metadata_level'],
+            'anomaly_key' => str_starts_with($dataset['code'], 'faa_') ? 'faa' : 'cba',
+            'level_key' => $dataset['metadata_level'],
             'download_extension' => $dataset['download_extension'],
             'province_id' => $province['id'] ?? null,
             'province_name' => $province['name'] ?? null,

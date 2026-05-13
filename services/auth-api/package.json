@@ -1,0 +1,22 @@
+{
+  "name": "gravport-auth-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Auth API for GravPort using Node.js, Express, and PostgreSQL",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "pg": "^8.13.1"
+  }
+}

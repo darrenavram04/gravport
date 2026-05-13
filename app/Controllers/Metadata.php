@@ -79,6 +79,16 @@ class Metadata extends BaseController
             ]);
         }
 
+        $fileContentErrors = $this->submissionService->validateSubmissionFiles([
+            'shapefile_zip' => $shapefileZip,
+            'tabular_file' => $tabularFile,
+            'raster_file' => $rasterFile,
+        ]);
+
+        if ($fileContentErrors !== []) {
+            return redirect()->back()->withInput()->with('errors', $fileContentErrors);
+        }
+
         $result = $this->submissionService->store(
             [
                 'metadata_file_identifier' => (string) $this->request->getPost('metadata_file_identifier'),

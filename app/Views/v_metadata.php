@@ -88,6 +88,7 @@ $roleGuidance = [
         'example' => 'Masyarakat umum, mahasiswa, peneliti, atau analis tata ruang.',
     ],
 ];
+$today  = $today ?? date('Y-m-d');
 $errors = session()->getFlashdata('errors') ?? [];
 ?>
 <!DOCTYPE html>
@@ -102,16 +103,151 @@ $errors = session()->getFlashdata('errors') ?? [];
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="<?= base_url('site/css/bootstrap.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=26') ?>">
+  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=31') ?>">
   <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css') ?>">
   <link rel="stylesheet" href="<?= base_url('site/css/metadata.css?v=3') ?>">
+  <style>
+    .metadata-sidebar__link { display: flex; align-items: center; }
+    .meta-progress-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 36px; padding: 2px 7px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.38);
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-left: auto; flex-shrink: 0;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .meta-progress-badge--partial {
+      background: rgba(255,191,116,0.15); color: #ffbf74;
+      border-color: rgba(255,191,116,0.32);
+    }
+    .meta-progress-badge--done {
+      background: rgba(73,189,139,0.18); color: #49bd8b;
+      border-color: rgba(73,189,139,0.32);
+    }
+    .meta-overall-progress {
+      margin-top: 16px; padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .meta-overall-progress__bar {
+      height: 6px; border-radius: 999px;
+      background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 8px;
+    }
+    .meta-overall-progress__fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #ffbf74, #61d4ff);
+      transition: width 0.3s ease;
+    }
+    .meta-overall-progress__fill--done {
+      background: linear-gradient(90deg, #49bd8b, #61d4ff);
+    }
+    .meta-overall-progress__label {
+      display: block; font-size: 11px;
+      color: rgba(255,255,255,0.42); text-align: center;
+    }
+
+    /* ── META LOADER ── */
+    body.meta-loading { overflow: hidden; }
+    .meta-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: #060c18;
+      transition: transform 0.9s cubic-bezier(.76,0,.24,1);
+    }
+    .meta-loader.is-done { transform: translateY(-100%); pointer-events: none; }
+    .meta-loader__grid {
+      position: absolute; inset: 0; opacity: 0.035;
+      background-image: linear-gradient(rgba(97,212,255,1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(97,212,255,1) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .meta-loader__content {
+      position: relative; text-align: center; color: #fff;
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .meta-loader.is-visible .meta-loader__content { opacity: 1; transform: none; }
+    .meta-loader__icon {
+      width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 20px;
+      background: rgba(97,212,255,0.1); border: 1px solid rgba(97,212,255,0.22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: #61d4ff;
+    }
+    .meta-loader__name { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .meta-loader__sub {
+      font-size: 11px; color: rgba(255,255,255,0.32);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 22px;
+    }
+    .meta-loader__status {
+      font-size: 11px; color: rgba(97,212,255,0.6);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 18px; height: 16px;
+      transition: opacity 0.2s;
+    }
+    .meta-loader__bar {
+      width: 200px; height: 2px; border-radius: 999px;
+      background: rgba(255,255,255,0.07); overflow: hidden; margin: 0 auto;
+    }
+    .meta-loader__bar-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #61d4ff, #a76025);
+      transition: width 0.08s linear;
+    }
+
+    /* ── SCROLL PROGRESS ── */
+    .meta-pg-progress {
+      position: fixed; top: 0; left: 0; z-index: 9990;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, #61d4ff, #a76025);
+      transition: width 0.1s linear;
+      pointer-events: none;
+    }
+
+    /* ── PAGE-IN ANIMATION STATE ── */
+    body.meta-loading .metadata-topbar,
+    body.meta-loading .metadata-sidebar,
+    body.meta-loading .meta-section { opacity: 0; transform: translateY(24px); }
+    .metadata-topbar { transition: opacity 0.65s ease, transform 0.65s ease; }
+    .metadata-sidebar { transition: opacity 0.65s ease 0.1s, transform 0.65s ease 0.1s; }
+    .meta-section { transition: opacity 0.55s ease, transform 0.55s ease; }
+
+    /* ── SUBMIT BUTTON SHIMMER ── */
+    .metadata-submit { position: relative; overflow: hidden; }
+    .metadata-submit::after {
+      content: ''; position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transition: left 0.5s ease;
+    }
+    .metadata-submit:hover::after { left: 160%; }
+
+    /* ── FIELD FOCUS GLOW ── */
+    .meta-field input:focus,
+    .meta-field select:focus {
+      box-shadow: 0 0 0 3px rgba(97,212,255,0.12), 0 0 0 1px rgba(97,212,255,0.3);
+    }
+  </style>
 </head>
-<body class="metadata-page">
+<body class="metadata-page gravport-landing meta-loading">
+
+<!-- Cinematic Loader -->
+<div class="meta-loader" id="metaLoader">
+  <div class="meta-loader__grid"></div>
+  <div class="meta-loader__content">
+    <div class="meta-loader__icon"><i class="bi bi-journal-richtext"></i></div>
+    <div class="meta-loader__name">Metadata</div>
+    <div class="meta-loader__sub">ISO 19115 · GravPort</div>
+    <div class="meta-loader__status" id="metaStatus">Authenticating…</div>
+    <div class="meta-loader__bar"><div class="meta-loader__bar-fill" id="metaBarFill"></div></div>
+  </div>
+</div>
+<div class="meta-pg-progress" id="metaPgProgress"></div>
 
 <div class="metadata-backdrop" aria-hidden="true"></div>
 
 <?= view('partials/site_header', [
     'activePage' => 'metadata',
+    'headerClass' => 'header--solid',
 ]) ?>
 
 <main class="metadata-shell">
@@ -152,23 +288,34 @@ $errors = session()->getFlashdata('errors') ?? [];
           <a class="metadata-sidebar__link is-active" href="#meta-basic" data-meta-nav="meta-basic">
             <span class="metadata-sidebar__number">01</span>
             <span class="metadata-sidebar__title">Basic</span>
+            <span class="meta-progress-badge" id="badge-meta-basic">0/4</span>
           </a>
           <a class="metadata-sidebar__link" href="#meta-general" data-meta-nav="meta-general">
             <span class="metadata-sidebar__number">02</span>
             <span class="metadata-sidebar__title">General Information Metadata</span>
+            <span class="meta-progress-badge" id="badge-meta-general">0/4</span>
           </a>
           <a class="metadata-sidebar__link" href="#meta-data-contact" data-meta-nav="meta-data-contact">
             <span class="metadata-sidebar__number">03</span>
             <span class="metadata-sidebar__title">Data Contact Information</span>
+            <span class="meta-progress-badge" id="badge-meta-data-contact">0/4</span>
           </a>
           <a class="metadata-sidebar__link" href="#meta-contact" data-meta-nav="meta-contact">
             <span class="metadata-sidebar__number">04</span>
             <span class="metadata-sidebar__title">Contact Information</span>
+            <span class="meta-progress-badge" id="badge-meta-contact">0/2</span>
           </a>
           <a class="metadata-sidebar__link" href="#meta-address" data-meta-nav="meta-address">
             <span class="metadata-sidebar__number">05</span>
             <span class="metadata-sidebar__title">Address</span>
+            <span class="meta-progress-badge" id="badge-meta-address">0/6</span>
           </a>
+        </div>
+        <div class="meta-overall-progress">
+          <div class="meta-overall-progress__bar">
+            <div class="meta-overall-progress__fill" id="meta-overall-fill" style="width:0%"></div>
+          </div>
+          <span class="meta-overall-progress__label" id="meta-overall-label">0 / 20 fields completed</span>
         </div>
       </article>
     </aside>
@@ -464,5 +611,141 @@ $errors = session()->getFlashdata('errors') ?? [];
 </main>
 
 <script src="<?= base_url('site/js/metadata.js') ?>"></script>
+
+<!-- Loader + page-in -->
+<script>
+(function () {
+  var loader   = document.getElementById('metaLoader');
+  var statusEl = document.getElementById('metaStatus');
+  var barFill  = document.getElementById('metaBarFill');
+  var msgs     = ['Authenticating…', 'Loading form schema…', 'Preparing sections…', 'Ready.'];
+  var barPct   = 0;
+
+  function setMsg(idx) {
+    if (!statusEl) return;
+    statusEl.style.opacity = '0';
+    setTimeout(function () {
+      statusEl.textContent = msgs[idx] || msgs[msgs.length - 1];
+      statusEl.style.opacity = '1';
+    }, 150);
+  }
+
+  function advanceBar(target, cb) {
+    var iv = setInterval(function () {
+      barPct = Math.min(barPct + 3, target);
+      if (barFill) barFill.style.width = barPct + '%';
+      if (barPct >= target) { clearInterval(iv); if (cb) cb(); }
+    }, 18);
+  }
+
+  function triggerPageIn() {
+    var topbar  = document.querySelector('.metadata-topbar');
+    var sidebar = document.querySelector('.metadata-sidebar');
+    if (topbar)  { topbar.style.opacity  = '1'; topbar.style.transform  = 'none'; }
+    if (sidebar) { sidebar.style.opacity = '1'; sidebar.style.transform = 'none'; }
+    document.querySelectorAll('.meta-section').forEach(function (el, i) {
+      setTimeout(function () {
+        el.style.opacity   = '1';
+        el.style.transform = 'none';
+      }, i * 80 + 120);
+    });
+  }
+
+  if (loader) {
+    setTimeout(function () {
+      loader.classList.add('is-visible');
+      advanceBar(50, function () {
+        setMsg(1);
+        setTimeout(function () {
+          advanceBar(80, function () {
+            setMsg(2);
+            setTimeout(function () {
+              advanceBar(100, function () {
+                setMsg(3);
+                setTimeout(function () {
+                  loader.classList.add('is-done');
+                  document.body.classList.remove('meta-loading');
+                  triggerPageIn();
+                }, 320);
+              });
+            }, 220);
+          });
+        }, 360);
+      });
+    }, 60);
+  } else {
+    triggerPageIn();
+  }
+
+  /* Scroll progress */
+  var prog = document.getElementById('metaPgProgress');
+  if (prog) {
+    window.addEventListener('scroll', function () {
+      var s = document.documentElement.scrollTop;
+      var h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      prog.style.width = (h > 0 ? (s / h * 100) : 0) + '%';
+    }, { passive: true });
+  }
+})();
+</script>
+
+<script>
+(function () {
+    var sections = [
+        { id: 'meta-basic',        total: 4 },
+        { id: 'meta-general',      total: 4 },
+        { id: 'meta-data-contact', total: 4 },
+        { id: 'meta-contact',      total: 2 },
+        { id: 'meta-address',      total: 6 },
+    ];
+    var grandTotal = 20;
+
+    function countFilled(sectionId) {
+        var section = document.getElementById(sectionId);
+        if (!section) return 0;
+        var count = 0;
+        var seen = {};
+        var fields = section.querySelectorAll('[required]');
+        for (var i = 0; i < fields.length; i++) {
+            var el = fields[i];
+            if (el.type === 'radio') {
+                if (!seen[el.name]) {
+                    seen[el.name] = true;
+                    if (section.querySelector('[name="' + el.name + '"]:checked')) count++;
+                }
+            } else {
+                if (el.value.trim() !== '') count++;
+            }
+        }
+        return count;
+    }
+
+    function update() {
+        var grandFilled = 0;
+        for (var s = 0; s < sections.length; s++) {
+            var sec = sections[s];
+            var filled = countFilled(sec.id);
+            grandFilled += filled;
+            var badge = document.getElementById('badge-' + sec.id);
+            if (!badge) continue;
+            badge.textContent = filled + '/' + sec.total;
+            badge.classList.toggle('meta-progress-badge--done',    filled === sec.total);
+            badge.classList.toggle('meta-progress-badge--partial', filled > 0 && filled < sec.total);
+        }
+        var pct = Math.round((grandFilled / grandTotal) * 100);
+        var fill  = document.getElementById('meta-overall-fill');
+        var label = document.getElementById('meta-overall-label');
+        if (fill)  { fill.style.width = pct + '%'; fill.classList.toggle('meta-overall-progress__fill--done', grandFilled === grandTotal); }
+        if (label) label.textContent = grandFilled + ' / ' + grandTotal + ' fields completed';
+    }
+
+    var form = document.querySelector('.metadata-form');
+    if (form) {
+        form.addEventListener('input',  update);
+        form.addEventListener('change', update);
+    }
+    update();
+})();
+</script>
 </body>
 </html>

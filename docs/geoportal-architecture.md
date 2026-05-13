@@ -10,6 +10,7 @@ Geoportal ini dibangun di atas CodeIgniter 4 dan saat ini punya empat alur utama
 2. Katalog dataset dan unduhan berbasis registry tabel dataset.
 3. WebMap interaktif untuk preview data Level 1 dan Level 2.
 4. Area admin untuk impor paket data dan metadata XML.
+5. Auth API terpisah berbasis Node.js dan Express.js untuk login/signup user.
 
 Secara sederhana, alurnya seperti ini:
 
@@ -39,7 +40,7 @@ Ada tiga kelompok database yang dipakai:
 - `app/Controllers/Home.php`
   Landing dan beberapa halaman template lama.
 - `app/Controllers/AuthController.php`
-  Alur login/logout yang aktif dipakai route saat ini.
+  Alur login/logout yang aktif dipakai route saat ini, sebagai consumer ke Auth API.
 - `app/Controllers/Catalog.php`
   Halaman katalog, detail dataset, download CSV, dan output GeoJSON.
 - `app/Controllers/WebMap.php`
@@ -53,6 +54,8 @@ Ada tiga kelompok database yang dipakai:
 
 - `app/Libraries/DatasetImportService.php`
   Pusat logika impor paket Level 1, Level 2, dan metadata XML.
+- `app/Libraries/AuthApiClient.php`
+  Client HTTP untuk menghubungkan halaman login/signup PHP ke Auth API Node.js.
 
 ### Model
 
@@ -89,6 +92,11 @@ Ada tiga kelompok database yang dipakai:
 - `app/Commands/ImportDatasetPackage.php`
   Jalur CLI untuk menjalankan import yang sama seperti tombol admin.
 
+### Service API terpisah
+
+- `services/auth-api/`
+  Service Node.js + Express.js untuk endpoint autentikasi user.
+
 ## 3. Peta Request dan Route
 
 Route aktif dirangkai di `app/Config/Routes.php`.
@@ -102,6 +110,7 @@ Route aktif dirangkai di `app/Config/Routes.php`.
 - `/catalog/geojson/{id}` -> `Catalog::geojson`
 - `/webmap` -> `WebMap::index`
 - `/login` -> `AuthController::loginForm` dan `AuthController::loginPost`
+- `/signup` -> `AuthController::signupForm` dan `AuthController::signupPost`
 - `/logout` -> `AuthController::logout`
 
 ### Route admin
@@ -130,6 +139,8 @@ Halaman `v_webmap.php` tidak mengambil data langsung dari database. Ia hanya mem
 ### Komponen yang terlibat
 
 - `AuthController`
+- `AuthApiClient`
+- `services/auth-api`
 - `AuthUserModel`
 - `AuthUserRoleModel`
 - `app/Common.php`
@@ -141,16 +152,19 @@ Halaman `v_webmap.php` tidak mengambil data langsung dari database. Ia hanya mem
 
 1. User membuka `/login`.
 2. `AuthController::loginForm()` merender `v_login`.
-3. Form submit ke `POST /login`.
-4. `AuthController::loginPost()`:
-   - membaca email dan password,
-   - lookup user di `auth.users`,
+3. User baru dapat membuka `GET /signup` untuk registrasi mandiri role `user`.
+4. Form login/signup submit ke route PHP aktif.
+5. `AuthController` memvalidasi input awal dan throttling dasar.
+6. `AuthController` meneruskan request ke Auth API Node.js melalui `AuthApiClient`.
+7. Auth API:
+   - membaca/menulis `auth.users`,
    - memverifikasi `password_hash`,
-   - mengambil role primer dari `auth.user_roles` dan `auth.roles`,
-   - meregenerasi session,
-   - menyimpan flag `logged_in`, `isLoggedIn`, `user_id`, `email`, `full_name`, dan `role`.
-5. Jika role `admin`, user diarahkan ke `/dataset/manage`.
-6. Jika role selain `admin`, user diarahkan ke `/catalog`.
+   - mengambil atau membentuk role primer dari `auth.user_roles` dan `auth.roles`,
+   - mengunci registrasi publik ke role default `user`,
+   - tidak menyediakan self-register untuk `admin`.
+8. Jika login berhasil, PHP meregenerasi session lalu menyimpan flag `logged_in`, `isLoggedIn`, `user_id`, `email`, `full_name`, dan `role`.
+9. Jika role `admin`, user diarahkan ke `/dataset/manage`.
+10. Jika role selain `admin`, user diarahkan ke `/catalog`.
 
 ### Helper global
 
@@ -161,7 +175,11 @@ Halaman `v_webmap.php` tidak mengambil data langsung dari database. Ia hanya mem
 1. membaca role dari session,
 2. bila email ada, mencoba sinkronkan lagi ke tabel auth,
 3. menyimpan role hasil sinkronisasi kembali ke session,
-4. fallback ke `user` jika tidak ada hasil.
+4. fallback aman ke `user` jika relasi role belum ada, tanpa menebak `admin` dari email atau nama.
+
+### Catatan implementasi frontend
+
+Untuk flow auth ini, frontend tidak memakai Vite. Halaman `login` dan `signup` tetap server-rendered dari PHP karena kebutuhan JavaScript-nya ringan. Pendekatan ini lebih sederhana dan biasanya lebih cepat diopsikan pada repo yang belum memakai SPA.
 
 ### Filter
 

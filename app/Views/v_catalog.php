@@ -11,6 +11,8 @@ $search       = $search ?? '';
 $downloadable = (bool)($downloadable ?? false);
 $viewable     = (bool)($viewable ?? false);
 $scopes       = is_array($scopes ?? null) ? $scopes : [];
+$anomalies    = is_array($anomalies ?? null) ? $anomalies : [];
+$levels       = is_array($levels ?? null) ? $levels : [];
 $countryCode  = $countryCode ?? 'ID';
 $countryName  = $countryName ?? 'Indonesia';
 $datasets     = is_array($datasets ?? null) ? $datasets : [];
@@ -38,12 +40,12 @@ function esc_attr($v) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Data Catalog</title>
+  <title>GravPort | Data Catalog</title>
 
   <!-- Keep your existing template assets -->
   <link rel="stylesheet" href="<?= base_url('site/css/bootstrap.css'); ?>">
   <link rel="stylesheet" href="<?= base_url('site/css/fonts.css'); ?>">
-  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=2'); ?>">
+  <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=30'); ?>">
   <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css'); ?>">
   <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Poppins:400,500,600%7CTeko:300,400,500%7CMaven+Pro:500">
 
@@ -89,18 +91,6 @@ function esc_attr($v) {
       mix-blend-mode: soft-light;
     }
 
-    /* Header should look like v_template (brown bar). */
-    /* If your style.css already defines .site-header, this just stabilizes it. */
-    .site-header{
-      position: fixed !important;
-      top: 0; left: 0; right: 0;
-      z-index: 9999;
-      background: rgba(165,106,42,0.96) !important;
-      backdrop-filter: saturate(1.05) blur(8px);
-      -webkit-backdrop-filter: saturate(1.05) blur(8px);
-      border-bottom: 1px solid rgba(255,255,255,0.14);
-    }
-
     /* Main layout */
     .catalog-wrap{
       position: relative;
@@ -134,6 +124,14 @@ function esc_attr($v) {
       letter-spacing: -0.045em;
       color: #ffffff;
       text-shadow: 0 12px 34px rgba(0,0,0,0.26);
+    }
+
+    .catalog-subtitle{
+      max-width: 720px;
+      margin: 14px 0 0;
+      color: rgba(255,255,255,0.74);
+      font-size: 15px;
+      line-height: 1.7;
     }
 
     .catalog-title-wrap::after{
@@ -215,7 +213,7 @@ function esc_attr($v) {
     /* Filters panel */
     .filters-panel{
       position: sticky;
-      top: 110px;
+      top: calc(var(--landing-header-offset) + 6px);
       border-radius: 18px;
       padding: 14px;
       background: rgba(255,255,255,0.07);
@@ -530,22 +528,110 @@ function esc_attr($v) {
     /* Utility */
     .hidden{ display:none !important; }
 
+    /* ===== Cinematic Loader ===== */
+    body.cat-loading { overflow: hidden; }
+    .cat-loader {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #04101d;
+      transform: translateY(0);
+      transition: transform 0.9s cubic-bezier(0.76,0,0.24,1);
+    }
+    .cat-loader.is-done { transform: translateY(-100%); }
+    .cat-loader__brand {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 32px;
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .cat-loader__brand img { width: 46px; height: 46px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(167,96,37,0.5)); }
+    .cat-loader__brand strong { font-family: "Poppins",sans-serif; font-size: 26px; font-weight: 800; color: #fff; }
+    .cat-loader__tag {
+      font-family: "Poppins",sans-serif; font-size: 10px; font-weight: 800;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.36); margin-bottom: 24px;
+      opacity: 0; transition: opacity 0.4s 0.25s;
+    }
+    .cat-loader__bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; opacity: 0; transition: opacity 0.3s 0.15s; }
+    .cat-loader__fill { height: 100%; width: 0%; background: linear-gradient(90deg,#a76025,#ffbf74,#61d4ff); border-radius: 999px; transition: width 1.1s cubic-bezier(0.4,0,0.2,1) 0.1s; }
+    .cat-loader.is-visible .cat-loader__brand { opacity: 1; transform: translateY(0); }
+    .cat-loader.is-visible .cat-loader__bar  { opacity: 1; }
+    .cat-loader.is-visible .cat-loader__tag  { opacity: 1; }
+    .cat-loader.is-loading .cat-loader__fill { width: 100%; }
+
+    /* ===== Scroll progress ===== */
+    .cat-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg,#a76025,#ffbf74,#61d4ff); z-index: 9999; pointer-events: none; transition: width 0.09s linear; }
+
+    /* ===== Title clip-path reveal ===== */
+    .catalog-title { clip-path: inset(0 100% 0 0); transition: clip-path 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s; }
+    .catalog-title.is-revealed { clip-path: inset(0 0% 0 0); }
+
+    /* ===== Panel slide-in ===== */
+    .filters-panel { opacity: 0; transform: translateX(-20px); transition: opacity 0.55s 0.4s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s; }
+    .filters-panel.panel-in { opacity: 1; transform: translateX(0); }
+    .results-panel { opacity: 0; transform: translateY(14px); transition: opacity 0.55s 0.5s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.5s; }
+    .results-panel.panel-in { opacity: 1; transform: translateY(0); }
+
+    /* ===== Card entrance stagger ===== */
+    .ds-card {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.5s ease, transform 0.55s cubic-bezier(0.16,1,0.3,1),
+                  border-color 0.25s ease, box-shadow 0.3s ease;
+    }
+    .ds-card.card-in { opacity: 1; transform: translateY(0); }
+    .ds-card:hover { border-color: rgba(255,191,116,0.3) !important; box-shadow: 0 20px 60px rgba(0,0,0,0.38) !important; }
+
+    /* ===== Card spotlight hover (pseudo-element) ===== */
+    .ds-card { position: relative; }
+    .ds-card__inner { position: relative; z-index: 1; }
+    .ds-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(300px circle at var(--cmx,50%) var(--cmy,50%), rgba(255,191,116,0.13), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ds-card:hover::before { opacity: 1; }
+
+    /* ===== Table row hover ===== */
+    table.catalog-table tbody tr { transition: background 0.18s; }
+    table.catalog-table tbody tr:hover { background: rgba(255,191,116,0.06); }
+
     .nav-auth{
       display:flex;
       align-items:center;
       gap:12px;
     }
     .nav-login, .nav-logout{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
       color:#fff;
       text-decoration:none;
       font-weight:700;
-      padding:8px 12px;
+      padding:0 16px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,0.25);
       background: rgba(0,0,0,0.12);
+      line-height:1;
     }
     .nav-login:hover, .nav-logout:hover{
       background: rgba(0,0,0,0.22);
+    }
+    .nav-login--primary{
+      background: rgba(255,255,255,0.95);
+      color:#69350f;
+      border-color: rgba(255,255,255,0.95);
+    }
+    .nav-login--secondary,
+    .nav-logout--secondary{
+      background: rgba(7,19,36,0.28);
     }
     .nav-role{
       color: rgba(255,255,255,0.9);
@@ -560,13 +646,27 @@ function esc_attr($v) {
   </style>
 </head>
 
-<body class="catalog-page">
+<body class="catalog-page gravport-landing cat-loading">
+
+  <div class="cat-loader" id="catLoader" role="status" aria-label="Loading catalog">
+    <div class="cat-loader__brand">
+      <img src="<?= base_url('images/itb.png'); ?>" alt="">
+      <strong>GravPort</strong>
+    </div>
+    <p class="cat-loader__tag">Data Catalog</p>
+    <div class="cat-loader__bar">
+      <div class="cat-loader__fill"></div>
+    </div>
+  </div>
+
+  <div class="cat-progress" id="catProgress"></div>
   <div class="catalog-bg" aria-hidden="true"></div>
 
   <div class="page">
     <div id="home">
       <?= view('partials/site_header', [
         'activePage' => 'catalog',
+        'headerClass' => 'header--solid',
       ]) ?>
 
       <main class="catalog-shell">
@@ -582,7 +682,9 @@ function esc_attr($v) {
           <!-- Toolbar -->
           <div class="catalog-toolbar">
             <div class="toolbar-left">
-              <span class="pill">Scope filters: <strong><?= empty($scopes) ? 'All' : esc(implode(', ', array_map('ucfirst', $scopes))) ?></strong></span>
+              <span class="pill">Scope: <strong><?= empty($scopes) ? 'All' : esc(implode(', ', array_map('ucfirst', $scopes))) ?></strong></span>
+              <span class="pill">Data: <strong><?= empty($anomalies) ? 'All' : esc(strtoupper(implode(', ', $anomalies))) ?></strong></span>
+              <span class="pill">Level: <strong><?= empty($levels) ? 'All' : esc(implode(', ', array_map('strtoupper', array_map(static fn ($value) => str_replace('level', 'L', $value), $levels)))) ?></strong></span>
               <span class="pill">Properties:
                 <strong>
                   <?= ($downloadable || $viewable) ? '' : 'All' ?>
@@ -605,7 +707,7 @@ function esc_attr($v) {
             <aside class="filters-panel">
               <div class="filters-title">
                 <span>Filters</span>
-                <a class="btn-reset" href="<?= esc($baseUrl) ?>">Reset</a>
+                <a class="btn-reset" href="<?= esc($baseUrl) ?>" title="Clear all filters"><i class="bi bi-x-circle" style="margin-right:4px;"></i>Reset</a>
               </div>
 
               <form method="get" class="filters-form" id="filtersForm">
@@ -618,7 +720,7 @@ function esc_attr($v) {
                       name="q"
                       id="q"
                       value="<?= esc_attr($search) ?>"
-                      placeholder="Search dataset title..."
+                      placeholder="Cari dataset..."
                       autocomplete="off"
                     >
                   </div>
@@ -630,6 +732,34 @@ function esc_attr($v) {
                         <option value="<?= $n ?>" <?= q_selected($perPage === (int)$n) ?>><?= $n ?></option>
                       <?php endforeach; ?>
                     </select>
+                  </div>
+
+                  <div>
+                    <label>Data</label>
+                    <div class="check-row">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="anomaly[]" id="anomaly_faa" value="faa" <?= q_checked(in_array('faa', $anomalies, true)) ?>>
+                        <label class="form-check-label" for="anomaly_faa">FAA</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="anomaly[]" id="anomaly_cba" value="cba" <?= q_checked(in_array('cba', $anomalies, true)) ?>>
+                        <label class="form-check-label" for="anomaly_cba">CBA</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label>Level</label>
+                    <div class="check-row">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="level[]" id="level_1" value="level1" <?= q_checked(in_array('level1', $levels, true)) ?>>
+                        <label class="form-check-label" for="level_1">Level 1</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="level[]" id="level_2" value="level2" <?= q_checked(in_array('level2', $levels, true)) ?>>
+                        <label class="form-check-label" for="level_2">Level 2</label>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -697,12 +827,19 @@ function esc_attr($v) {
                         $backend = $d['backend_type'] ?? null;
                         $schema  = $d['data_schema'] ?? null;
                         $table   = $d['data_table'] ?? null;
+                        $anomalyLabel = strtoupper((string) ($d['anomaly_key'] ?? ''));
+                        $levelLabel = strtoupper(str_replace('level', 'L', (string) ($d['level_key'] ?? '')));
+                        $downloadLabel = ($d['type'] ?? '') === 'raster' ? 'GeoTIFF' : 'CSV';
                       ?>
                       <article class="ds-card">
                         <div class="ds-card__inner">
                           <div class="ds-topline">
                             <span class="ds-chip <?= esc_attr($chipClass) ?>"><?= esc(strtoupper($scope)) ?></span>
                             <div class="ds-meta">
+                              <?php if ($anomalyLabel !== '' || $levelLabel !== ''): ?>
+                                <span><?= esc(trim($anomalyLabel . ' ' . $levelLabel)) ?></span>
+                                <span>&middot;</span>
+                              <?php endif; ?>
                               <span><?= esc($d['country_name'] ?? $countryName) ?></span>
                               <?php if ($items !== null && $items !== ''): ?>
                                 <span>&middot;</span><span><?= esc((string)$items) ?> items</span>
@@ -723,11 +860,11 @@ function esc_attr($v) {
 
                           <div class="ds-actions">
                             <?php if ($isView): ?>
-                              <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) ?>">View</a>
+                              <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>">View</a>
                             <?php endif; ?>
 
                             <?php if ($isDown): ?>
-                              <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Download</a>
+                              <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Unduh <?= esc($downloadLabel) ?></a>
                             <?php endif; ?>
 
                             <?php if ($isView): ?>
@@ -768,6 +905,7 @@ function esc_attr($v) {
                             $scope = $d['spatial_scope'] ?? 'national';
                             $isView = !empty($d['is_viewable']);
                             $isDown = !empty($d['is_downloadable']);
+                            $downloadLabel = ($d['type'] ?? '') === 'raster' ? 'GeoTIFF' : 'CSV';
                           ?>
                           <tr>
                             <td><?= esc($d['title'] ?? '-') ?></td>
@@ -778,11 +916,11 @@ function esc_attr($v) {
                             <td>
                               <div class="ds-actions" style="margin:0;">
                                 <?php if ($isView): ?>
-                                  <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) ?>">View</a>
+                                  <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>">View</a>
                                 <?php endif; ?>
 
                                 <?php if ($isDown): ?>
-                                  <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Download</a>
+                                  <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Unduh <?= esc($downloadLabel) ?></a>
                                 <?php endif; ?>
 
                                 <?php if ($isView): ?>
@@ -868,6 +1006,87 @@ function esc_attr($v) {
       const form = document.getElementById('filtersForm');
       btn?.addEventListener('click', () => form?.submit());
     })();
+  </script>
+
+  <script>
+  /* ============================================================
+     GravPort Catalog — Creative Layer
+  ============================================================ */
+  (function () {
+
+    /* --- Cinematic loader --- */
+    var loader = document.getElementById('catLoader');
+    if (loader) {
+      setTimeout(function () {
+        loader.classList.add('is-visible');
+        setTimeout(function () {
+          loader.classList.add('is-loading');
+          setTimeout(function () {
+            loader.classList.add('is-done');
+            document.body.classList.remove('cat-loading');
+            /* Trigger page animations after loader gone */
+            triggerPageIn();
+            setTimeout(function () {
+              if (loader.parentNode) loader.parentNode.removeChild(loader);
+            }, 1000);
+          }, 1550);
+        }, 80);
+      }, 50);
+    } else {
+      triggerPageIn();
+    }
+
+    function triggerPageIn() {
+      /* Title reveal */
+      var title = document.querySelector('.catalog-title');
+      if (title) setTimeout(function () { title.classList.add('is-revealed'); }, 60);
+
+      /* Panel slide-in */
+      var fp = document.querySelector('.filters-panel');
+      var rp = document.querySelector('.results-panel');
+      if (fp) setTimeout(function () { fp.classList.add('panel-in'); }, 100);
+      if (rp) setTimeout(function () { rp.classList.add('panel-in'); }, 160);
+
+      /* Card stagger entrance */
+      document.querySelectorAll('.ds-card').forEach(function (card, i) {
+        setTimeout(function () { card.classList.add('card-in'); }, 380 + i * 75);
+      });
+    }
+
+    /* --- Scroll progress bar --- */
+    var progressBar = document.getElementById('catProgress');
+    if (progressBar) {
+      window.addEventListener('scroll', function () {
+        var doc = document.documentElement;
+        var pct = (window.scrollY / (doc.scrollHeight - window.innerHeight)) * 100;
+        progressBar.style.width = Math.min(100, pct) + '%';
+      }, { passive: true });
+    }
+
+    /* --- Card spotlight hover --- */
+    document.querySelectorAll('.ds-card').forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--cmx', ((e.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--cmy', ((e.clientY - r.top)  / r.height * 100) + '%');
+      });
+    });
+
+    /* --- Re-animate cards on view toggle --- */
+    ['btnCards','btnTable'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        if (id === 'btnCards') {
+          document.querySelectorAll('.ds-card').forEach(function (c, i) {
+            c.classList.remove('card-in');
+            setTimeout(function () { c.classList.add('card-in'); }, 40 + i * 55);
+          });
+        }
+      });
+    });
+
+  })();
   </script>
 </body>
 </html>

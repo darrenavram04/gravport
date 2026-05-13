@@ -333,6 +333,10 @@ class WebMap extends BaseController
 
     private function normalizeBounds($bounds): ?array
     {
+        if ($bounds === null || $bounds === '') {
+            return null;
+        }
+
         if (is_string($bounds)) {
             $decoded = json_decode($bounds, true);
             if (is_array($decoded)) {
@@ -346,18 +350,20 @@ class WebMap extends BaseController
                         'east' => $parts[2],
                         'north' => $parts[3],
                     ];
+                } else {
+                    throw new InvalidArgumentException('Format bounds tidak valid.');
                 }
             }
         }
 
         if (!is_array($bounds)) {
-            return null;
+            throw new InvalidArgumentException('Format bounds tidak valid.');
         }
 
         $required = ['west', 'south', 'east', 'north'];
         foreach ($required as $key) {
             if (!isset($bounds[$key]) || !is_numeric($bounds[$key])) {
-                return null;
+                throw new InvalidArgumentException('Bounds harus berisi west, south, east, dan north numerik.');
             }
         }
 
@@ -369,10 +375,23 @@ class WebMap extends BaseController
         ];
 
         if (
+            $normalized['west'] < -180
+            || $normalized['west'] > 180
+            || $normalized['east'] < -180
+            || $normalized['east'] > 180
+            || $normalized['south'] < -90
+            || $normalized['south'] > 90
+            || $normalized['north'] < -90
+            || $normalized['north'] > 90
+        ) {
+            throw new InvalidArgumentException('Bounds berada di luar rentang koordinat geografis yang valid.');
+        }
+
+        if (
             $normalized['west'] >= $normalized['east']
             || $normalized['south'] >= $normalized['north']
         ) {
-            return null;
+            throw new InvalidArgumentException('Bounds harus memiliki west < east dan south < north.');
         }
 
         return $normalized;
@@ -1145,7 +1164,11 @@ class WebMap extends BaseController
     private function decodeBytea(string $value): string
     {
         if (str_starts_with($value, '\\x')) {
-            $binary = hex2bin(substr($value, 2));
+            $hex = substr($value, 2);
+            if ($hex === '' || strlen($hex) % 2 !== 0) {
+                return '';
+            }
+            $binary = hex2bin($hex);
             return $binary === false ? '' : $binary;
         }
 

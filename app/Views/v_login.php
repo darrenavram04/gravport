@@ -345,35 +345,6 @@
       box-shadow: 0 24px 50px rgba(255, 191, 116, 0.22);
     }
 
-    .login-demo {
-      position: relative;
-      z-index: 1;
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .login-demo strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 13px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.82);
-    }
-
-    .login-demo code {
-      display: block;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.18);
-      color: #fff;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
     .login-back {
       position: relative;
       z-index: 1;
@@ -387,6 +358,22 @@
     }
 
     .login-back:hover {
+      color: #fff;
+    }
+
+    .login-switch {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.78);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .login-switch:hover {
       color: #fff;
     }
 
@@ -433,24 +420,24 @@
       <span class="login-kicker">Geoportal Access</span>
       <h1>Masuk ke workspace GravPort.</h1>
       <p>
-        Akses ini digunakan untuk membuka katalog dataset, WebMap, dan area administrasi metadata. Hak akses tambahan akan ditampilkan sesuai peran akun yang digunakan saat login.
+        Masuk untuk membuka katalog, WebMap, dan fitur sesuai role akun.
       </p>
 
       <div class="login-story__grid">
         <div class="login-story__stat">
           <small>Katalog</small>
           <strong>Dataset Level 1 & 2</strong>
-          <span>Akses halaman katalog untuk meninjau data FAA dan CBA yang tersedia.</span>
+          <span>Lihat FAA dan CBA yang tersedia.</span>
         </div>
         <div class="login-story__stat">
           <small>Admin</small>
           <strong>Metadata Workspace</strong>
-          <span>Role admin dapat membuka pengisian metadata dan halaman operasional internal.</span>
+          <span>Admin dapat mengakses metadata dan operasional internal.</span>
         </div>
         <div class="login-story__stat">
           <small>Workflow</small>
           <strong>Role-based Access</strong>
-          <span>Tampilan menu dan alur kerja akan menyesuaikan hak akses user yang aktif.</span>
+          <span>Menu menyesuaikan role user aktif.</span>
         </div>
       </div>
     </article>
@@ -459,7 +446,7 @@
       <div class="login-card__head">
         <span class="login-card__eyebrow">Secure Sign In</span>
         <h2>Masuk ke akun Anda</h2>
-        <p>Gunakan akun yang sesuai untuk mengakses fitur umum atau area administrasi GravPort.</p>
+        <p>Gunakan akun yang sesuai.</p>
       </div>
 
       <?php if (session()->getFlashdata('error')): ?>
@@ -475,7 +462,7 @@
 
         <div class="login-field">
           <label for="email">Email</label>
-          <input id="email" name="email" type="email" value="<?= esc(old('email')) ?>" placeholder="admin@gravport.test" required>
+          <input id="email" name="email" type="email" value="<?= esc(old('email')) ?>" placeholder="email@contoh.com" required>
         </div>
 
         <div class="login-field">
@@ -486,11 +473,11 @@
         <button class="login-submit" type="submit">Login to GravPort</button>
       </form>
 
-      <div class="login-demo">
-        <strong>Info Login</strong>
-        <code>Admin: admin@gravport.test / admin123</code>
-        <code>User: client@gravport.test / client123</code>
-      </div>
+
+      <a class="login-switch" href="<?= site_url('signup') ?>">
+        <span>Belum punya akun?</span>
+        <span>Daftar sebagai user</span>
+      </a>
 
       <a class="login-back" href="<?= site_url('/') ?>">
         <span>&larr;</span>

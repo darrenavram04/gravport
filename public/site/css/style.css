@@ -21953,16 +21953,24 @@ html{
   gap: 10px;
 }
 
-.gravport-landing .nav-login,
-.gravport-landing .nav-logout{
+.gravport-landing .nav-login{
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.gravport-landing .nav-login:hover,
-.gravport-landing .nav-logout:hover{
+.gravport-landing .nav-logout{
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.gravport-landing .nav-login:hover{
   transform: translateY(-1px);
+}
+
+.gravport-landing .nav-logout:hover{
+  color: #fff !important;
 }
 
 .gravport-landing .nav-share{
@@ -22609,7 +22617,6 @@ body.gravport-landing{
 }
 
 .gravport-landing .nav-login,
-.gravport-landing .nav-logout,
 .gravport-landing .nav-share{
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -26787,6 +26794,311 @@ body.gravport-landing{
     width: 74px;
     min-width: 74px;
     height: 74px;
+  }
+}
+
+/* ==========================================================================
+   GravPort polish patch
+   ========================================================================== */
+.gravport-landing .nav-auth{
+  gap: 10px;
+}
+
+.gravport-landing .nav-login{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px !important;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: none !important;
+}
+
+.gravport-landing .nav-logout{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px !important;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.gravport-landing .nav-login--primary{
+  background: linear-gradient(135deg, #fff5e8 0%, #fde6ca 100%) !important;
+  color: #74411a !important;
+  border: 1px solid rgba(255, 244, 232, 0.92) !important;
+}
+
+.gravport-landing .nav-login--secondary{
+  background: rgba(11, 25, 44, 0.28) !important;
+  color: #fff8f2 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.gravport-landing .nav-logout--secondary{
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+  border: none !important;
+  min-height: auto !important;
+  padding: 0 6px !important;
+}
+
+.gravport-landing .nav-logout--secondary:hover{
+  color: #fff !important;
+  opacity: 1;
+}
+
+.gravport-landing #sceneHome .hero-content{
+  max-width: 42rem;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.gravport-landing #sceneHome .hero-content::before{
+  content: none;
+}
+
+.gravport-landing #About .section-heading--about{
+  align-items: stretch;
+  gap: clamp(18px, 2.5vw, 30px);
+}
+
+.gravport-landing .about-heading-card{
+  position: relative;
+  flex: 1 1 520px;
+  padding: clamp(28px, 3vw, 42px);
+  border-radius: 34px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(255, 201, 150, 0.2), transparent 34%),
+    linear-gradient(135deg, rgba(7, 19, 37, 0.58) 0%, rgba(14, 37, 68, 0.44) 58%, rgba(170, 104, 50, 0.26) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 28px 60px rgba(7, 16, 30, 0.2);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+.gravport-landing .about-heading-card::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    radial-gradient(circle at 84% 20%, rgba(255, 216, 180, 0.12), transparent 24%);
+  pointer-events: none;
+}
+
+.gravport-landing .about-heading-card .section-kicker,
+.gravport-landing .about-heading-card .section-title{
+  position: relative;
+  z-index: 1;
+}
+
+.gravport-landing .about-heading-card .section-kicker{
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 244, 234, 0.92);
+}
+
+.gravport-landing .about-heading-card .section-title{
+  color: #fffaf3;
+  max-width: 9ch;
+  text-shadow: 0 16px 30px rgba(5, 12, 24, 0.22);
+}
+
+.gravport-landing .about-heading-side{
+  flex: 1 1 360px;
+  display: grid;
+  gap: 16px;
+  align-content: center;
+}
+
+.gravport-landing .about-heading-side .section-lead{
+  max-width: none;
+  padding: 22px 24px;
+  border-radius: 26px;
+  background: rgba(8, 22, 42, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 42px rgba(8, 16, 30, 0.12);
+  color: rgba(248, 240, 232, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.gravport-landing .about-metrics{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gravport-landing .about-metric{
+  padding: 18px 18px 16px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(8, 22, 42, 0.28), rgba(10, 27, 46, 0.18));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 32px rgba(8, 16, 30, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.gravport-landing .about-metric__label{
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 239, 225, 0.84);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gravport-landing .about-metric strong{
+  display: block;
+  margin-top: 12px;
+  font-size: 1.08rem;
+  line-height: 1.35;
+  color: #fffaf3;
+}
+
+.gravport-landing .about-metric p{
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgba(242, 231, 222, 0.84);
+}
+
+.gravport-landing .tool-visual{
+  padding: 22px;
+}
+
+.gravport-landing .tool-visual__frame{
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  aspect-ratio: 0.73;
+  margin: 0 auto;
+  padding: 16px;
+  border-radius: 32px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(255, 217, 180, 0.78), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.96));
+  border: 1px solid rgba(149, 164, 183, 0.18);
+  box-shadow: 0 28px 54px rgba(12, 22, 38, 0.14);
+}
+
+.gravport-landing .tool-visual__badge{
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(10, 26, 46, 0.74);
+  color: #fff7ef;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gravport-landing .tool-geoid-viewer{
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border-radius: 26px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 244, 232, 0.82), rgba(228, 236, 243, 0.92) 42%, rgba(203, 216, 228, 0.98) 100%);
+  filter: saturate(0.88) contrast(1.04);
+  --poster-color: transparent;
+  --progress-bar-color: #a76025;
+}
+
+.gravport-landing .tool-geoid-viewer.is-dragging{
+  cursor: grabbing;
+}
+
+.gravport-landing .tool-geoid-embed{
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 244, 232, 0.82), rgba(228, 236, 243, 0.92) 42%, rgba(203, 216, 228, 0.98) 100%);
+}
+
+.gravport-landing .tool-visual__frame-glow{
+  position: absolute;
+  inset: auto 12% 12px;
+  height: 42px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(78, 110, 146, 0.22), rgba(78, 110, 146, 0));
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.gravport-landing .tool-visual__caption{
+  max-width: 28rem;
+  margin: 16px auto 0;
+}
+
+.gravport-landing .tool-geoid-viewer::part(default-progress-bar){
+  border-radius: 999px;
+}
+
+@media (max-width: 991px){
+  .gravport-landing .about-metrics{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px){
+  .gravport-landing .tool-visual{
+    padding: 16px;
+  }
+
+  .gravport-landing .tool-visual__frame{
+    padding: 12px;
+    border-radius: 24px;
+  }
+
+  .gravport-landing .about-heading-card{
+    padding: 24px 22px;
+    border-radius: 28px;
+  }
+
+  .gravport-landing .about-heading-side .section-lead{
+    padding: 18px 18px;
+    border-radius: 22px;
+  }
+
+  .gravport-landing .about-metrics{
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,0 +1,44 @@
+# Environment files — JANGAN pernah commit
+.env
+services/auth-api/.env
+
+# Vendor directories
+vendor/
+services/auth-api/node_modules/
+
+# CodeIgniter writable — semua konten runtime diexclude
+writable/cache/
+writable/logs/
+writable/session/
+writable/tmp/
+writable/debugbar/
+
+# Tools dan binaries Windows (tidak diperlukan di server Linux)
+writable/tools/
+
+# Data geoid dan imports (besar, di-handle terpisah)
+writable/geoid-source/
+writable/imports/
+writable/exports/
+writable/uploads/
+
+# Auth API test data
+writable/auth-api/
+
+# Build artifacts (kecuali scripts dan config yang diperlukan)
+build/check_server.py
+build/logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# PHP
+*.log

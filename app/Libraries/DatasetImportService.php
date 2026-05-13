@@ -166,7 +166,7 @@ class DatasetImportService
         }
 
         $root = realpath(self::IMPORT_ROOT);
-        if ($root === false || strpos($candidate, $root) !== 0) {
+        if ($root === false || (strpos($candidate, $root . DIRECTORY_SEPARATOR) !== 0 && $candidate !== $root)) {
             throw new RuntimeException('Folder import berada di luar direktori yang diizinkan.');
         }
 

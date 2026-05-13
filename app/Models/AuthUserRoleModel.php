@@ -35,28 +35,17 @@ class AuthUserRoleModel extends Model
 
     private function bootstrapMissingRole(int $userId): string
     {
-        $user = $this->db->table('users')
-            ->select('id, email, full_name')
-            ->where('id', $userId)
-            ->get()
-            ->getRowArray();
-
-        if (!$user) {
-            return 'user';
-        }
-
-        $guessedRole = $this->guessRoleName($user);
         $role = $this->db->table('roles')
             ->select('id, name')
-            ->where('name', $guessedRole)
+            ->where('name', 'user')
             ->get()
             ->getRowArray();
 
         if (!$role) {
-            $this->db->table('roles')->insert(['name' => $guessedRole]);
+            $this->db->table('roles')->insert(['name' => 'user']);
             $role = $this->db->table('roles')
                 ->select('id, name')
-                ->where('name', $guessedRole)
+                ->where('name', 'user')
                 ->get()
                 ->getRowArray();
         }
@@ -72,18 +61,6 @@ class AuthUserRoleModel extends Model
                     'role_id' => (int) $role['id'],
                 ]);
             }
-        }
-
-        return $guessedRole;
-    }
-
-    private function guessRoleName(array $user): string
-    {
-        $email = strtolower(trim((string) ($user['email'] ?? '')));
-        $fullName = strtolower(trim((string) ($user['full_name'] ?? '')));
-
-        if (str_contains($email, 'admin') || str_contains($fullName, 'admin')) {
-            return 'admin';
         }
 
         return 'user';

@@ -26,7 +26,7 @@ class Catalog extends BaseController
     {
         $request = $this->request;
 
-        $search = $request->getGet('q');
+        $search = trim((string) ($request->getGet('q') ?? ''));
         $perPage = max(1, (int) ($request->getGet('per_page') ?? 20));
         $page = max(1, (int) ($request->getGet('page') ?? 1));
 
@@ -41,11 +41,37 @@ class Catalog extends BaseController
             $scopes = [];
         }
 
+        $anomalies = $request->getGet('anomaly');
+        if (is_string($anomalies)) {
+            $anomalies = [$anomalies];
+        }
+        if (!is_array($anomalies)) {
+            $anomalies = [];
+        }
+        $anomalies = array_values(array_filter(array_map(
+            static fn ($value): string => strtolower(trim((string) $value)),
+            $anomalies
+        )));
+
+        $levels = $request->getGet('level');
+        if (is_string($levels)) {
+            $levels = [$levels];
+        }
+        if (!is_array($levels)) {
+            $levels = [];
+        }
+        $levels = array_values(array_filter(array_map(
+            static fn ($value): string => strtolower(trim((string) $value)),
+            $levels
+        )));
+
         $filters = [
             'q' => $search,
             'downloadable' => $downloadable,
             'viewable' => $viewable,
             'spatial_scope' => $scopes,
+            'anomaly' => $anomalies,
+            'level' => $levels,
         ];
 
         $allEntries = $this->registry->filterCatalogEntries($filters);
@@ -64,6 +90,8 @@ class Catalog extends BaseController
             'downloadable' => $downloadable,
             'viewable' => $viewable,
             'scopes' => $scopes,
+            'anomalies' => $anomalies,
+            'levels' => $levels,
             'countryCode' => 'ID',
             'countryName' => 'Indonesia',
         ]);
@@ -437,6 +465,15 @@ class Catalog extends BaseController
             return null;
         }
 
+        if (
+            $bounds['west'] < -180 || $bounds['west'] > 180
+            || $bounds['east'] < -180 || $bounds['east'] > 180
+            || $bounds['south'] < -90 || $bounds['south'] > 90
+            || $bounds['north'] < -90 || $bounds['north'] > 90
+        ) {
+            return null;
+        }
+
         return $bounds;
     }
 
@@ -654,7 +691,11 @@ class Catalog extends BaseController
     private function decodeBytea(string $value): string
     {
         if (str_starts_with($value, '\\x')) {
-            $binary = hex2bin(substr($value, 2));
+            $hex = substr($value, 2);
+            if ($hex === '' || strlen($hex) % 2 !== 0) {
+                return '';
+            }
+            $binary = hex2bin($hex);
             return $binary === false ? '' : $binary;
         }
 

@@ -6,7 +6,7 @@
     <title><?= esc($dataset['title']) ?> - GravPort Dataset View</title>
 
     <link rel="stylesheet" href="<?= base_url('site/css/bootstrap.css'); ?>">
-    <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=26'); ?>">
+    <link rel="stylesheet" href="<?= base_url('site/css/style.css?v=30'); ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css'); ?>">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -21,17 +21,10 @@
             color: #142033;
         }
 
-        .dataset-view-page .site-header {
-            background: rgba(167, 96, 37, 0.94);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-        }
-
         .dataset-shell {
             max-width: 1220px;
             margin: 0 auto;
-            padding: 112px 20px 36px;
+            padding: calc(var(--landing-header-offset) + 18px) 20px 36px;
         }
 
         .dataset-grid {
@@ -204,13 +197,70 @@
                 min-height: 460px;
             }
         }
+
+        /* Breadcrumb */
+        .dataset-breadcrumb {
+            padding: calc(var(--landing-header-offset, 80px) + 12px) 20px 0;
+            max-width: 1220px;
+            margin: 0 auto;
+        }
+        .dataset-breadcrumb ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px 2px;
+            font-size: 13px;
+            color: rgba(20, 32, 51, 0.55);
+        }
+        .dataset-breadcrumb li + li::before {
+            content: "›";
+            margin: 0 6px;
+            opacity: 0.5;
+        }
+        .dataset-breadcrumb a {
+            color: rgba(20, 32, 51, 0.65);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .dataset-breadcrumb a:hover {
+            color: #a76025;
+        }
+        .dataset-breadcrumb li[aria-current="page"] {
+            color: #142033;
+            font-weight: 600;
+            max-width: 340px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dataset-shell {
+            padding-top: 14px !important;
+        }
     </style>
 </head>
-<body class="dataset-view-page">
+<body class="dataset-view-page gravport-landing">
 
 <?= view('partials/site_header', [
     'activePage' => 'catalog',
+    'headerClass' => 'header--solid',
 ]) ?>
+
+<?php
+$fromParam = $_GET['from'] ?? '';
+$catalogBase = site_url('catalog');
+$backUrl = (strpos($fromParam, $catalogBase) === 0) ? $fromParam : $catalogBase;
+?>
+
+<nav class="dataset-breadcrumb" aria-label="Breadcrumb">
+    <ol>
+        <li><a href="<?= site_url('/') ?>">Home</a></li>
+        <li><a href="<?= esc($backUrl) ?>">Data Catalog</a></li>
+        <li aria-current="page"><?= esc($dataset['title']) ?></li>
+    </ol>
+</nav>
 
 <main class="dataset-shell">
     <div class="dataset-grid">
@@ -218,7 +268,7 @@
             <span class="dataset-kicker">Dataset Preview</span>
             <h1><?= esc($dataset['title']) ?></h1>
             <p>
-                Preview ini tersambung langsung ke sumber aktif WebMap dan memuat titik atau grid sesuai viewport aktif, tanpa klaster pada data titik.
+                Preview terhubung langsung ke sumber aktif WebMap.
             </p>
 
             <div class="dataset-meta">
@@ -243,7 +293,7 @@
             <div class="dataset-status">
                 <strong>Status Preview</strong>
                 <div id="datasetPreviewStatus">
-                    Preview dimulai dalam mode netral dan mengikuti viewport aktif peta.
+                    Preview mengikuti viewport aktif peta.
                 </div>
             </div>
 
@@ -256,7 +306,7 @@
                     <i class="bi bi-file-earmark-code"></i>
                     <?= esc($dataset['metadata_label'] ?? 'Download Metadata XML') ?>
                 </a>
-                <a href="<?= site_url('catalog') ?>" class="dataset-btn dataset-btn--ghost">
+                <a href="<?= esc($backUrl) ?>" class="dataset-btn dataset-btn--ghost">
                     <i class="bi bi-arrow-left"></i>
                     Back to catalog
                 </a>
@@ -267,7 +317,7 @@
             <div id="map"></div>
             <div class="dataset-map-note">
                 <strong>Preview Aktif</strong>
-                <span id="datasetMapNote">Geser atau zoom peta untuk memuat preview sesuai area yang sedang dilihat.</span>
+                <span id="datasetMapNote">Geser atau zoom peta untuk memuat area yang sedang dilihat.</span>
             </div>
         </section>
     </div>

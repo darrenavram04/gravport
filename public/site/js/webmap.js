@@ -201,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     els.geometryFileInput.addEventListener("change", handleGeometryUpload);
-    els.previewBtn.addEventListener("click", () => loadPreview(false));
+    els.previewBtn?.addEventListener("click", () => loadPreview(false));
     els.clearSpatialBtn.addEventListener("click", clearSpatialFilters);
     els.downloadVectorBtn.addEventListener("click", downloadVector);
     els.downloadRasterBtn.addEventListener("click", downloadRaster);
@@ -431,6 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderDatasetMeta(dataset, featureCount, forcedNote = null, meta = {}) {
+    syncActionButtons(dataset);
     els.datasetBadge.textContent = dataset.type.toUpperCase();
     els.datasetAvailability.textContent = dataset.availability.toUpperCase();
     els.datasetTitle.textContent = dataset.label;
@@ -497,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     els.drawer.classList.add("is-open");
     els.drawerTitle.textContent = props.title || "Ringkasan titik";
-    els.drawerSubtitle.textContent = `${dataset.label} · mode ringan`;
+    els.drawerSubtitle.textContent = `${dataset.label} - mode ringan`;
     els.drawerNote.textContent = "Perbesar area atau gunakan filter yang lebih sempit untuk memunculkan titik asli satu per satu.";
     els.drawerSummary.innerHTML = renderDetailItems([
       { label: props.summary_label || "Mean", value: `${props.summary_value ?? "-"} ${props.summary_unit || ""}` },
@@ -732,7 +733,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (state.mode === "upload" && state.uploadedGeometry) {
       return state.uploadedGeometry.type || "Upload";
     }
-    return "Netral";
+    return "Viewport";
+  }
+
+  function syncActionButtons(dataset) {
+    const isVector = dataset.type === "vector";
+    els.downloadVectorBtn.hidden = !isVector;
+    els.downloadRasterBtn.hidden = isVector;
+    els.downloadVectorBtn.disabled = !isVector;
+    els.downloadRasterBtn.disabled = isVector;
+    els.downloadVectorBtn.textContent = "Unduh CSV";
+    els.downloadRasterBtn.textContent = "Unduh GeoTIFF";
+    els.downloadMetadataBtn.textContent = "Unduh Metadata";
   }
 
   function pointStyle(dataset, props, meta) {
@@ -819,6 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function syncDatasetMeta() {
     const dataset = currentDataset();
     if (!dataset) return;
+    syncActionButtons(dataset);
     renderDatasetMeta(dataset, 0, null, {});
     renderLegend(dataset, {});
   }
@@ -891,8 +904,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const source = Number(response.meta?.source_feature_count ?? 0).toLocaleString("id-ID");
       return `${baseNote} Mode ringan aktif: ${grouped} sel mewakili ${source} titik pada viewport saat ini.`;
     }
-    if (currentFilterLabel() === "Netral") {
-      return `${baseNote} Tampilan awal bersifat netral dan mengikuti viewport aktif.`;
+    if (currentFilterLabel() === "Viewport") {
+      return `${baseNote} Preview mengikuti viewport aktif.`;
     }
     if (response.meta?.mode === "points") {
       return `${baseNote} Semua titik pada area aktif dimuat apa adanya tanpa klaster.`;
