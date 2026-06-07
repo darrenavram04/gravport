@@ -8,14 +8,14 @@ function getTransporter() {
     _transporter = nodemailer.createTransport({
       host: config.smtp.host,
       port: config.smtp.port,
-      secure: false,
+      secure: config.smtp.port === 465,
       auth: {
         user: config.smtp.user,
         pass: config.smtp.pass,
       },
-      connectionTimeout: 5000,  // 5s connect timeout
-      greetingTimeout:  5000,   // 5s greeting timeout
-      socketTimeout:    8000,   // 8s socket inactivity timeout
+      connectionTimeout: 10000,
+      greetingTimeout:  10000,
+      socketTimeout:    15000,
     });
   }
   return _transporter;
