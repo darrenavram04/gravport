@@ -14,6 +14,7 @@
         "ext-intl": "*",
         "ext-mbstring": "*",
         "laminas/laminas-escaper": "^2.14",
+        "midtrans/midtrans-php": "^2.5",
         "psr/log": "^3.0"
     },
     "require-dev": {
