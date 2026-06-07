@@ -145,6 +145,18 @@ $userLevel = $roleLevelLocal($role);
   /* Prevent nav wrapping to a second row at any viewport above mobile breakpoint */
   .site-nav { flex-wrap: nowrap !important; }
 
+  /* Prevent individual nav link text from wrapping (e.g. "Admin Hub") */
+  .site-nav__link { white-space: nowrap; }
+
+  /* Tighten nav gap on home (many items) so lang-toggle stays in frame */
+  .gravport-landing .site-nav { gap: 12px !important; }
+  .gravport-landing .site-nav__link { font-size: 13px !important; }
+
+  /* Ensure lang-toggle never gets pushed out */
+  .nav-container { flex-wrap: nowrap; min-width: 0; }
+  .lang-toggle { flex-shrink: 0; }
+  .nav-auth { flex-shrink: 0; min-width: 0; }
+
   @media (max-width: 900px) {
     .nav-hamburger { display: flex; }
     .site-nav { display: none !important; }
