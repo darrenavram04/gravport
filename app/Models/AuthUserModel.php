@@ -2,27 +2,41 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use CodeIgniter\Database\BaseConnection;
+use Config\Database;
 
-class AuthUserModel extends Model
+class AuthUserModel
 {
-    protected $DBGroup = 'auth';
-    protected $table   = 'users';
-    protected $primaryKey = 'id';
-    protected $returnType = 'array';
+    private BaseConnection $db;
 
-    protected $allowedFields = [
-        'email',
-        'password_hash',
-        'full_name',
-        'is_active',
-        'created_at',
-        'updated_at',
-    ];
+    public function __construct()
+    {
+        $this->db = Database::connect();
+    }
 
     public function findByEmail(string $email): ?array
     {
-        $row = $this->where('email', $email)->first();
+        $row = $this->db->query(
+            'SELECT acc_id AS id, acc_email AS email, acc_name AS full_name, role, is_active
+             FROM geoportal.accounts
+             WHERE acc_email = ?
+             LIMIT 1',
+            [strtolower(trim($email))]
+        )->getRowArray();
+
+        return $row ?: null;
+    }
+
+    public function findById(int $id): ?array
+    {
+        $row = $this->db->query(
+            'SELECT acc_id AS id, acc_email AS email, acc_name AS full_name, role, is_active
+             FROM geoportal.accounts
+             WHERE acc_id = ?
+             LIMIT 1',
+            [$id]
+        )->getRowArray();
+
         return $row ?: null;
     }
 }

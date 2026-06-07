@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Libraries\DatasetImportService;
 use App\Libraries\FilteredMetadataExporter;
 use App\Libraries\GeoportalDatasetRegistry;
+use App\Libraries\MarketplaceService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Config\Database;
 
@@ -14,12 +15,14 @@ class Catalog extends BaseController
     private GeoportalDatasetRegistry $registry;
     private FilteredMetadataExporter $metadataExporter;
     private DatasetImportService $importer;
+    private MarketplaceService $marketplace;
 
     public function __construct()
     {
-        $this->registry = new GeoportalDatasetRegistry();
+        $this->registry    = new GeoportalDatasetRegistry();
         $this->metadataExporter = new FilteredMetadataExporter();
-        $this->importer = new DatasetImportService();
+        $this->importer    = new DatasetImportService();
+        $this->marketplace = new MarketplaceService();
     }
 
     public function index()
@@ -65,6 +68,11 @@ class Catalog extends BaseController
             $levels
         )));
 
+        $selectedOrgs = $request->getGet('organization');
+        if (is_string($selectedOrgs)) $selectedOrgs = [$selectedOrgs];
+        if (!is_array($selectedOrgs)) $selectedOrgs = [];
+        $selectedOrgs = array_values(array_filter(array_map('strval', $selectedOrgs)));
+
         $filters = [
             'q' => $search,
             'downloadable' => $downloadable,
@@ -72,13 +80,27 @@ class Catalog extends BaseController
             'spatial_scope' => $scopes,
             'anomaly' => $anomalies,
             'level' => $levels,
+            'organization_ids' => $selectedOrgs,
         ];
 
         $allEntries = $this->registry->filterCatalogEntries($filters);
+
+        // Build organisation list for filter UI
+        $db = Database::connect();
+        $organizations = $db->query(
+            'SELECT org_id AS id, org_name AS name FROM geoportal.organizations WHERE is_active = true ORDER BY org_name'
+        )->getResultArray();
+
         $total = count($allEntries);
         $totalPages = (int) max(1, ceil($total / $perPage));
         $offset = ($page - 1) * $perPage;
         $datasets = array_slice($allEntries, $offset, $perPage);
+
+        $quota = null;
+        $userId = (int) (session()->get('user_id') ?? 0);
+        if ($userId > 0 && !in_array($this->userRole(), ['admin', 'superadmin'], true)) {
+            $quota = $this->marketplace->checkQuota($userId);
+        }
 
         return view('v_catalog', [
             'datasets' => $datasets,
@@ -92,8 +114,11 @@ class Catalog extends BaseController
             'scopes' => $scopes,
             'anomalies' => $anomalies,
             'levels' => $levels,
+            'selectedOrgs' => $selectedOrgs,
+            'organizations' => $organizations,
             'countryCode' => 'ID',
             'countryName' => 'Indonesia',
+            'quota' => $quota,
         ]);
     }
 
@@ -118,27 +143,66 @@ class Catalog extends BaseController
         $dataset = $this->catalogEntry($id);
 
         if (!$this->isLoggedIn()) {
+            session()->setFlashdata('error', 'Silakan login untuk mengunduh data.');
             return redirect()->to(site_url('login'));
         }
 
         $role = $this->userRole();
-        if (!in_array($role, ['admin', 'user'], true)) {
-            return $this->response->setStatusCode(403)->setBody('Forbidden');
+        if (!in_array($role, ['admin', 'user', 'superadmin'], true)) {
+            session()->setFlashdata('error', 'Anda memerlukan langganan aktif untuk mengunduh data. Lihat paket yang tersedia.');
+            return redirect()->to(site_url('signup'));
         }
 
         if (empty($dataset['is_downloadable'])) {
-            return $this->response->setStatusCode(403)->setBody('This dataset is not downloadable.');
+            return $this->response->setStatusCode(403)->setBody('Dataset ini tidak dapat diunduh.');
         }
 
+        $userId = (int) (session()->get('user_id') ?? 0);
+        $isPrivileged = in_array($role, ['admin', 'superadmin'], true);
+
+        // ── Level-2 gate (semua tier berbayar boleh) ─────────────────
+        $datasetCode = $dataset['dataset_code'] ?? '';
+        if (str_ends_with($datasetCode, '_l2') && !$isPrivileged) {
+            $tier = $this->marketplace->userTier($userId);
+            if (in_array($tier, ['none', 'free'], true)) {
+                session()->setFlashdata('error', 'Dataset Level 2 (GeoTIFF) memerlukan paket berbayar (Lite, Pro, atau Team).');
+                return redirect()->to(site_url('signup'));
+            }
+        }
+
+        // ── Quota check ───────────────────────────────────────────────
+        if ($userId > 0 && !$isPrivileged) {
+            $quota = $this->marketplace->checkQuota($userId);
+            if (!$quota['allowed']) {
+                if (($quota['reason'] ?? '') === 'no_subscription') {
+                    session()->setFlashdata('error', 'Anda belum memiliki langganan aktif. Daftar paket untuk mulai mengunduh data.');
+                    return redirect()->to(site_url('signup'));
+                }
+                session()->setFlashdata('error', 'Kuota unduhan mingguan Anda telah habis. Tunggu reset di hari Senin atau upgrade ke paket Pro/Team.');
+                return redirect()->to(site_url('catalog'));
+            }
+        }
+
+        // ── Perform download ──────────────────────────────────────────
+        $rowCount = null;
+
         if ($dataset['type'] === 'vector') {
-            $export = $this->exportVectorCsv($dataset);
+            $export   = $this->exportVectorCsv($dataset);
+            $rowCount = $export['row_count'] ?? null;
+            $size     = is_file((string)($export['path'] ?? '')) ? filesize($export['path']) : null;
+
+            $this->logCatalogDownload($userId, $dataset, 'vector', $rowCount, $size ?: null);
 
             return $this->response->download($export['path'], null)->setFileName($export['filename']);
         }
 
         $originalRaster = $this->originalRasterPath($dataset['dataset_code']);
         if ($dataset['spatial_scope'] === 'national' && $originalRaster !== null) {
-            return $this->response->download($originalRaster, null)->setFileName($this->safeFilename($dataset['title']) . '.tif');
+            $size = is_file($originalRaster) ? filesize($originalRaster) : null;
+            $this->logCatalogDownload($userId, $dataset, 'raster', null, $size ?: null);
+
+            return $this->response->download($originalRaster, null)
+                ->setFileName($this->safeFilename($dataset['title']) . '.tif');
         }
 
         $binary = $this->exportRasterBinary($dataset);
@@ -147,23 +211,73 @@ class Catalog extends BaseController
         }
 
         $path = $this->writeBinaryExport($binary, $this->safeFilename($dataset['title']) . '.tif', 'data');
+        $size = is_file($path) ? filesize($path) : null;
+        $this->logCatalogDownload($userId, $dataset, 'raster', null, $size ?: null);
 
         return $this->response->download($path, null)->setFileName(basename($path));
     }
 
+    private function logCatalogDownload(int $userId, array $dataset, string $type, ?int $rowCount, ?int $sizeBytes = null): void
+    {
+        try {
+            $this->marketplace->logDownload([
+                'user_id'             => $userId ?: null,
+                'dataset_code'        => $dataset['dataset_code'] ?? '',
+                'dataset_type'        => $type,
+                'filter_params'       => [],
+                'row_count'           => $rowCount,
+                'download_size_bytes' => $sizeBytes,
+                'user_agent'          => $this->request->getUserAgent()->getAgentString(),
+            ]);
+        } catch (\Throwable) {}
+    }
+
     public function downloadMetadata(int $id)
     {
-        $dataset = $this->catalogEntry($id);
+        if (!$this->isLoggedIn()) {
+            session()->setFlashdata('error', 'Silakan login untuk mengunduh metadata.');
+            return redirect()->to(site_url('login'));
+        }
+
+        $userId = (int) (session()->get('user_id') ?? 0);
+        $role   = $this->userRole();
+        $isPrivileged = in_array($role, ['admin', 'superadmin'], true);
+
+        if (!$isPrivileged) {
+            $tier = $this->marketplace->userTier($userId);
+            if (in_array($tier, ['none', 'free'], true)) {
+                session()->setFlashdata('error', 'Metadata XML memerlukan langganan aktif (Lite, Pro, atau Team).');
+                return redirect()->to(site_url('signup'));
+            }
+        }
+
+        $dataset     = $this->catalogEntry($id);
+        $datasetCode = $dataset['dataset_code'] ?? '';
+
+        // Prefer the official CatMD XML uploaded by superadmin for this specific dataset
+        $db  = Database::connect();
+        $row = $db->query(
+            "SELECT raw_xml, file_identifier, title FROM geoportal.dataset_metadata_xml WHERE dataset_code = ? LIMIT 1",
+            [$datasetCode]
+        )->getRowArray();
+
+        if (!empty($row['raw_xml'])) {
+            $safeTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $datasetCode);
+            $filename  = 'metadata_' . $safeTitle . '.xml';
+            return $this->response
+                ->setHeader('Content-Type', 'application/xml; charset=utf-8')
+                ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->setBody($row['raw_xml']);
+        }
+
+        // Fallback: generate metadata XML dynamically
         $filters = [
-            'province_id' => $dataset['province_id'],
+            'province_id'   => $dataset['province_id'],
             'province_name' => $dataset['province_name'],
-            'bounds' => null,
+            'bounds'        => null,
             'geometry_type' => null,
         ];
-        $metadataDataset = $dataset;
-        $metadataDataset['dataset_code'] = $dataset['dataset_code'];
-
-        $export = $this->metadataExporter->export($metadataDataset, $filters);
+        $export = $this->metadataExporter->export($dataset, $filters);
 
         return $this->response->download($export['path'], null)->setFileName($export['filename']);
     }
@@ -204,7 +318,7 @@ class Catalog extends BaseController
         }
 
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('t.geom', $entry, $bounds);
         $rows = $db->query('
             SELECT
@@ -258,7 +372,7 @@ class Catalog extends BaseController
     private function aggregatedVectorPreview(array $entry, ?array $bounds, int $zoom): array
     {
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('t.geom', $entry, $bounds);
         $gridSize = $this->aggregateGridSize($bounds, $zoom);
 
@@ -348,7 +462,7 @@ class Catalog extends BaseController
     private function rasterPreview(array $entry, ?array $bounds): array
     {
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('geom', $entry, $bounds);
 
         $rows = $db->query('
@@ -418,7 +532,7 @@ class Catalog extends BaseController
         $params = [];
 
         if (!empty($entry['province_id'])) {
-            $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM testing."AOI Jawa_Bali" WHERE id = ' . (int) $entry['province_id'] . ' LIMIT 1))';
+            $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1))';
         }
 
         if ($bounds !== null) {
@@ -519,7 +633,7 @@ class Catalog extends BaseController
     private function vectorPreviewSourceCount(array $entry, ?array $bounds): int
     {
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('t.geom', $entry, $bounds);
         $row = $db->query('
             SELECT COUNT(*) AS total
@@ -588,7 +702,7 @@ class Catalog extends BaseController
     private function exportRasterBinary(array $entry): ?string
     {
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
 
         if (empty($entry['province_id'])) {
             $row = $db->query('
@@ -599,8 +713,8 @@ class Catalog extends BaseController
             $row = $db->query('
                 WITH province AS (
                     SELECT geom
-                    FROM testing."AOI Jawa_Bali"
-                    WHERE id = ?
+                    FROM geoportal.polygon_adm_province
+                    WHERE adm_id = ?
                     LIMIT 1
                 ),
                 clipped AS (
@@ -642,7 +756,7 @@ class Catalog extends BaseController
 
     private function rawConnection()
     {
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         $conn = $db->connID;
 
         if (!$conn) {
@@ -663,7 +777,7 @@ class Catalog extends BaseController
             return '';
         }
 
-        return ' AND ST_Intersects(' . $geomColumn . ', (SELECT geom FROM testing."AOI Jawa_Bali" WHERE id = ' . (int) $entry['province_id'] . ' LIMIT 1)) ';
+        return ' AND ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1)) ';
     }
 
     private function writeBinaryExport(string $binary, string $filename, string $folder): string

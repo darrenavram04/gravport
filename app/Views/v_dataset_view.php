@@ -280,21 +280,6 @@ $backUrl = (strpos($fromParam, $catalogBase) === 0) ? $fromParam : $catalogBase;
                     <span>Coverage</span>
                     <strong><?= esc($dataset['province_name'] ?? 'Jawa-Bali') ?></strong>
                 </div>
-                <div class="dataset-meta__row">
-                    <span>Backend</span>
-                    <strong><?= esc($dataset['backend_type'] ?? 'Unknown') ?></strong>
-                </div>
-                <div class="dataset-meta__row">
-                    <span>Source Table</span>
-                    <strong><?= esc(($dataset['data_schema'] ?? '-') . '.' . ($dataset['data_table'] ?? '-')) ?></strong>
-                </div>
-            </div>
-
-            <div class="dataset-status">
-                <strong>Status Preview</strong>
-                <div id="datasetPreviewStatus">
-                    Preview mengikuti viewport aktif peta.
-                </div>
             </div>
 
             <div class="dataset-actions">
@@ -315,10 +300,6 @@ $backUrl = (strpos($fromParam, $catalogBase) === 0) ? $fromParam : $catalogBase;
 
         <section class="dataset-panel dataset-map-wrap">
             <div id="map"></div>
-            <div class="dataset-map-note">
-                <strong>Preview Aktif</strong>
-                <span id="datasetMapNote">Geser atau zoom peta untuk memuat area yang sedang dilihat.</span>
-            </div>
         </section>
     </div>
 </main>

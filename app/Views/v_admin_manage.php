@@ -327,7 +327,7 @@
         <span class="admin-badge">Guidebook</span>
       </div>
       <h2>View PDF</h2>
-      <a class="admin-link admin-link--ghost" href="<?= base_url('guidebooks/metadata-guidebook-dummy.pdf') ?>" target="_blank" rel="noopener">
+      <a class="admin-link admin-link--ghost" href="<?= base_url('guidebooks/guidebook-metadata.pdf') ?>" target="_blank" rel="noopener">
         <span>Buka Guidebook</span>
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
@@ -379,6 +379,169 @@
           <input type="text" value="<?= esc(($importReport['metadata']['level1']['file_identifier'] ?? '-') . ' / ' . ($importReport['metadata']['level2']['file_identifier'] ?? '-')) ?>" readonly>
         </div>
       </article>
+    <?php endif; ?>
+
+    <?php
+      $currentRole = auth_current_role();
+      $isSuperAdmin = $currentRole === 'superadmin';
+    ?>
+
+    <?php if ($isSuperAdmin): ?>
+    <!-- ── SUPERADMIN-ONLY CARDS ─────────────────────────────────── -->
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-people"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Pendaftaran Tertunda</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Setujui atau tolak akun individual &amp; tim yang menunggu aktivasi.</p>
+      <a class="admin-link" href="<?= site_url('admin/pending') ?>">
+        <span>Kelola Pendaftaran</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-credit-card-2-front"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Manajemen Langganan</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Tetapkan atau batalkan langganan pengguna, lihat distribusi tier.</p>
+      <a class="admin-link" href="<?= site_url('admin/subscriptions') ?>">
+        <span>Kelola Langganan</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-layers-half"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Data Staging / Temp</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Tinjau titik &amp; raster gravity yang dikirim admin, approve atau tolak.</p>
+      <a class="admin-link" href="<?= site_url('dataset/staging') ?>">
+        <span>Tinjau Staging</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-file-earmark-text"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Submission Metadata</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Lihat semua metadata yang dikirimkan pengguna ke sistem.</p>
+      <a class="admin-link admin-link--ghost" href="<?= site_url('admin/metadata-submissions') ?>">
+        <span>Lihat Submissions</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <!-- Upload XML Metadata -->
+    <article class="admin-card" id="card-upload-xml">
+      <div class="admin-card__top">
+        <i class="bi bi-file-earmark-code"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Upload Metadata XML</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Upload file <code>.xml</code> CatMD ke katalog produksi (dataset_metadata_xml).</p>
+
+      <?php if (session()->getFlashdata('xml_success')): ?>
+        <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.8rem;color:#065f46;font-weight:600;">
+          <?= esc(session()->getFlashdata('xml_success')) ?>
+        </div>
+      <?php endif ?>
+      <?php if (session()->getFlashdata('xml_error')): ?>
+        <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.8rem;color:#991b1b;font-weight:600;">
+          <?= esc(session()->getFlashdata('xml_error')) ?>
+        </div>
+      <?php endif ?>
+
+      <form method="post" action="<?= site_url('admin/upload-metadata-xml') ?>" enctype="multipart/form-data"
+            style="display:flex;flex-direction:column;gap:10px;">
+        <?= csrf_field() ?>
+        <div>
+          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:4px;">Dataset</label>
+          <select name="dataset_code" required
+                  style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.84rem;color:#142033;">
+            <option value="">-- Pilih Dataset --</option>
+            <option value="faa_l1">Free Air Anomaly Level 1</option>
+            <option value="cba_l1">Complete Bouguer Anomaly Level 1</option>
+            <option value="faa_l2">Free Air Anomaly Level 2</option>
+            <option value="cba_l2">Complete Bouguer Anomaly Level 2</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:4px;">File XML</label>
+          <input type="file" name="metadata_xml" accept=".xml" required
+                 style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.84rem;color:#142033;">
+        </div>
+        <button type="submit"
+                style="background:#a76025;color:#fff;border:none;padding:9px 0;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:2px;">
+          <i class="bi bi-cloud-upload"></i> Upload ke Katalog
+        </button>
+      </form>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-building"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Data Providers</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Tambah &amp; kelola provider data dan pengaturan revenue share.</p>
+      <a class="admin-link admin-link--ghost" href="<?= site_url('admin/providers') ?>">
+        <span>Kelola Providers</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-bar-chart-line"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Revenue Share</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Generate laporan revenue bulanan dan tandai pembayaran provider.</p>
+      <a class="admin-link admin-link--ghost" href="<?= site_url('admin/revenue') ?>">
+        <span>Lihat Revenue</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-person-gear"></i>
+        <span class="admin-badge" style="display:none"></span>
+      </div>
+      <h2>Kelola Akun</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Buat akun admin/user baru, ubah role, atau nonaktifkan akun.</p>
+      <a class="admin-link" href="<?= site_url('admin/accounts') ?>">
+        <span>Kelola Akun</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
+    <?php else: ?>
+    <!-- ── ADMIN (non-superadmin) CARDS ──────────────────────────── -->
+
+    <article class="admin-card">
+      <div class="admin-card__top">
+        <i class="bi bi-clock-history"></i>
+        <span class="admin-badge">Admin</span>
+      </div>
+      <h2>Status Submission Saya</h2>
+      <p style="font-size:.85rem;color:#6b7a8f;margin:0 0 14px">Pantau status persetujuan data titik, raster, dan metadata yang telah Anda kirimkan ke superadmin.</p>
+      <a class="admin-link" href="<?= site_url('dataset/my-submissions') ?>">
+        <span>Lihat Status</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </article>
+
     <?php endif; ?>
   </section>
 </main>

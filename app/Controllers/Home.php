@@ -6,11 +6,7 @@ class Home extends BaseController
 {
     public function index(): string
     {
-        $data = [
-            'judul' => 'Dashboard',
-            'page'  => 'v_dashboard'
-        ];
-        return view('v_template', $data);
+        return view('v_template');
     }
 
     public function vectorMap(): string
@@ -43,7 +39,17 @@ class Home extends BaseController
 
         public function landingPage()
     {
-        return view('v_landing', ['show_header' => true]); // v_landing.php adalah halaman baru
+        return view('v_landing');
+    }
+
+    public function landingFree()
+    {
+        return view('v_landing_free');
+    }
+
+    public function landingEnterprise()
+    {
+        return view('v_landing_enterprise');
     }
 
     public function landingPage2()

@@ -236,7 +236,7 @@ $errors = session()->getFlashdata('errors') ?? [];
   <div class="meta-loader__content">
     <div class="meta-loader__icon"><i class="bi bi-journal-richtext"></i></div>
     <div class="meta-loader__name">Metadata</div>
-    <div class="meta-loader__sub">ISO 19115 · GravPort</div>
+    <div class="meta-loader__sub">ISO 19115 | GravPort</div>
     <div class="meta-loader__status" id="metaStatus">Authenticating…</div>
     <div class="meta-loader__bar"><div class="meta-loader__bar-fill" id="metaBarFill"></div></div>
   </div>
@@ -253,11 +253,10 @@ $errors = session()->getFlashdata('errors') ?? [];
 <main class="metadata-shell">
   <section class="metadata-topbar">
     <div>
-      <span class="metadata-kicker">Authorized User</span>
       <h1>Metadata & Upload Form</h1>
       <p class="metadata-intro">
         <?= esc($formIntro) ?>
-        <a href="<?= base_url('guidebooks/metadata-guidebook-dummy.pdf') ?>" target="_blank" rel="noopener">Buka guidebook</a>
+        <a href="<?= base_url('guidebooks/guidebook-metadata.pdf') ?>" target="_blank" rel="noopener">Buka guidebook</a>
       </p>
     </div>
     <div class="meta-chip-row">
@@ -386,6 +385,18 @@ $errors = session()->getFlashdata('errors') ?? [];
               </label>
             </div>
           </div>
+
+          <label class="meta-field">
+            <span>Dataset Tujuan</span>
+            <p class="meta-field__help">Pilih dataset spesifik yang sesuai dengan data yang Anda unggah. Ini menentukan di mana data akan tampil di katalog dan WebMap setelah disetujui.</p>
+            <select name="dataset_code" required>
+              <option value="">-- Pilih dataset --</option>
+              <option value="faa_l1" <?= old('dataset_code') === 'faa_l1' ? 'selected' : '' ?>>Free Air Anomaly Level 1 (CSV titik)</option>
+              <option value="cba_l1" <?= old('dataset_code') === 'cba_l1' ? 'selected' : '' ?>>Complete Bouguer Anomaly Level 1 (CSV titik)</option>
+              <option value="faa_l2" <?= old('dataset_code') === 'faa_l2' ? 'selected' : '' ?>>Free Air Anomaly Level 2 (TIFF raster)</option>
+              <option value="cba_l2" <?= old('dataset_code') === 'cba_l2' ? 'selected' : '' ?>>Complete Bouguer Anomaly Level 2 (TIFF raster)</option>
+            </select>
+          </label>
         </div>
       </article>
 
@@ -567,33 +578,24 @@ $errors = session()->getFlashdata('errors') ?? [];
           <span class="meta-section__eyebrow">Dataset Upload</span>
           <h2>Source Files</h2>
           <p class="meta-section__description">
-            Unggah minimal satu berkas sumber. ZIP digunakan untuk paket SHP lengkap beserta file pendampingnya,
-            file tabular menerima Excel atau CSV, dan raster menerima TIFF.
+            Unggah berkas data yang akan dimasukkan ke staging. Excel/CSV untuk data titik (Level 1),
+            TIFF untuk data raster (Level 2).
           </p>
         </div>
 
         <div class="meta-grid">
           <label class="meta-field">
-            <span>ZIP SHP + pelengkap</span>
+            <span>Excel / CSV <span style="color:var(--meta-amber);font-size:11px;">(Level 1)</span></span>
             <p class="meta-field__help">
-              Simpan <code>.shp</code>, <code>.shx</code>, <code>.dbf</code>, <code>.prj</code>, dan pelengkap lain
-              ke dalam satu file <code>.zip</code> sebelum diunggah.
-            </p>
-            <input name="shapefile_zip" type="file" accept=".zip">
-          </label>
-
-          <label class="meta-field">
-            <span>Excel / CSV</span>
-            <p class="meta-field__help">
-              Menerima <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code> untuk data tabular level 1.
+              Menerima <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code> untuk data tabular titik gravitasi.
             </p>
             <input name="tabular_file" type="file" accept=".xlsx,.xls,.csv">
           </label>
 
           <label class="meta-field">
-            <span>TIFF</span>
+            <span>TIFF <span style="color:var(--meta-amber);font-size:11px;">(Level 2)</span></span>
             <p class="meta-field__help">
-              Gunakan <code>.tif</code> atau <code>.tiff</code> untuk raster level 2 yang ingin disiapkan ke tahap staging.
+              Gunakan <code>.tif</code> atau <code>.tiff</code> untuk raster yang akan disiapkan ke tahap staging.
             </p>
             <input name="raster_file" type="file" accept=".tif,.tiff">
           </label>
@@ -749,3 +751,4 @@ $errors = session()->getFlashdata('errors') ?? [];
 </script>
 </body>
 </html>
+

@@ -13,6 +13,7 @@ $viewable     = (bool)($viewable ?? false);
 $scopes       = is_array($scopes ?? null) ? $scopes : [];
 $anomalies    = is_array($anomalies ?? null) ? $anomalies : [];
 $levels       = is_array($levels ?? null) ? $levels : [];
+$quota        = $quota ?? null;
 $countryCode  = $countryCode ?? 'ID';
 $countryName  = $countryName ?? 'Indonesia';
 $datasets     = is_array($datasets ?? null) ? $datasets : [];
@@ -65,7 +66,7 @@ function esc_attr($v) {
     .catalog-shell{
       position: relative;
       min-height: 100vh;
-      padding-top: 100px; /* header height buffer */
+      padding-top: calc(var(--landing-header-offset, 112px) + 12px);
     }
 
     /* Background: scientific + enterprise (subtle) */
@@ -120,10 +121,12 @@ function esc_attr($v) {
       margin: 0;
       font-weight: 800;
       font-size: clamp(2.5rem, 5vw, 4.4rem);
-      line-height: .96;
+      line-height: 1.18;
       letter-spacing: -0.045em;
       color: #ffffff;
       text-shadow: 0 12px 34px rgba(0,0,0,0.26);
+      padding-bottom: 8px;
+      overflow: visible;
     }
 
     .catalog-subtitle{
@@ -144,6 +147,45 @@ function esc_attr($v) {
       background: linear-gradient(90deg, #ffd29a 0%, #f59e53 100%);
       box-shadow: 0 10px 22px rgba(245, 158, 83, 0.36);
     }
+
+    /* Quota indicator */
+    .quota-indicator {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      flex-wrap: wrap;
+    }
+    .quota-tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .quota-tier-badge.free { background:rgba(74,154,245,0.15); color:#4a9af5; border:1px solid rgba(74,154,245,0.25); }
+    .quota-tier-badge.enterprise { background:rgba(240,165,0,0.15); color:#f0a500; border:1px solid rgba(240,165,0,0.3); }
+    .quota-tier-badge.lite, .quota-tier-badge.pro, .quota-tier-badge.team { background:rgba(97,212,255,0.12); color:#61d4ff; border:1px solid rgba(97,212,255,0.22); }
+    .quota-mini-bar {
+      flex: 1;
+      min-width: 120px;
+      max-width: 180px;
+      height: 5px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .quota-mini-bar-fill { height: 100%; border-radius: 99px; }
 
     /* Toolbar */
     .catalog-toolbar{
@@ -224,7 +266,16 @@ function esc_attr($v) {
     }
     @media (max-width: 992px){
       .filters-panel{ position: relative; top: 0; }
+      .filters-panel .filters-form{ display: none; }
+      .filters-panel.is-open .filters-form{ display: block; }
+      .filters-toggle-btn{
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
+        color: rgba(255,255,255,.85); border-radius: 999px;
+        padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+      }
     }
+    @media (min-width: 993px){ .filters-toggle-btn{ display: none; } }
 
     .filters-title{
       margin: 0 0 10px;
@@ -650,7 +701,7 @@ function esc_attr($v) {
 
   <div class="cat-loader" id="catLoader" role="status" aria-label="Loading catalog">
     <div class="cat-loader__brand">
-      <img src="<?= base_url('images/itb.png'); ?>" alt="">
+      <img src="<?= base_url('images/gravport_logo_color.png'); ?>" alt="">
       <strong>GravPort</strong>
     </div>
     <p class="cat-loader__tag">Data Catalog</p>
@@ -679,6 +730,50 @@ function esc_attr($v) {
             </div>
           </div>
 
+          <?php if ($quota !== null): ?>
+          <?php
+            $qTier     = strtolower($quota['tier'] ?? 'none');
+            $qUsedB    = (int)($quota['used'] ?? 0);
+            $qLimitB   = $quota['limit'];      // null = unlimited
+            $qUnlimited = ($qLimitB === null);
+
+            // Format bytes ke MB/GB yang human-readable
+            $fmtBytes = static function(int $b): string {
+                if ($b >= 1073741824) return round($b / 1073741824, 1) . ' GB';
+                if ($b >= 1048576)   return round($b / 1048576, 1) . ' MB';
+                if ($b >= 1024)      return round($b / 1024, 1) . ' KB';
+                return $b . ' B';
+            };
+
+            $qPct = (!$qUnlimited && $qLimitB > 0)
+                ? min(100, round($qUsedB / $qLimitB * 100))
+                : 0;
+            $qBarColor = $qPct >= 90 ? '#ef4444' : ($qPct >= 70 ? '#f0a500' : '#4a9af5');
+            $tierLabel = match($qTier) {
+                'lite','solo' => 'Lite', 'pro' => 'Pro', 'team' => 'Team',
+                'enterprise' => 'Enterprise', 'government' => 'Government',
+                default => ucfirst($qTier) ?: 'Lite',
+            };
+          ?>
+          <div class="quota-indicator">
+            <span class="quota-tier-badge <?= in_array($qTier, ['enterprise','government'], true) ? 'enterprise' : 'free' ?>">
+              <i class="bi bi-person-fill"></i>
+              <?= esc($tierLabel) ?>
+            </span>
+            <?php if (!$qUnlimited): ?>
+              <span><?= $fmtBytes($qUsedB) ?> / <?= $fmtBytes((int)$qLimitB) ?> minggu ini</span>
+              <div class="quota-mini-bar">
+                <div class="quota-mini-bar-fill" style="width:<?= $qPct ?>%; background:<?= $qBarColor ?>;"></div>
+              </div>
+              <?php if ($qPct >= 100): ?>
+                <span style="color:#ef4444; font-weight:600;">Kuota minggu ini habis</span>
+              <?php endif; ?>
+            <?php else: ?>
+              <span><?= $fmtBytes($qUsedB) ?> diunduh &middot; <i class="bi bi-infinity"></i> unlimited</span>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
+
           <!-- Toolbar -->
           <div class="catalog-toolbar">
             <div class="toolbar-left">
@@ -696,8 +791,8 @@ function esc_attr($v) {
 
             <div class="toolbar-right">
               <div class="view-toggle" role="group" aria-label="View toggle">
-                <button type="button" id="btnCards" class="is-active">Cards</button>
-                <button type="button" id="btnTable">Table</button>
+                <button type="button" id="btnCards" class="is-active" data-i18n="cat.cards">Cards</button>
+                <button type="button" id="btnTable" data-i18n="cat.table">Table</button>
               </div>
             </div>
           </div>
@@ -706,27 +801,32 @@ function esc_attr($v) {
             <!-- Filters -->
             <aside class="filters-panel">
               <div class="filters-title">
-                <span>Filters</span>
-                <a class="btn-reset" href="<?= esc($baseUrl) ?>" title="Clear all filters"><i class="bi bi-x-circle" style="margin-right:4px;"></i>Reset</a>
+                <span data-i18n="cat.filters">Filters</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button type="button" class="filters-toggle-btn" id="filtersToggle" aria-expanded="false">
+                    <i class="bi bi-sliders"></i> <span data-i18n="cat.show">Tampilkan</span>
+                  </button>
+                  <a class="btn-reset" href="<?= esc($baseUrl) ?>" title="Clear all filters"><i class="bi bi-x-circle" style="margin-right:4px;"></i><span data-i18n="cat.reset">Reset</span></a>
+                </div>
               </div>
 
               <form method="get" class="filters-form" id="filtersForm">
                 <div class="filters-row">
                   <div>
-                    <label for="q">Search</label>
+                    <label for="q" data-i18n="cat.search.lbl">Pencarian</label>
                     <input
                       class="form-control"
                       type="text"
                       name="q"
                       id="q"
                       value="<?= esc_attr($search) ?>"
-                      placeholder="Cari dataset..."
+                      data-i18n-placeholder="cat.search.ph" placeholder="Cari dataset..."
                       autocomplete="off"
                     >
                   </div>
 
                   <div>
-                    <label for="per_page">Items per page</label>
+                    <label for="per_page" data-i18n="cat.per_page">Items per page</label>
                     <select name="per_page" id="per_page" class="form-select">
                       <?php foreach ([10, 20, 50] as $n): ?>
                         <option value="<?= $n ?>" <?= q_selected($perPage === (int)$n) ?>><?= $n ?></option>
@@ -798,9 +898,24 @@ function esc_attr($v) {
                 <!-- Keep page reset on filter apply -->
                 <input type="hidden" name="page" value="1">
 
+                  <div>
+                    <label>Organisasi</label>
+                    <div class="check-row flex-col">
+                      <?php foreach (($organizations ?? []) as $org): ?>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox"
+                            name="organization[]"
+                            id="org_<?= esc_attr($org['id']) ?>"
+                            value="<?= esc_attr($org['id']) ?>"
+                            <?= q_checked(in_array((string)$org['id'], $selectedOrgs ?? [], true)) ?>>
+                          <label class="form-check-label" for="org_<?= esc_attr($org['id']) ?>"><?= esc($org['name']) ?></label>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+
                 <div class="filters-actions">
-                  <button type="submit" class="btn btn-apply">Apply</button>
-                  <button type="button" class="btn btn-reset" id="btnQuickApply">Quick apply</button>
+                  <button type="submit" class="btn btn-apply">Terapkan Filter</button>
                 </div>
               </form>
             </aside>
@@ -824,9 +939,6 @@ function esc_attr($v) {
                         $isView = !empty($d['is_viewable']);
                         $isDown = !empty($d['is_downloadable']);
                         $items  = $d['items_count'] ?? null;
-                        $backend = $d['backend_type'] ?? null;
-                        $schema  = $d['data_schema'] ?? null;
-                        $table   = $d['data_table'] ?? null;
                         $anomalyLabel = strtoupper((string) ($d['anomaly_key'] ?? ''));
                         $levelLabel = strtoupper(str_replace('level', 'L', (string) ($d['level_key'] ?? '')));
                         $downloadLabel = ($d['type'] ?? '') === 'raster' ? 'GeoTIFF' : 'CSV';
@@ -849,30 +961,21 @@ function esc_attr($v) {
 
                           <div class="ds-title"><?= esc($d['title'] ?? '-') ?></div>
 
-                          <div class="ds-meta">
-                            <?php if ($backend): ?>
-                              <span>Backend: <strong><?= esc($backend) ?></strong></span>
-                            <?php endif; ?>
-                            <?php if ($schema && $table): ?>
-                              <span>&middot;</span><span><strong><?= esc($schema) ?>.<?= esc($table) ?></strong></span>
-                            <?php endif; ?>
-                          </div>
-
                           <div class="ds-actions">
                             <?php if ($isView): ?>
-                              <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>">View</a>
+                              <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>" data-i18n="cat.view">View</a>
                             <?php endif; ?>
 
                             <?php if ($isDown): ?>
-                              <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Unduh <?= esc($downloadLabel) ?></a>
+                              <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>"><span data-i18n="cat.dl">Unduh</span> <?= esc($downloadLabel) ?></a>
                             <?php endif; ?>
 
                             <?php if ($isView): ?>
-                              <a class="btn-pill btn-pill--soft" href="<?= site_url('catalog/download-metadata/' . (int)$d['id']) ?>">Metadata</a>
+                              <a class="btn-pill btn-pill--soft" href="<?= site_url('catalog/download-metadata/' . (int)$d['id']) ?>" data-i18n="cat.metadata.btn">Metadata</a>
                             <?php endif; ?>
 
                             <?php if (!$isDown && !$isView): ?>
-                              <span class="td-muted">No actions available</span>
+                              <span class="td-muted" data-i18n="cat.no_actions">No actions available</span>
                             <?php endif; ?>
                           </div>
                         </div>
@@ -916,19 +1019,19 @@ function esc_attr($v) {
                             <td>
                               <div class="ds-actions" style="margin:0;">
                                 <?php if ($isView): ?>
-                                  <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>">View</a>
+                                  <a class="btn-pill btn-pill--primary" href="<?= site_url('catalog/view/' . (int)$d['id']) . '?from=' . urlencode(current_url(true)) ?>" data-i18n="cat.view">View</a>
                                 <?php endif; ?>
 
                                 <?php if ($isDown): ?>
-                                  <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>">Unduh <?= esc($downloadLabel) ?></a>
+                                  <a class="btn-pill btn-pill--brown" href="<?= site_url('catalog/download/' . (int)$d['id']) ?>"><span data-i18n="cat.dl">Unduh</span> <?= esc($downloadLabel) ?></a>
                                 <?php endif; ?>
 
                                 <?php if ($isView): ?>
-                                  <a class="btn-pill btn-pill--soft" href="<?= site_url('catalog/download-metadata/' . (int)$d['id']) ?>">Metadata</a>
+                                  <a class="btn-pill btn-pill--soft" href="<?= site_url('catalog/download-metadata/' . (int)$d['id']) ?>" data-i18n="cat.metadata.btn">Metadata</a>
                                 <?php endif; ?>
 
                                 <?php if (!$isDown && !$isView): ?>
-                                  <span class="td-muted">No actions</span>
+                                  <span class="td-muted" data-i18n="cat.no_actions">No actions available</span>
                                 <?php endif; ?>
                               </div>
                             </td>
@@ -1010,7 +1113,7 @@ function esc_attr($v) {
 
   <script>
   /* ============================================================
-     GravPort Catalog — Creative Layer
+     GravPort Catalog - Creative Layer
   ============================================================ */
   (function () {
 
@@ -1087,6 +1190,21 @@ function esc_attr($v) {
     });
 
   })();
+
+  // Mobile filter toggle
+  (function(){
+    const btn   = document.getElementById('filtersToggle');
+    const panel = document.querySelector('.filters-panel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function(){
+      const open = panel.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open);
+      btn.innerHTML = open
+        ? '<i class="bi bi-sliders"></i> Sembunyikan'
+        : '<i class="bi bi-sliders"></i> Tampilkan';
+    });
+  })();
   </script>
 </body>
 </html>
+

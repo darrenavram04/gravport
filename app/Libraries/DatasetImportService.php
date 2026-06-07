@@ -70,7 +70,7 @@ class DatasetImportService
         }
 
         $packagePath = $this->packagePath($packageName);
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         $conn = $db->connID;
 
         if (!$conn) {
@@ -94,20 +94,20 @@ class DatasetImportService
 
         try {
             $this->ensureMetadataTable($conn);
-            $this->ensureLevel1Table($conn, 'testing.faa_l1_points');
-            $this->ensureLevel1Table($conn, 'testing.cba_l1_points');
-            $this->ensureRasterTable($conn, 'testing.faa_l2_raster');
-            $this->ensureRasterTable($conn, 'testing.cba_l2_raster');
+            $this->ensureLevel1Table($conn, 'geoportal.faa_l1_points');
+            $this->ensureLevel1Table($conn, 'geoportal.cba_l1_points');
+            $this->ensureRasterTable($conn, 'geoportal.faa_l2_raster');
+            $this->ensureRasterTable($conn, 'geoportal.cba_l2_raster');
 
             $report['metadata'] = [
-                'level1' => $this->importMetadataXml(
+                'faa_l1' => $this->importMetadataXml(
                     $conn,
-                    'level1',
+                    'faa_l1',
                     $packagePath . DIRECTORY_SEPARATOR . 'level1' . DIRECTORY_SEPARATOR . 'Metadata_Gravimetri_Level_1.xml'
                 ),
-                'level2' => $this->importMetadataXml(
+                'faa_l2' => $this->importMetadataXml(
                     $conn,
-                    'level2',
+                    'faa_l2',
                     $packagePath . DIRECTORY_SEPARATOR . 'level2' . DIRECTORY_SEPARATOR . 'Metadata_Gravimetri_Level_2.xml'
                 ),
             ];
@@ -115,13 +115,13 @@ class DatasetImportService
             $report['level1'] = [
                 'faa' => $this->importLevel1Group(
                     $conn,
-                    'testing.faa_l1_points',
+                    'geoportal.faa_l1_points',
                     glob($packagePath . DIRECTORY_SEPARATOR . 'level1' . DIRECTORY_SEPARATOR . 'faa' . DIRECTORY_SEPARATOR . '*.csv') ?: [],
                     'FAA'
                 ),
                 'cba' => $this->importLevel1Group(
                     $conn,
-                    'testing.cba_l1_points',
+                    'geoportal.cba_l1_points',
                     glob($packagePath . DIRECTORY_SEPARATOR . 'level1' . DIRECTORY_SEPARATOR . 'cba' . DIRECTORY_SEPARATOR . '*.csv') ?: [],
                     'CBA'
                 ),
@@ -130,12 +130,12 @@ class DatasetImportService
             $report['level2'] = [
                 'faa' => $this->importRaster(
                     $conn,
-                    'testing.faa_l2_raster',
+                    'geoportal.faa_l2_raster',
                     $packagePath . DIRECTORY_SEPARATOR . 'level2' . DIRECTORY_SEPARATOR . 'faa' . DIRECTORY_SEPARATOR . 'FAA.tif'
                 ),
                 'cba' => $this->importRaster(
                     $conn,
-                    'testing.cba_l2_raster',
+                    'geoportal.cba_l2_raster',
                     $packagePath . DIRECTORY_SEPARATOR . 'level2' . DIRECTORY_SEPARATOR . 'cba' . DIRECTORY_SEPARATOR . 'CBA.tif'
                 ),
             ];
@@ -176,8 +176,9 @@ class DatasetImportService
     private function ensureMetadataTable($conn): void
     {
         $this->query($conn, <<<SQL
-CREATE TABLE IF NOT EXISTS testing.dataset_metadata_xml (
-    metadata_level text PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS geoportal.dataset_metadata_xml (
+    dataset_code text PRIMARY KEY,
+    metadata_level text,
     source_path text NOT NULL,
     file_identifier text,
     parent_identifier text,
@@ -245,7 +246,19 @@ SQL
         $this->query($conn, "CREATE INDEX IF NOT EXISTS {$indexName} ON {$table} USING GIST (grid_geom)");
     }
 
-    private function importMetadataXml($conn, string $metadataLevel, string $xmlPath): array
+    public function importMetadataXmlFile(string $datasetCode, string $xmlPath): array
+    {
+        $db   = Database::connect();
+        $conn = $db->connID;
+        if (!$conn) {
+            $db->initialize();
+            $conn = $db->connID;
+        }
+        $this->ensureMetadataTable($conn);
+        return $this->importMetadataXml($conn, $datasetCode, $xmlPath);
+    }
+
+    private function importMetadataXml($conn, string $datasetCode, string $xmlPath): array
     {
         if (!is_file($xmlPath)) {
             throw new RuntimeException("File metadata XML tidak ditemukan: {$xmlPath}");
@@ -258,8 +271,15 @@ SQL
 
         $data = $this->parseMetadataXml($xmlPath);
 
+        $metadataLevel = match(true) {
+            str_ends_with($datasetCode, '_l1') => 'level1',
+            str_ends_with($datasetCode, '_l2') => 'level2',
+            default                            => $datasetCode,
+        };
+
         $this->queryParams($conn, <<<SQL
-INSERT INTO testing.dataset_metadata_xml (
+INSERT INTO geoportal.dataset_metadata_xml (
+    dataset_code,
     metadata_level,
     source_path,
     file_identifier,
@@ -284,10 +304,11 @@ INSERT INTO testing.dataset_metadata_xml (
     raw_xml,
     imported_at
 ) VALUES (
-    $1, $2, $3, $4, $5, NULLIF($6, '')::date, $7, $8, $9, $10, $11, $12, $13, $14,
-    $15, $16, $17, $18, $19, $20::jsonb, $21, $22::xml, now()
+    $1, $2, $3, $4, $5, $6, NULLIF($7, '')::date, $8, $9, $10, $11, $12, $13, $14, $15,
+    $16, $17, $18, $19, $20, $21::jsonb, $22, $23::xml, now()
 )
-ON CONFLICT (metadata_level) DO UPDATE SET
+ON CONFLICT (dataset_code) DO UPDATE SET
+    metadata_level = EXCLUDED.metadata_level,
     source_path = EXCLUDED.source_path,
     file_identifier = EXCLUDED.file_identifier,
     parent_identifier = EXCLUDED.parent_identifier,
@@ -312,6 +333,7 @@ ON CONFLICT (metadata_level) DO UPDATE SET
     imported_at = now()
 SQL,
             [
+                $datasetCode,
                 $metadataLevel,
                 $this->relativePath($xmlPath),
                 $data['file_identifier'],

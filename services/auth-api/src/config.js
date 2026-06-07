@@ -33,6 +33,18 @@ const config = {
     bcryptRounds: 12,
     defaultRole: 'user',
     passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,72}$/,
+    resetTokenExpireMinutes: 30,
+    otpExpireMinutes: 5,
+  },
+  smtp: {
+    host: readString('SMTP_HOST', 'smtp.gmail.com'),
+    port: readNumber('SMTP_PORT', 587),
+    user: readString('SMTP_USER', ''),
+    pass: readString('SMTP_PASS', ''),
+    from: readString('SMTP_FROM', 'GravPort <noreply@gravport.id>'),
+  },
+  app: {
+    baseUrl: readString('APP_BASE_URL', 'http://localhost/geoportal/public'),
   },
 };
 

@@ -36,7 +36,7 @@
                     <!-- RD Navbar Toggle-->
                     <button class="rd-navbar-toggle" data-rd-navbar-toggle=".rd-navbar-nav-wrap"><span></span></button>
                     <!-- RD Navbar Brand-->
-                    <div class="rd-navbar-brand"><a class="brand" href="index.html"><img src="images/waskita.png" alt="" width="130" height="10"/></a></div>
+                    <div class="rd-navbar-brand"><a class="brand" href="index.html"><img src="images/gravport_logo_color.png" alt="GravPort" width="130" height="40"/></a></div>
                   </div>
                   <div class="rd-navbar-main-element">
                     <div class="rd-navbar-nav-wrap">
@@ -80,18 +80,16 @@
             <div class="swiper-slide" data-slide-bg="images/LRT.jpg">
               <div class="swiper-slide-caption section-md">
                 <div class="container">
-                  <h1 style="color: white;" data-caption-animate="fadeInLeft" data-caption-delay="0">PT Waskita Karya (Persero) Tbk</h1>
-                  <p style="color: white;" class="text-width-large" data-caption-animate="fadeInRight" data-caption-delay="100">PT Waskita Karya (Persero) Tbk adalah sebuah Badan Usaha Milik Negara Indonesia 
-                    (BUMN) yang bergerak di bidang konstruksi dengan lima divisi, yakni Gedung, Infrastruktur I, Infrastruktur II, 
-                    EPC, dan Luar Negeri. </p><a class="button button-primary button-ujarak" href="#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">Get in touch</a>
+                  <h1 style="color: white;" data-caption-animate="fadeInLeft" data-caption-delay="0">Geoportal Capstone</h1>
+                  <p style="color: white;" class="text-width-large" data-caption-animate="fadeInRight" data-caption-delay="100">Geoportal Capstone memusatkan alur catalog, WebMap, metadata, dan import dataset gravitasi dalam satu pengalaman yang lebih ringkas.</p><a class="button button-primary button-ujarak" href="#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">Get in touch</a>
                 </div>
               </div>
             </div>
             <div class="swiper-slide" data-slide-bg="images/LRT3.jpg">
               <div class="swiper-slide-caption section-md">
                 <div class="container">
-                  <h1 style="color: white;" data-caption-animate="fadeInLeft" data-caption-delay="0">Intership</h1>
-                  <p style="color: white;" class="text-width-large" data-caption-animate="fadeInRight" data-caption-delay="100">lalala lalala hey</p><a class="button button-primary button-ujarak" href="#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">Get in touch</a>
+                  <h1 style="color: white;" data-caption-animate="fadeInLeft" data-caption-delay="0">Geoportal Capstone</h1>
+                  <p style="color: white;" class="text-width-large" data-caption-animate="fadeInRight" data-caption-delay="100">Halaman publik lama ini ikut dibersihkan agar konsisten dengan branding Geoportal Capstone.</p><a class="button button-primary button-ujarak" href="#modalCta" data-toggle="modal" data-caption-animate="fadeInUp" data-caption-delay="200">Get in touch</a>
                 </div>
               </div>
             </div>
@@ -105,6 +103,324 @@
         </section>
 
       </div>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           STATISTIK DATA GRAVITASI — Dashboard Section
+      ══════════════════════════════════════════════════════════════════ -->
+      <section id="statistik" style="
+        background: linear-gradient(160deg,#06091a 0%,#080e22 55%,#060b1c 100%);
+        padding: 80px 0 90px;
+        position: relative;
+        overflow: hidden;
+      ">
+        <!-- background mesh -->
+        <div style="
+          position:absolute;inset:0;pointer-events:none;
+          background:
+            radial-gradient(ellipse 60% 50% at 10% 20%, rgba(167,96,37,.18) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 45% at 88% 80%, rgba(97,212,255,.10) 0%, transparent 60%);
+        "></div>
+        <!-- grid overlay -->
+        <div style="
+          position:absolute;inset:0;pointer-events:none;
+          background-image:linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);
+          background-size:48px 48px;
+        "></div>
+
+        <div class="container" style="position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px">
+
+          <!-- Header row -->
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:40px">
+            <div>
+              <p style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffbf74;margin:0 0 10px">
+                DATA OVERVIEW
+              </p>
+              <h2 style="
+                font-family:'Fraunces',serif;font-size:clamp(2rem,4vw,3rem);font-weight:800;
+                color:#fff;margin:0;line-height:1.05;
+              ">Statistik GravPort</h2>
+              <p style="font-family:'Manrope',sans-serif;color:rgba(190,208,235,.65);font-size:14px;margin:10px 0 0;line-height:1.7">
+                Data gravitasi Jawa-Bali — diperbarui secara real-time.
+              </p>
+            </div>
+            <div id="statLastUpdate" style="
+              display:inline-flex;align-items:center;gap:8px;
+              padding:8px 16px;border-radius:999px;
+              border:1px solid rgba(255,255,255,.10);
+              background:rgba(255,255,255,.04);
+              font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.65);
+            ">
+              <span style="width:7px;height:7px;border-radius:999px;background:#22d3a0;box-shadow:0 0 8px rgba(34,211,160,.5);display:inline-block"></span>
+              Live · Memuat...
+            </div>
+          </div>
+
+          <!-- ── Top stat cards ── -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px">
+
+            <div class="gp-stat-card" style="
+              padding:22px 24px;border-radius:20px;
+              border:1px solid rgba(255,255,255,.09);
+              background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+              backdrop-filter:blur(20px);position:relative;overflow:hidden;
+            ">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(167,96,37,.12),transparent 55%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,191,116,.12);display:flex;align-items:center;justify-content:center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffbf74" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                </div>
+                <span style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(190,208,235,.6)">Total Titik</span>
+              </div>
+              <div id="statPoints" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:800;color:#fff;line-height:1">—</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">titik gravitasi terukur</div>
+            </div>
+
+            <div class="gp-stat-card" style="
+              padding:22px 24px;border-radius:20px;
+              border:1px solid rgba(255,255,255,.09);
+              background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+              backdrop-filter:blur(20px);position:relative;overflow:hidden;
+            ">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(97,212,255,.10),transparent 55%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(97,212,255,.12);display:flex;align-items:center;justify-content:center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#61d4ff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <span style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(190,208,235,.6)">Dataset</span>
+              </div>
+              <div id="statDatasets" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:800;color:#fff;line-height:1">—</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">dataset terpublikasi</div>
+            </div>
+
+            <div class="gp-stat-card" style="
+              padding:22px 24px;border-radius:20px;
+              border:1px solid rgba(255,255,255,.09);
+              background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+              backdrop-filter:blur(20px);position:relative;overflow:hidden;
+            ">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(34,211,160,.08),transparent 55%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(34,211,160,.12);display:flex;align-items:center;justify-content:center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3a0" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <span style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(190,208,235,.6)">Unduhan</span>
+              </div>
+              <div id="statDownloads" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:800;color:#fff;line-height:1">—</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">unduhan selesai</div>
+            </div>
+
+            <div class="gp-stat-card" style="
+              padding:22px 24px;border-radius:20px;
+              border:1px solid rgba(255,255,255,.09);
+              background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+              backdrop-filter:blur(20px);position:relative;overflow:hidden;
+            ">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(167,96,37,.10),transparent 55%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,191,116,.10);display:flex;align-items:center;justify-content:center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffbf74" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                </div>
+                <span style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(190,208,235,.6)">Cakupan</span>
+              </div>
+              <div id="statProvinces" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:800;color:#fff;line-height:1">—</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">provinsi Jawa-Bali</div>
+            </div>
+
+          </div>
+
+          <!-- ── Bottom row: Chart + Info panel ── -->
+          <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">
+            <!-- Chart card -->
+            <div style="
+              padding:28px 28px 22px;border-radius:20px;
+              border:1px solid rgba(255,255,255,.09);
+              background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+              backdrop-filter:blur(20px);position:relative;overflow:hidden;
+            ">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 90% 5%,rgba(167,96,37,.09),transparent 45%);pointer-events:none"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;position:relative;z-index:1">
+                <div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:13px;font-weight:800;color:#fff">Distribusi Tipe Anomali</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(190,208,235,.55);margin-top:3px">Jumlah dataset per tipe anomali gravitasi</div>
+                </div>
+                <div style="display:flex;gap:14px;align-items:center">
+                  <span id="legendFAA" style="display:flex;align-items:center;gap:5px;font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;color:rgba(190,208,235,.6)">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#ffbf74;display:inline-block"></span> FAA
+                  </span>
+                  <span id="legendCBA" style="display:flex;align-items:center;gap:5px;font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;color:rgba(190,208,235,.6)">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#61d4ff;display:inline-block"></span> CBA
+                  </span>
+                </div>
+              </div>
+              <div style="position:relative;z-index:1">
+                <canvas id="anomalyChart" height="180"></canvas>
+              </div>
+            </div>
+
+            <!-- Info panel (Coverage + Level) -->
+            <div style="display:flex;flex-direction:column;gap:14px">
+
+              <!-- Coverage card -->
+              <div style="
+                padding:22px 22px;border-radius:20px;
+                border:1px solid rgba(255,191,116,.18);
+                background:linear-gradient(145deg,rgba(255,191,116,.07),rgba(255,191,116,.02));
+                backdrop-filter:blur(20px);position:relative;overflow:hidden;
+              ">
+                <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(255,191,116,.12),transparent 55%);pointer-events:none"></div>
+                <div style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ffbf74;margin-bottom:10px;position:relative">Wilayah</div>
+                <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:800;color:#fff;line-height:1.1;position:relative">Jawa–Bali</div>
+                <div style="font-family:'Manrope',sans-serif;font-size:11.5px;color:rgba(190,208,235,.65);margin-top:8px;line-height:1.7;position:relative">
+                  Survei gaya berat mencakup seluruh Pulau Jawa dan Bali dengan resolusi tinggi.
+                </div>
+              </div>
+
+              <!-- Level distribution card -->
+              <div style="
+                padding:22px 22px;border-radius:20px;
+                border:1px solid rgba(255,255,255,.09);
+                background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+                backdrop-filter:blur(20px);
+              ">
+                <div style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(190,208,235,.6);margin-bottom:14px">Level Data</div>
+                <div id="levelBars"></div>
+              </div>
+
+            </div>
+          </div><!-- /bottom row -->
+
+        </div><!-- /container -->
+      </section>
+
+      <!-- scripts for stats section (load Chart.js) -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+      <script>
+      (function () {
+        const API = '/geoportal/public/index.php/api/v1/public-stats';
+        let chart = null;
+
+        function fmt(n) {
+          if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.0','') + 'jt';
+          if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.0','') + 'rb';
+          return String(n);
+        }
+
+        function relTime(isoStr) {
+          if (!isoStr) return 'tidak diketahui';
+          const diff = (Date.now() - new Date(isoStr).getTime()) / 1000;
+          if (diff < 60) return 'baru saja';
+          if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+          if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+          return Math.floor(diff/86400) + ' hari lalu';
+        }
+
+        function buildLevelBars(levels) {
+          const total = levels.reduce((s,r) => s + parseInt(r.cnt), 0) || 1;
+          const colors = ['#ffbf74','#61d4ff','#22d3a0'];
+          const el = document.getElementById('levelBars');
+          el.innerHTML = levels.map((r,i) => {
+            const pct = Math.round(parseInt(r.cnt) / total * 100);
+            return `
+              <div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                  <span style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;color:rgba(240,246,255,.85)">Level ${r.level}</span>
+                  <span style="font-family:'Manrope',sans-serif;font-size:11px;font-weight:800;color:${colors[i]||'#ffbf74'}">${r.cnt} dataset</span>
+                </div>
+                <div style="height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden">
+                  <div style="height:100%;width:${pct}%;border-radius:999px;background:${colors[i]||'#ffbf74'};transition:width .6s cubic-bezier(.34,1.56,.64,1)"></div>
+                </div>
+              </div>`;
+          }).join('');
+        }
+
+        function buildChart(byType) {
+          const labels = byType.map(r => r.anom_type);
+          const data   = byType.map(r => parseInt(r.cnt));
+          const palette = ['#ffbf74','#61d4ff','#22d3a0','#a78bfa'];
+
+          const ctx = document.getElementById('anomalyChart').getContext('2d');
+          if (chart) { chart.destroy(); }
+
+          chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                data,
+                backgroundColor: labels.map((_,i) => (palette[i] || palette[0]) + '28'),
+                borderColor:     labels.map((_,i) => palette[i] || palette[0]),
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'rgba(8,17,31,.92)',
+                  titleColor: '#fff',
+                  bodyColor: 'rgba(190,208,235,.8)',
+                  borderColor: 'rgba(255,255,255,.10)',
+                  borderWidth: 1,
+                  padding: 12,
+                  callbacks: {
+                    label: ctx => ' ' + ctx.raw + ' dataset',
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(255,255,255,.05)' },
+                  ticks: { color: 'rgba(190,208,235,.65)', font: { family: 'Manrope', size: 11, weight: '700' } }
+                },
+                y: {
+                  grid: { color: 'rgba(255,255,255,.05)' },
+                  ticks: {
+                    color: 'rgba(190,208,235,.65)',
+                    font: { family: 'Manrope', size: 11 },
+                    stepSize: 1,
+                    callback: v => Number.isInteger(v) ? v : null,
+                  },
+                  beginAtZero: true,
+                }
+              }
+            }
+          });
+        }
+
+        function loadStats() {
+          fetch(API)
+            .then(r => r.json())
+            .then(res => {
+              const d = res.data;
+              document.getElementById('statPoints').textContent    = fmt(d.total_points    || 0);
+              document.getElementById('statDatasets').textContent  = fmt(d.total_datasets  || 0);
+              document.getElementById('statDownloads').textContent = fmt(d.total_downloads || 0);
+              document.getElementById('statProvinces').textContent = d.provinces_covered || 0;
+
+              const ts = d.last_updated;
+              document.getElementById('statLastUpdate').innerHTML =
+                '<span style="width:7px;height:7px;border-radius:999px;background:#22d3a0;box-shadow:0 0 8px rgba(34,211,160,.5);display:inline-block"></span>' +
+                ' Live · Diperbarui ' + relTime(ts);
+
+              if (d.by_anomaly_type && d.by_anomaly_type.length) buildChart(d.by_anomaly_type);
+              if (d.by_level        && d.by_level.length)        buildLevelBars(d.by_level);
+            })
+            .catch(() => {
+              document.getElementById('statLastUpdate').textContent = 'Gagal memuat data';
+            });
+        }
+
+        loadStats();
+        setInterval(loadStats, 30000); // auto-refresh every 30s
+      })();
+      </script>
+
       <!-- See all services-->
       <section class="section section-sm section-first bg-default text-center" id="services">
         <div class="container">
@@ -116,44 +432,48 @@
                 <div class="col-sm-6 wow fadeInRight">
                   <article class="box-icon-modern box-icon-modern-custom">
                     <div class="box-icon-modern-icon">
-                      <img src="images/civil3d.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                      <img src="images/gravport_logo_black.png" alt="GravPort" style="width: 50px; height: 50px;">
+                    </div>
                     <div>
-                      <h5 class="box-icon-modern-title"><a href="#">Civil 3D</a></h5>
+                      <h5 class="box-icon-modern-title"><a href="#">Reserved Slot</a></h5>
                       <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pengolahan data borepile, pilecap, dan kolom</p>
+                      <p class="box-icon-modern-text">Belum diisi.</p>
                     </div>
                   </article>
                 </div>
                 <div class="col-sm-6 wow fadeInRight" data-wow-delay=".1s">
                   <article class="box-icon-modern box-icon-modern-2">
                     <div class="box-icon-modern-icon">
-                      <img src="images/civil3d.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                      <img src="images/gravport_logo_black.png" alt="GravPort" style="width: 50px; height: 50px;">
+                    </div>
                     <div>
-                      <h5 class="box-icon-modern-title"><a href="#">Civil 3D</a></h5>
+                      <h5 class="box-icon-modern-title"><a href="#">Reserved Slot</a></h5>
                       <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pengolahan data borepile, pilecap, dan kolom</p>
+                      <p class="box-icon-modern-text">Belum diisi.</p>
                     </div>
                   </article>
                 </div>
                 <div class="col-sm-6 wow fadeInRight" data-wow-delay=".2s">
                   <article class="box-icon-modern box-icon-modern-2">
                     <div class="box-icon-modern-icon">
-                      <img src="images/civil3d.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                      <img src="images/gravport_logo_black.png" alt="GravPort" style="width: 50px; height: 50px;">
+                    </div>
                     <div>
-                      <h5 class="box-icon-modern-title"><a href="#">Civil 3D</a></h5>
+                      <h5 class="box-icon-modern-title"><a href="#">Reserved Slot</a></h5>
                       <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pengolahan data borepile, pilecap, dan kolom</p>
+                      <p class="box-icon-modern-text">Belum diisi.</p>
                     </div>
                   </article>
                 </div>
                 <div class="col-sm-6 wow fadeInRight" data-wow-delay=".3s">
                   <article class="box-icon-modern box-icon-modern-2">
                     <div class="box-icon-modern-icon">
-                      <img src="images/civil3d.jpg" alt="Logo 1" style="width: 50px; height: 50px;">
+                      <img src="images/gravport_logo_black.png" alt="GravPort" style="width: 50px; height: 50px;">
+                    </div>
                     <div>
-                      <h5 class="box-icon-modern-title"><a href="#">Civil 3D</a></h5>
+                      <h5 class="box-icon-modern-title"><a href="#">Reserved Slot</a></h5>
                       <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pengolahan data borepile, pilecap, dan kolom</p>
+                      <p class="box-icon-modern-text">Belum diisi.</p>
                     </div>
                   </article>
                 </div>
@@ -269,7 +589,7 @@
                 </div>
                 <div class="col-sm-6 col-md-4 order-sm-first">
                   <!-- Rights-->
-                  <p class="rights"><span>&copy;&nbsp;</span><span class="copyright-year"></span> <span>Waskita-internship | All rights reserved.</span>
+                  <p class="rights"><span>&copy;&nbsp;</span><span class="copyright-year"></span> <span>Geoportal Capstone | All rights reserved.</span>
                   </p>
               </div>
             </div>

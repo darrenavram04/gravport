@@ -2,15 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Libraries\EmailService;
 use App\Libraries\MetadataSubmissionService;
 
 class Metadata extends BaseController
 {
     private MetadataSubmissionService $submissionService;
+    private EmailService $mailer;
 
     public function __construct()
     {
         $this->submissionService = new MetadataSubmissionService();
+        $this->mailer = new EmailService();
     }
 
     public function index()
@@ -27,6 +30,7 @@ class Metadata extends BaseController
             'jenis_data' => 'required',
             'provinsi' => 'required',
             'level_data' => 'required',
+            'dataset_code' => 'required|in_list[faa_l1,cba_l1,faa_l2,cba_l2]',
             'bahasa' => 'required',
             'character_set' => 'required',
             'hierarchy_level' => 'required',
@@ -95,6 +99,7 @@ class Metadata extends BaseController
                 'jenis_data' => (string) $this->request->getPost('jenis_data'),
                 'provinsi' => (string) $this->request->getPost('provinsi'),
                 'level_data' => (string) $this->request->getPost('level_data'),
+                'dataset_code' => (string) $this->request->getPost('dataset_code'),
                 'bahasa' => (string) $this->request->getPost('bahasa'),
                 'character_set' => (string) $this->request->getPost('character_set'),
                 'hierarchy_level' => (string) $this->request->getPost('hierarchy_level'),
@@ -111,17 +116,37 @@ class Metadata extends BaseController
                 'postal_code' => (string) $this->request->getPost('postal_code'),
                 'country' => (string) $this->request->getPost('country'),
                 'electronic_mail_address' => (string) $this->request->getPost('electronic_mail_address'),
+                'acc_id' => (int) (session()->get('user_id') ?? 0) ?: null,
             ],
             [
                 'shapefile_zip' => $shapefileZip,
                 'tabular_file' => $tabularFile,
                 'raster_file' => $rasterFile,
             ],
-            auth_current_role()
+            auth_current_role(),
+            (int) (session()->get('user_id') ?? 0)
         );
 
+        $submitterName = session()->get('full_name') ?? 'Admin';
+        $submitterEmail = session()->get('email') ?? '';
+
+        // Notifikasi email ke superadmin (non-fatal)
+        $this->mailer->sendMetadataSubmissionNotice([
+            'submission_id'  => $result['id'],
+            'submitter_name' => $submitterName,
+            'submitter_email'=> $submitterEmail,
+            'jenis_data'     => $this->request->getPost('jenis_data'),
+            'provinsi'       => $this->request->getPost('provinsi'),
+            'level_data'     => $this->request->getPost('level_data'),
+            'review_url'     => site_url('admin/metadata-submissions'),
+        ]);
+
         return redirect()->to(site_url('metadata'))
-            ->with('success', 'Metadata dan file berhasil disimpan ke staging submission #' . $result['id'] . '.');
+            ->with('success',
+                'Metadata submission #' . $result['id'] . ' berhasil disimpan. '
+                . 'File tersimpan di server dan notifikasi telah dikirim ke superadmin untuk direview. '
+                . 'Superadmin dapat melihat submission ini di Admin Hub &rarr; Metadata Submissions.'
+            );
     }
 
     private function hasUploadedFile($file): bool

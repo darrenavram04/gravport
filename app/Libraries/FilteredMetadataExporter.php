@@ -10,7 +10,7 @@ class FilteredMetadataExporter
 {
     public function export(array $dataset, array $filters = []): array
     {
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         $row = $db->query('
             SELECT
                 metadata_level,
@@ -27,7 +27,7 @@ class FilteredMetadataExporter
                 contact_role,
                 country,
                 raw_xml
-            FROM testing.dataset_metadata_xml
+            FROM geoportal.dataset_metadata_xml
             WHERE metadata_level = ?
             LIMIT 1
         ', [(string) ($dataset['metadata_level'] ?? '')])->getRowArray();

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\FilteredMetadataExporter;
 use App\Libraries\GeoportalDatasetRegistry;
+use App\Libraries\MarketplaceService;
 use CodeIgniter\API\ResponseTrait;
 use Config\Database;
 use InvalidArgumentException;
@@ -14,10 +15,13 @@ class WebMap extends BaseController
 
     private GeoportalDatasetRegistry $registry;
     private FilteredMetadataExporter $metadataExporter;
+    private MarketplaceService $marketplace;
 
     public function __construct()
     {
-        $this->registry = new GeoportalDatasetRegistry();
+        ini_set('memory_limit', '-1');
+        $this->registry    = new GeoportalDatasetRegistry();
+        $this->marketplace = new MarketplaceService();
         $this->metadataExporter = new FilteredMetadataExporter();
     }
 
@@ -64,6 +68,7 @@ class WebMap extends BaseController
 
     public function layer()
     {
+        ini_set('memory_limit', '-1'); // No cap — aggregation is capped by TABLESAMPLE + LIMIT 1200
         try {
             $input = $this->inputPayload();
             $datasetCode = (string) ($input['dataset'] ?? 'faa_l1');
@@ -111,9 +116,8 @@ class WebMap extends BaseController
             }
 
             $filters = $this->filtersFromInput($input);
-            if ($this->shouldAggregateVector($filters)) {
-                throw new InvalidArgumentException('Persempit area atau aktifkan filter provinsi/draw/upload terlebih dulu agar unduhan Level 1 tetap presisi dan ringan.');
-            }
+            // Always force full detail for downloads — no area restriction
+            $filters['force_detail'] = true;
             $csvExport = $this->exportFilteredVectorCsvFile($datasetCode, $filters);
 
             $archive = $this->buildDatasetPackage(
@@ -125,6 +129,8 @@ class WebMap extends BaseController
                 ]
             );
 
+            $sizeBytes = is_file($archive['path']) ? filesize($archive['path']) : null;
+            $this->logWebMapDownload($datasetCode, 'vector', $filters, $csvExport['row_count'] ?? null, $sizeBytes ?: null);
             return $this->response->download($archive['path'], null)->setFileName($archive['filename']);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(400)->setJSON([
@@ -138,6 +144,13 @@ class WebMap extends BaseController
         try {
             $input = $this->inputPayload();
             $datasetCode = (string) ($input['dataset'] ?? 'faa_l2');
+
+            if ($this->enterpriseGateFail($datasetCode)) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'error' => 'Dataset Level 2 (raster GeoTIFF) memerlukan paket berbayar (Lite, Pro, atau Team).',
+                    'upgrade_url' => site_url('signup'),
+                ]);
+            }
             $binary = $this->rasterBinaryFromFilters($datasetCode, $this->filtersFromInput($input));
 
             if ($binary === null) {
@@ -155,6 +168,8 @@ class WebMap extends BaseController
                 ]
             );
 
+            $sizeBytes = is_file($archive['path']) ? filesize($archive['path']) : null;
+            $this->logWebMapDownload($datasetCode, 'raster', $this->filtersFromInput($input), null, $sizeBytes ?: null);
             return $this->response->download($archive['path'], null)->setFileName($archive['filename']);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(400)->setJSON([
@@ -166,6 +181,13 @@ class WebMap extends BaseController
     public function downloadRasterGrid(int $rid)
     {
         $datasetCode = (string) ($this->request->getGet('dataset') ?? 'faa_l2');
+
+        if ($this->enterpriseGateFail($datasetCode)) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'error' => 'Dataset Level 2 (raster GeoTIFF) memerlukan paket berbayar (Lite, Pro, atau Team).',
+                'upgrade_url' => site_url('signup'),
+            ]);
+        }
 
         try {
             $dataset = $this->dataset($datasetCode);
@@ -195,6 +217,8 @@ class WebMap extends BaseController
                 ]
             );
 
+            $sizeBytes = is_file($archive['path']) ? filesize($archive['path']) : null;
+            $this->logWebMapDownload($datasetCode, 'raster', ['grid_id' => $rid], null, $sizeBytes ?: null);
             return $this->response->download($archive['path'], null)->setFileName($archive['filename']);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(400)->setBody($e->getMessage());
@@ -204,6 +228,13 @@ class WebMap extends BaseController
     public function downloadRasterProvince(int $provinceId)
     {
         $datasetCode = (string) ($this->request->getGet('dataset') ?? 'faa_l2');
+
+        if ($this->enterpriseGateFail($datasetCode)) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'error' => 'Dataset Level 2 (raster GeoTIFF) memerlukan paket berbayar (Lite, Pro, atau Team).',
+                'upgrade_url' => site_url('signup'),
+            ]);
+        }
 
         try {
             $dataset = $this->dataset($datasetCode);
@@ -241,6 +272,7 @@ class WebMap extends BaseController
                 ]
             );
 
+            $this->logWebMapDownload($datasetCode, 'raster', ['province_id' => $provinceId]);
             return $this->response->download($archive['path'], null)->setFileName($archive['filename']);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(400)->setBody($e->getMessage());
@@ -399,17 +431,16 @@ class WebMap extends BaseController
 
     private function provinceCollection(): array
     {
-        $db = Database::connect('gravport');
+        $db = Database::connect();
 
         $rows = $db->query('
             SELECT
-                id,
-                name_1,
-                gid_1,
-                country,
-                ST_AsGeoJSON(geom) AS geojson
-            FROM testing."AOI Jawa_Bali"
-            ORDER BY name_1 ASC
+                adm_id,
+                adm_name,
+                adm_code,
+                ST_AsGeoJSON(ST_Simplify(geom, 0.01)) AS geojson
+            FROM geoportal.polygon_adm_province
+            ORDER BY adm_name ASC
         ')->getResultArray();
 
         $features = [];
@@ -419,10 +450,10 @@ class WebMap extends BaseController
                 'type' => 'Feature',
                 'geometry' => json_decode($row['geojson'], true),
                 'properties' => [
-                    'feature_id' => (string) $row['id'],
-                    'title' => (string) $row['name_1'],
-                    'gid_1' => (string) $row['gid_1'],
-                    'country' => (string) $row['country'],
+                    'feature_id' => (string) $row['adm_id'],
+                    'title' => (string) $row['adm_name'],
+                    'gid_1' => (string) $row['adm_code'],
+                    'country' => 'Indonesia',
                 ],
             ];
         }
@@ -502,17 +533,31 @@ class WebMap extends BaseController
 
     private function vectorAggregateLayer(string $datasetCode, array $filters): array
     {
-        $dataset = $this->dataset($datasetCode);
-        $db = Database::connect($dataset['db']);
+        $dataset  = $this->dataset($datasetCode);
+        $db       = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
         $gridSize = $this->aggregateGridSize($filters);
+
+        // TABLESAMPLE keeps memory flat. Without bounds (global overview) always
+        // use an aggressive 3% sample regardless of zoom — the result is still
+        // statistically representative and keeps PostgreSQL + PHP memory tiny.
+        $zoom      = (int) ($filters['zoom'] ?? 0);
+        $hasBounds = is_array($filters['bounds'] ?? null);
+        $sample = match (true) {
+            !$hasBounds    => ' TABLESAMPLE SYSTEM(3)',
+            $zoom <= 5     => ' TABLESAMPLE SYSTEM(5)',
+            $zoom <= 6     => ' TABLESAMPLE SYSTEM(10)',
+            $zoom <= 7     => ' TABLESAMPLE SYSTEM(30)',
+            $zoom <= 8     => ' TABLESAMPLE SYSTEM(60)',
+            default        => '',
+        };
 
         $rows = $db->query('
             WITH src AS (
                 SELECT
                     t.anomaly_value,
                     t.geom
-                FROM ' . $dataset['table'] . ' t
+                FROM ' . $dataset['table'] . ' t' . $sample . '
                 WHERE 1=1
                 ' . $sqlBoundary . '
             ),
@@ -802,25 +847,19 @@ class WebMap extends BaseController
 
     private function aggregateGridSize(array $filters): float
     {
-        $zoom = (int) ($filters['zoom'] ?? 0);
-        $preset = match (true) {
-            $zoom <= 5 => 0.35,
-            $zoom <= 6 => 0.22,
-            $zoom <= 7 => 0.14,
-            $zoom <= 8 => 0.08,
-            default => 0.04,
-        };
-
-        $bounds = $filters['bounds'] ?? null;
-        if (is_array($bounds)) {
-            $dynamic = max(
-                abs((float) $bounds['east'] - (float) $bounds['west']) / 28,
-                abs((float) $bounds['north'] - (float) $bounds['south']) / 18
-            );
-            $preset = max($preset, $dynamic);
+        // No bounds = global overview, always use coarse 1° cells
+        if (!is_array($filters['bounds'] ?? null)) {
+            return 1.0;
         }
 
-        return round(max(0.02, min(0.45, $preset)), 6);
+        $zoom = (int) ($filters['zoom'] ?? 0);
+        return match (true) {
+            $zoom <= 5  => 1.0,
+            $zoom <= 6  => 0.5,
+            $zoom <= 7  => 0.25,
+            $zoom <= 8  => 0.125,
+            default     => 0.0625,
+        };
     }
 
     private function vectorSourceCount(string $datasetCode, array $filters): int
@@ -840,12 +879,22 @@ class WebMap extends BaseController
 
     private function exportFilteredVectorCsvFile(string $datasetCode, array $filters): array
     {
-        $dataset = $this->dataset($datasetCode);
-        $db = Database::connect($dataset['db']);
+        $dataset  = $this->dataset($datasetCode);
+        $db       = Database::connect($dataset['db']);
+
+        // Ensure we have the raw pgsql connection handle for row-by-row streaming.
+        if (!$db->connID) {
+            $db->initialize();
+        }
+        $conn = $db->connID;
+        if (!$conn) {
+            throw new \RuntimeException('Koneksi PostgreSQL tidak tersedia untuk streaming export.');
+        }
+
         $directory = $this->exportDirectory('data');
-        $filename = $datasetCode . '_filtered_' . date('Ymd_His') . '.csv';
-        $path = $directory . DIRECTORY_SEPARATOR . $filename;
-        $handle = fopen($path, 'wb');
+        $filename  = $datasetCode . '_filtered_' . date('Ymd_His') . '.csv';
+        $path      = $directory . DIRECTORY_SEPARATOR . $filename;
+        $handle    = fopen($path, 'wb');
 
         if ($handle === false) {
             throw new \RuntimeException('File export CSV tidak dapat dibuat.');
@@ -854,7 +903,9 @@ class WebMap extends BaseController
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], array_merge($filters, [
             'force_detail' => true,
         ]));
-        $sql = '
+
+        // Convert CI-style ? placeholders to PostgreSQL $N positional params.
+        $pgSql = $this->toPositionalParams('
             SELECT
                 t.id,
                 t.latitude,
@@ -867,10 +918,24 @@ class WebMap extends BaseController
             WHERE 1=1
             ' . $sqlBoundary . '
             ORDER BY t.id ASC
-        ';
+        ');
+
+        set_time_limit(0);
+
+        // Stream rows directly from PostgreSQL — zero per-row PHP memory overhead.
+        $result = $params
+            ? pg_query_params($conn, $pgSql, $params)
+            : pg_query($conn, $pgSql);
+
+        if ($result === false) {
+            fclose($handle);
+            throw new \RuntimeException(pg_last_error($conn) ?: 'Query streaming CSV gagal.');
+        }
 
         fputcsv($handle, ['id', 'latitude', 'longitude', 'orthometric_height', 'anomaly_value', 'source_file', 'survey_mode']);
-        foreach ($db->query($sql, $params)->getResultArray() as $row) {
+        $rowCount = 0;
+
+        while (($row = pg_fetch_assoc($result)) !== false) {
             fputcsv($handle, [
                 $row['id'] ?? '',
                 $row['latitude'] ?? '',
@@ -880,14 +945,26 @@ class WebMap extends BaseController
                 $row['source_file'] ?? '',
                 $row['survey_mode'] ?? '',
             ]);
+            $rowCount++;
         }
 
+        pg_free_result($result);
         fclose($handle);
 
         return [
-            'path' => $path,
-            'filename' => $filename,
+            'path'      => $path,
+            'filename'  => $filename,
+            'row_count' => $rowCount,
         ];
+    }
+
+    /** Replace ? placeholders with PostgreSQL positional params ($1, $2, …). */
+    private function toPositionalParams(string $sql): string
+    {
+        $i = 0;
+        return preg_replace_callback('/\?/', static function () use (&$i): string {
+            return '$' . ++$i;
+        }, $sql);
     }
 
     private function buildDatasetPackage(string $baseName, string $datasetCode, array $filters, array $files): array
@@ -1033,13 +1110,13 @@ class WebMap extends BaseController
     private function boundaryPayload(array $filters): ?array
     {
         if (!empty($filters['province_id'])) {
-            $db = Database::connect('gravport');
+            $db = Database::connect();
             $row = $db->query('
                 SELECT
                     ST_AsGeoJSON(geom) AS geojson,
                     ST_GeometryType(geom) AS geom_type
-                FROM testing."AOI Jawa_Bali"
-                WHERE id = ?
+                FROM geoportal.polygon_adm_province
+                WHERE adm_id = ?
                 LIMIT 1
             ', [$filters['province_id']])->getRowArray();
 
@@ -1218,5 +1295,37 @@ class WebMap extends BaseController
         }
 
         return 'national';
+    }
+
+    /** Returns true when the dataset is Level 2 and the user lacks Enterprise access. */
+    private function enterpriseGateFail(string $datasetCode): bool
+    {
+        if (!str_ends_with($datasetCode, '_l2')) {
+            return false;
+        }
+        $role = auth_current_role();
+        if (in_array($role, ['admin', 'superadmin'], true)) {
+            return false;
+        }
+        $userId = (int) (session()->get('user_id') ?? 0);
+        $tier = $this->marketplace->userTier($userId);
+        // All paid tiers (lite, pro, team, enterprise, government) can access Level 2
+        return in_array($tier, ['none', 'free'], true);
+    }
+
+    private function logWebMapDownload(string $datasetCode, string $datasetType, array $filterParams, ?int $rowCount = null, ?int $sizeBytes = null): void
+    {
+        try {
+            $userId = (int) (session()->get('user_id') ?? 0);
+            $this->marketplace->logDownload([
+                'user_id'             => $userId ?: null,
+                'dataset_code'        => $datasetCode,
+                'dataset_type'        => $datasetType,
+                'filter_params'       => $filterParams,
+                'row_count'           => $rowCount,
+                'download_size_bytes' => $sizeBytes,
+                'user_agent'          => $this->request->getUserAgent()->getAgentString(),
+            ]);
+        } catch (\Throwable) {}
     }
 }

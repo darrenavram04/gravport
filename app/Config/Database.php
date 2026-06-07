@@ -6,25 +6,19 @@ use CodeIgniter\Database\Config;
 
 class Database extends Config
 {
-    /**
-     * The default connection group.
-     */
-    public string $defaultGroup = 'mockup';
+    public string $defaultGroup = 'default';
 
-    /**
-     * MockUp DB: public.geo_datasets
-     */
-    public array $mockup = [
+    public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
         'username'     => 'postgres',
         'password'     => 'yayaya123',
-        'database'     => 'MockUp',
-        'schema'       => 'public',
+        'database'     => 'geoportal',
+        'schema'       => 'geoportal,public',
         'DBDriver'     => 'Postgre',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => true,
+        'DBDebug'      => (ENVIRONMENT !== 'production'),
         'charset'      => 'utf8',
         'DBCollat'     => 'utf8',
         'swapPre'      => '',
@@ -42,66 +36,19 @@ class Database extends Config
         ],
     ];
 
-    /**
-     * gravport DB: testing.datasets
-     */
-    public array $gravport = [
-        'DSN'          => '',
-        'hostname'     => 'localhost',
-        'username'     => 'postgres',
-        'password'     => 'yayaya123',
-        'database'     => 'gravport',
-        'schema'       => 'testing',
-        'DBDriver'     => 'Postgre',
-        'DBPrefix'     => '',
-        'pConnect'     => false,
-        'DBDebug'      => true,
-        'charset'      => 'utf8',
-        'DBCollat'     => 'utf8',
-        'swapPre'      => '',
-        'encrypt'      => false,
-        'compress'     => false,
-        'strictOn'     => false,
-        'failover'     => [],
-        'port'         => 5433,
-        'numberNative' => false,
-        'foundRows'    => false,
-        'dateFormat'   => [
-            'date'     => 'Y-m-d',
-            'datetime' => 'Y-m-d H:i:s',
-            'time'     => 'H:i:s',
-        ],
-    ];
+    // Alias groups — semua mengarah ke schema geoportal
+    public array $mockup   = [];
+    public array $gravport = [];
+    public array $geoportal = [];
+    public array $auth     = [];
 
-    /**
-     * Auth DB group (we’ll store auth tables in MockUp, schema auth).
-     * If you want auth in gravport instead, change database/schema here.
-     */
-    public array $auth = [
-        'DSN'          => '',
-        'hostname'     => 'localhost',
-        'username'     => 'postgres',
-        'password'     => 'yayaya123',
-        'database'     => 'MockUp',
-        'schema'       => 'auth',
-        'DBDriver'     => 'Postgre',
-        'DBPrefix'     => '',
-        'pConnect'     => false,
-        'DBDebug'      => true,
-        'charset'      => 'utf8',
-        'DBCollat'     => 'utf8',
-        'swapPre'      => '',
-        'encrypt'      => false,
-        'compress'     => false,
-        'strictOn'     => false,
-        'failover'     => [],
-        'port'         => 5433,
-        'numberNative' => false,
-        'foundRows'    => false,
-        'dateFormat'   => [
-            'date'     => 'Y-m-d',
-            'datetime' => 'Y-m-d H:i:s',
-            'time'     => 'H:i:s',
-        ],
-    ];
+    public function __construct()
+    {
+        parent::__construct();
+        // Semua alias pakai konfigurasi yang sama
+        $this->mockup    = $this->default;
+        $this->gravport  = $this->default;
+        $this->geoportal = $this->default;
+        $this->auth      = $this->default;
+    }
 }

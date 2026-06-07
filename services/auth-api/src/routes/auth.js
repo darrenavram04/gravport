@@ -12,11 +12,7 @@ const loginLimiter = rateLimit({
   max: 8,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    error: {
-      message: 'Terlalu banyak percobaan login. Coba lagi nanti.',
-    },
-  },
+  message: { error: { message: 'Terlalu banyak percobaan login. Coba lagi nanti.' } },
 });
 
 const signupLimiter = rateLimit({
@@ -24,37 +20,51 @@ const signupLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    error: {
-      message: 'Terlalu banyak percobaan pendaftaran. Coba lagi nanti.',
-    },
-  },
+  message: { error: { message: 'Terlalu banyak percobaan pendaftaran. Coba lagi nanti.' } },
 });
 
 if (config.server.sharedKey !== '') {
   router.use((req, res, next) => {
     const incomingKey = String(req.get('x-auth-client-key') || '');
-
     if (incomingKey !== config.server.sharedKey) {
-      return res.status(401).json({
-        error: {
-          message: 'Akses Auth API ditolak.',
-        },
-      });
+      return res.status(401).json({ error: { message: 'Akses Auth API ditolak.' } });
     }
-
     return next();
   });
 }
 
+// ── Helper: resolve role from accounts.role column ────────────────────────────
+async function resolvePrimaryRole(client, accId) {
+  const result = await client.query(
+    `SELECT role FROM ${config.database.schema}.accounts WHERE acc_id = $1 LIMIT 1`,
+    [accId]
+  );
+  return result.rows[0]?.role || config.auth.defaultRole;
+}
+
+// ── Helper: ensure account exists or create it ────────────────────────────────
+async function ensureAccount(client, email, fullName, passwordHash) {
+  const existing = await client.query(
+    `SELECT acc_id FROM ${config.database.schema}.accounts WHERE acc_email = $1 LIMIT 1`,
+    [email]
+  );
+  if (existing.rows[0]) return existing.rows[0].acc_id;
+
+  const inserted = await client.query(
+    `INSERT INTO ${config.database.schema}.accounts
+       (acc_name, acc_email, acc_password, is_active, role, created_at)
+     VALUES ($1, $2, $3, TRUE, $4, NOW())
+     RETURNING acc_id`,
+    [String(fullName || email).substring(0, 20), email, passwordHash, config.auth.defaultRole]
+  );
+  return inserted.rows[0].acc_id;
+}
+
+// POST /v1/auth/login
 router.post('/login', loginLimiter, async (req, res, next) => {
   const validation = validateLoginPayload(req.body || {});
   if (!validation.ok) {
-    return res.status(422).json({
-      error: {
-        message: validation.message,
-      },
-    });
+    return res.status(422).json({ error: { message: validation.message } });
   }
 
   const { email, password } = validation.data;
@@ -62,39 +72,37 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
   try {
     const userResult = await client.query(
-      `SELECT id, email, full_name, password_hash, is_active
-       FROM ${config.database.schema}.users
-       WHERE email = $1
+      `SELECT acc_id AS id, acc_email AS email, acc_name AS full_name,
+              acc_password AS password_hash, is_active
+       FROM ${config.database.schema}.accounts
+       WHERE acc_email = $1
        LIMIT 1`,
       [email]
     );
 
     const user = userResult.rows[0];
     if (!user || !user.is_active) {
-      return res.status(401).json({
-        error: {
-          message: 'Invalid credentials.',
-        },
-      });
+      return res.status(401).json({ error: { message: 'Invalid credentials.' } });
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
-      return res.status(401).json({
-        error: {
-          message: 'Invalid credentials.',
-        },
-      });
+      return res.status(401).json({ error: { message: 'Invalid credentials.' } });
     }
 
     const roleName = await resolvePrimaryRole(client, Number(user.id));
 
+    await client.query(
+      `UPDATE ${config.database.schema}.accounts SET is_logged_in = true WHERE acc_id = $1`,
+      [Number(user.id)]
+    );
+
     return res.status(200).json({
       data: {
-        id: Number(user.id),
-        email: String(user.email),
+        id:        Number(user.id),
+        email:     String(user.email),
         full_name: String(user.full_name || ''),
-        role: roleName,
+        role:      roleName,
       },
     });
   } catch (error) {
@@ -104,117 +112,145 @@ router.post('/login', loginLimiter, async (req, res, next) => {
   }
 });
 
+// POST /v1/auth/logout
+router.post('/logout', async (req, res, next) => {
+  const userId = parseInt(req.body?.user_id, 10);
+  if (!userId || userId <= 0) {
+    return res.status(422).json({ error: { message: 'user_id wajib diisi.' } });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query(
+      `UPDATE ${config.database.schema}.accounts SET is_logged_in = false WHERE acc_id = $1`,
+      [userId]
+    );
+    return res.status(200).json({ data: { ok: true } });
+  } catch (error) {
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
+// POST /v1/auth/signup
 router.post('/signup', signupLimiter, async (req, res, next) => {
   const validation = validateSignupPayload(req.body || {});
   if (!validation.ok) {
-    return res.status(422).json({
-      error: {
-        message: validation.message,
-      },
-    });
+    return res.status(422).json({ error: { message: validation.message } });
   }
 
   const { fullName, email, password } = validation.data;
+  const requestedRole = ['user', 'admin'].includes(String(req.body?.requested_role || ''))
+    ? String(req.body.requested_role)
+    : 'user';
+
   const client = await pool.connect();
 
   try {
     await client.query('BEGIN');
 
-    const roleId = await ensureRoleId(client, config.auth.defaultRole);
     const passwordHash = await bcrypt.hash(password, config.auth.bcryptRounds);
+    const accName      = String(fullName || email).substring(0, 20);
 
     const insertResult = await client.query(
-      `INSERT INTO ${config.database.schema}.users
-        (email, password_hash, full_name, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, TRUE, NOW(), NOW())
-       RETURNING id, email, full_name`,
-      [email, passwordHash, fullName]
+      `INSERT INTO ${config.database.schema}.accounts
+         (acc_name, acc_email, acc_password, is_active, role, created_at)
+       VALUES ($1, $2, $3, TRUE, $4, NOW())
+       RETURNING acc_id AS id, acc_email AS email, acc_name AS full_name`,
+      [accName, email, passwordHash, config.auth.defaultRole]
     );
 
     const user = insertResult.rows[0];
 
-    await client.query(
-      `INSERT INTO ${config.database.schema}.user_roles (user_id, role_id)
-       VALUES ($1, $2)
-       ON CONFLICT DO NOTHING`,
-      [Number(user.id), roleId]
-    );
-
     await client.query('COMMIT');
+
+    sendWelcomeEmail(user, requestedRole).catch(err =>
+      console.warn('[mailer] welcome email failed:', err.message)
+    );
 
     return res.status(201).json({
       data: {
-        id: Number(user.id),
-        email: String(user.email),
-        full_name: String(user.full_name || ''),
-        role: config.auth.defaultRole,
+        id:             Number(user.id),
+        email:          String(user.email),
+        full_name:      String(user.full_name || ''),
+        role:           config.auth.defaultRole,
+        requested_role: requestedRole,
       },
     });
   } catch (error) {
     await client.query('ROLLBACK');
-
     if (error && error.code === '23505') {
-      return res.status(409).json({
-        error: {
-          message: 'Email sudah terdaftar.',
-        },
-      });
+      return res.status(409).json({ error: { message: 'Email sudah terdaftar.' } });
     }
-
     return next(error);
   } finally {
     client.release();
   }
 });
 
-async function ensureRoleId(client, roleName) {
-  const existing = await client.query(
-    `SELECT id
-     FROM ${config.database.schema}.roles
-     WHERE name = $1
-     LIMIT 1`,
-    [roleName]
-  );
+// POST /v1/auth/admin/create-user
+router.post('/admin/create-user', async (req, res, next) => {
+  const { email, full_name, password_hash } = req.body || {};
 
-  if (existing.rows[0]) {
-    return Number(existing.rows[0].id);
+  if (!email || !full_name || !password_hash) {
+    return res.status(422).json({
+      error: { message: 'email, full_name, dan password_hash wajib diisi.' },
+    });
   }
 
-  const inserted = await client.query(
-    `INSERT INTO ${config.database.schema}.roles (name)
-     VALUES ($1)
-     RETURNING id`,
-    [roleName]
-  );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  return Number(inserted.rows[0].id);
-}
+    const insertResult = await client.query(
+      `INSERT INTO ${config.database.schema}.accounts
+         (acc_name, acc_email, acc_password, is_active, role, created_at)
+       VALUES ($1, $2, $3, TRUE, $4, NOW())
+       RETURNING acc_id AS id, acc_email AS email, acc_name AS full_name`,
+      [
+        String(full_name).substring(0, 20).trim(),
+        String(email).toLowerCase().trim(),
+        String(password_hash),
+        'user',
+      ]
+    );
 
-async function resolvePrimaryRole(client, userId) {
-  const roleResult = await client.query(
-    `SELECT r.name
-     FROM ${config.database.schema}.user_roles ur
-     JOIN ${config.database.schema}.roles r ON r.id = ur.role_id
-     WHERE ur.user_id = $1
-     ORDER BY r.name ASC
-     LIMIT 1`,
-    [userId]
-  );
+    const user = insertResult.rows[0];
+    await client.query('COMMIT');
 
-  if (roleResult.rows[0] && roleResult.rows[0].name) {
-    return String(roleResult.rows[0].name);
+    return res.status(201).json({
+      data: {
+        id:        Number(user.id),
+        email:     String(user.email),
+        full_name: String(user.full_name),
+      },
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    if (error && error.code === '23505') {
+      return res.status(409).json({ error: { message: 'Email sudah terdaftar.' } });
+    }
+    return next(error);
+  } finally {
+    client.release();
   }
+});
 
-  const roleId = await ensureRoleId(client, config.auth.defaultRole);
+// ── Email helpers ─────────────────────────────────────────────────────────────
+async function sendWelcomeEmail(user, requestedRole) {
+  const name = user.full_name || user.email;
+  const { sendMail } = require('../mailer');
 
-  await client.query(
-    `INSERT INTO ${config.database.schema}.user_roles (user_id, role_id)
-     VALUES ($1, $2)
-     ON CONFLICT DO NOTHING`,
-    [userId, roleId]
-  );
+  const html = requestedRole === 'admin'
+    ? `<p>Halo <strong>${name}</strong>, akun GravPort Anda sudah aktif. Permintaan akses Admin sedang ditinjau.</p>`
+    : `<p>Halo <strong>${name}</strong>, selamat datang di GravPort! Akun Anda sudah aktif.</p>`;
 
-  return config.auth.defaultRole;
+  await sendMail({
+    to: user.email,
+    subject: 'GravPort — Akun Anda Sudah Aktif',
+    html,
+  });
 }
 
 module.exports = router;

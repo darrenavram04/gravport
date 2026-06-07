@@ -47,6 +47,61 @@ class AuthApiClient
         return $this->extractDataPayload($response, 'Respons signup dari Auth API tidak lengkap.');
     }
 
+    /** @param array{email:string} $payload */
+    public function forgotPassword(array $payload): void
+    {
+        $this->request('POST', '/v1/auth/forgot-password', $payload);
+    }
+
+    /** @param array{token:string,password:string} $payload */
+    public function resetPassword(array $payload): void
+    {
+        $this->request('POST', '/v1/auth/reset-password', $payload);
+    }
+
+    /**
+     * Buat akun pengguna dengan password_hash yang sudah di-hash (bcrypt).
+     * Tidak mengirim welcome email. Digunakan saat admin mengaktifkan pending registration.
+     *
+     * @param array{email:string,full_name:string,password_hash:string} $payload
+     * @return array{id:int,email:string,full_name:string}
+     */
+    public function createUser(array $payload): array
+    {
+        $response = $this->request('POST', '/v1/auth/admin/create-user', $payload);
+        $data = $response['data'] ?? null;
+        if (! is_array($data)) {
+            throw new RuntimeException('Respons createUser dari Auth API tidak lengkap.');
+        }
+        return [
+            'id'        => (int) ($data['id'] ?? 0),
+            'email'     => (string) ($data['email'] ?? ''),
+            'full_name' => (string) ($data['full_name'] ?? ''),
+        ];
+    }
+
+    /** @param array{user_id:int} $payload */
+    public function logout(array $payload): void
+    {
+        $this->request('POST', '/v1/auth/logout', $payload);
+    }
+
+    /** @param array{user_id:int} $payload */
+    public function requestOtp(array $payload): void
+    {
+        $this->request('POST', '/v1/auth/request-otp', $payload);
+    }
+
+    /**
+     * @param array{user_id:int,otp_code:string} $payload
+     * @return array{verified:bool}
+     */
+    public function verifyOtp(array $payload): array
+    {
+        $response = $this->request('POST', '/v1/auth/verify-otp', $payload);
+        return ['verified' => (bool) ($response['data']['verified'] ?? false)];
+    }
+
     /**
      * @param array<string, mixed> $payload
      * @return array<string, mixed>

@@ -92,14 +92,13 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
   document.body.classList.add("motion-ready");
 
-  const shareButton = document.getElementById("siteShareBtn");
-  const toast = document.getElementById("siteToast");
   const navLinks = Array.from(document.querySelectorAll(".site-nav__link[data-nav-section]"));
   const revealTargets = document.querySelectorAll(
     ".section-heading, .media-panel, .content-panel, .tool-card, .tool-visual, .team-member, .contact-form-shell"
   );
 
   function showToast(message) {
+    const toast = document.getElementById("siteToast");
     if (!toast) return;
 
     toast.textContent = message;
@@ -177,40 +176,6 @@ document.addEventListener("DOMContentLoaded", function () {
     revealTargets.forEach((target) => target.classList.add("is-inview"));
   }
 
-  if (shareButton) {
-    shareButton.addEventListener("click", async function () {
-      const shareData = {
-        title: document.title,
-        text: "Explore GravPort Jawa-Bali gravity anomaly portal",
-        url: window.location.href,
-      };
-
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-          showToast("Link halaman siap dibagikan.");
-          return;
-        }
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(window.location.href);
-          showToast("Link halaman berhasil disalin.");
-          return;
-        }
-      } catch (error) {
-        showToast("Aksi berbagi dibatalkan.");
-        return;
-      }
-
-      const helper = document.createElement("input");
-      helper.value = window.location.href;
-      document.body.appendChild(helper);
-      helper.select();
-      document.execCommand("copy");
-      helper.remove();
-      showToast("Link halaman berhasil disalin.");
-    });
-  }
 });
 
 document.addEventListener("DOMContentLoaded", function () {

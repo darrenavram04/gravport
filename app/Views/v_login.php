@@ -33,9 +33,9 @@
       font-family: "Manrope", sans-serif;
       color: var(--login-text);
       background:
-        radial-gradient(circle at top left, rgba(167, 96, 37, 0.32), transparent 28%),
-        radial-gradient(circle at 82% 16%, rgba(97, 212, 255, 0.18), transparent 24%),
-        linear-gradient(135deg, #04101d 0%, #091427 45%, #0b1b34 100%);
+        radial-gradient(ellipse at top left, rgba(30, 50, 200, 0.28), transparent 42%),
+        radial-gradient(ellipse at 80% 10%, rgba(20, 30, 150, 0.2), transparent 38%),
+        linear-gradient(160deg, #07093d 0%, #060a28 45%, #040612 100%);
     }
 
     .login-shell {
@@ -249,12 +249,6 @@
       text-transform: uppercase;
     }
 
-    .login-card__eyebrow::before {
-      content: "";
-      width: 28px;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.36);
-    }
 
     .login-card h2 {
       margin: 14px 0 8px;
@@ -377,6 +371,109 @@
       color: #fff;
     }
 
+    /* Password field wrapper for show/hide toggle */
+    .login-field--pw .input-wrap {
+      position: relative;
+    }
+
+    .login-field--pw .input-wrap input {
+      padding-right: 50px;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1;
+      transition: color 0.18s ease;
+    }
+
+    .pw-toggle:hover { color: rgba(255, 255, 255, 0.9); }
+
+    .login-forgot {
+      position: relative;
+      z-index: 1;
+      display: block;
+      text-align: right;
+      margin-top: -6px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: rgba(255, 191, 116, 0.82);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.18s ease;
+    }
+
+    .login-forgot:hover { color: var(--login-amber); }
+
+    /* Guest button */
+    .login-guest {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.78);
+      font: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .login-guest:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.24);
+      color: #fff;
+    }
+
+    .login-divider {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 4px;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .login-links {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
     @media (max-width: 980px) {
       .login-frame {
         grid-template-columns: 1fr;
@@ -403,50 +500,115 @@
       }
     }
   </style>
+  <style>
+    .gp-lang-pill {
+      position: absolute; top: 16px; right: 18px; z-index: 10;
+      display: inline-flex; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18); overflow: hidden;
+      background: rgba(255,255,255,.07); backdrop-filter: blur(8px);
+    }
+    .gp-lang-pill button {
+      padding: 5px 12px; font-family: 'Manrope', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      color: rgba(255,255,255,.45); background: transparent;
+      border: none; cursor: pointer; transition: color .15s, background .15s;
+    }
+    .gp-lang-pill button.is-active { background: rgba(255,255,255,.16); color: #fff; }
+    .gp-lang-pill button:hover:not(.is-active) { color: rgba(255,255,255,.8); }
+  </style>
+  <script>
+  (function(){
+    var T = {
+      id: {
+        'lg.h1': 'Masuk ke workspace GravPort.',
+        'lg.intro': 'Masuk untuk membuka katalog, WebMap, dan fitur sesuai role akun.',
+        'lg.h2': 'Masuk ke akun Anda', 'lg.sub': 'Gunakan akun yang sesuai.',
+        'lg.lbl.pw': 'Password', 'lg.pw.ph': 'Masukkan password',
+        'lg.forgot': 'Lupa password?', 'lg.submit': 'Login ke GravPort',
+        'lg.divider': 'atau', 'lg.guest': 'Lanjutkan sebagai Tamu',
+        'lg.s1.lbl': 'Katalog', 'lg.s1.desc': 'Lihat FAA dan BA yang tersedia.',
+        'lg.s2.lbl': 'Role',    'lg.s2.desc': 'Lihat & Unduh FAA dan BA lengkap dengan metadata',
+        'lg.s3.desc': 'Integrasikan data gravimetri ke dalam basis data terstandarisasi',
+      },
+      en: {
+        'lg.h1': 'Sign In to GravPort.',
+        'lg.intro': 'Sign in to access the catalog, WebMap, and account features.',
+        'lg.h2': 'Sign in to your account', 'lg.sub': 'Use your registered account.',
+        'lg.lbl.pw': 'Password', 'lg.pw.ph': 'Enter password',
+        'lg.forgot': 'Forgot password?', 'lg.submit': 'Login to GravPort',
+        'lg.divider': 'or', 'lg.guest': 'Continue as Guest',
+        'lg.s1.lbl': 'Catalog', 'lg.s1.desc': 'View available FAA and BA datasets.',
+        'lg.s2.lbl': 'Role',    'lg.s2.desc': 'View & Download FAA and BA with full metadata',
+        'lg.s3.desc': 'Integrate gravity data into a standardized data infrastructure',
+      }
+    };
+    function gpApply(lang) {
+      document.querySelectorAll('[data-i18n]').forEach(function(el){
+        var k = el.getAttribute('data-i18n');
+        el.textContent = (T[lang]&&T[lang][k])||(T.id&&T.id[k])||k;
+      });
+      document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+        var k = el.getAttribute('data-i18n-ph');
+        el.placeholder = (T[lang]&&T[lang][k])||(T.id&&T.id[k])||k;
+      });
+      document.querySelectorAll('.gp-lang-pill button').forEach(function(b){
+        b.classList.toggle('is-active', b.dataset.lang === lang);
+      });
+    }
+    window.gpLgSet = function(lang) {
+      localStorage.setItem('gp_lang', lang); gpApply(lang);
+    };
+    document.addEventListener('DOMContentLoaded', function(){
+      gpApply(localStorage.getItem('gp_lang')||'id');
+    });
+  })();
+  </script>
 </head>
 <body>
-
 <main class="login-shell">
   <section class="login-frame">
     <article class="login-story">
       <div class="login-brand">
-        <img src="<?= base_url('images/itb.png'); ?>" alt="Logo ITB">
+        <img src="<?= base_url('images/gravport_logo_color.png'); ?>" alt="GravPort">
         <div>
           <strong>GravPort</strong>
           <span>Jawa-Bali Geoportal</span>
         </div>
       </div>
 
-      <span class="login-kicker">Geoportal Access</span>
-      <h1>Masuk ke workspace GravPort.</h1>
-      <p>
+      <h1 data-i18n="lg.h1">Masuk ke workspace GravPort.</h1>
+      <p data-i18n="lg.intro">
         Masuk untuk membuka katalog, WebMap, dan fitur sesuai role akun.
       </p>
 
       <div class="login-story__grid">
         <div class="login-story__stat">
-          <small>Katalog</small>
-          <strong>Dataset Level 1 & 2</strong>
-          <span>Lihat FAA dan CBA yang tersedia.</span>
+          <small data-i18n="lg.s1.lbl">Katalog</small>
+          <strong>Dataset Level 1 &amp; 2</strong>
+          <span data-i18n="lg.s1.desc">Lihat FAA dan BA yang tersedia.</span>
         </div>
         <div class="login-story__stat">
-          <small>Admin</small>
-          <strong>Metadata Workspace</strong>
-          <span>Admin dapat mengakses metadata dan operasional internal.</span>
+          <small data-i18n="lg.s2.lbl">Role</small>
+          <strong>User</strong>
+          <span data-i18n="lg.s2.desc">Lihat &amp; Unduh FAA dan BA lengkap dengan metadata</span>
         </div>
         <div class="login-story__stat">
-          <small>Workflow</small>
-          <strong>Role-based Access</strong>
-          <span>Menu menyesuaikan role user aktif.</span>
+          <small></small>
+          <strong>Be Part of GravPORT</strong>
+          <span data-i18n="lg.s3.desc">Integrasikan data gravimetri ke dalam basis data terstandarisasi</span>
         </div>
       </div>
     </article>
 
     <article class="login-card">
+      <div class="gp-lang-pill">
+        <button data-lang="id" onclick="gpLgSet('id')">ID</button>
+        <button data-lang="en" onclick="gpLgSet('en')">EN</button>
+      </div>
       <div class="login-card__head">
         <span class="login-card__eyebrow">Secure Sign In</span>
-        <h2>Masuk ke akun Anda</h2>
-        <p>Gunakan akun yang sesuai.</p>
+        <h2 data-i18n="lg.h2">Masuk ke akun Anda</h2>
+        <p data-i18n="lg.sub">Gunakan akun yang sesuai.</p>
       </div>
 
       <?php if (session()->getFlashdata('error')): ?>
@@ -462,30 +624,58 @@
 
         <div class="login-field">
           <label for="email">Email</label>
-          <input id="email" name="email" type="email" value="<?= esc(old('email')) ?>" placeholder="email@contoh.com" required>
+          <input id="email" name="email" type="email" value="<?= esc(old('email')) ?>" placeholder="email@contoh.com" required autocomplete="email">
         </div>
 
-        <div class="login-field">
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="Masukkan password" required>
+        <div class="login-field login-field--pw">
+          <label for="password" data-i18n="lg.lbl.pw">Password</label>
+          <div class="input-wrap">
+            <input id="password" name="password" type="password" data-i18n-ph="lg.pw.ph" placeholder="Masukkan password" required autocomplete="current-password">
+            <button type="button" class="pw-toggle" aria-label="Tampilkan/sembunyikan password" onclick="togglePassword('password', this)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
         </div>
 
-        <button class="login-submit" type="submit">Login to GravPort</button>
+        <a class="login-forgot" href="<?= site_url('forgot-password') ?>" data-i18n="lg.forgot">Lupa password?</a>
+
+        <button class="login-submit" type="submit" data-i18n="lg.submit">Login ke GravPort</button>
       </form>
 
+      <div class="login-divider" data-i18n="lg.divider">atau</div>
 
-      <a class="login-switch" href="<?= site_url('signup') ?>">
-        <span>Belum punya akun?</span>
-        <span>Daftar sebagai user</span>
+      <a class="login-guest" href="<?= site_url('login/guest') ?>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span data-i18n="lg.guest">Lanjutkan sebagai Tamu</span>
       </a>
 
-      <a class="login-back" href="<?= site_url('/') ?>">
-        <span>&larr;</span>
-        <span>Kembali ke home</span>
-      </a>
+      <div class="login-links">
+        <a class="login-switch" href="<?= site_url('signup') ?>">
+          Belum punya akun? <strong>Daftar</strong>
+        </a>
+        <a class="login-back" href="<?= site_url('/') ?>">
+          &larr; Beranda
+        </a>
+      </div>
     </article>
   </section>
 </main>
 
+<script>
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.innerHTML = isHidden
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+    btn.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
+  }
+</script>
+  <div id="auth-loader" style="position:fixed;inset:0;z-index:99999;background:#04101d;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease,visibility .5s ease;">
+    <img src="<?= base_url('images/gravport_logo_color.png') ?>" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(167,96,37,.5));margin-bottom:20px;">
+    <div style="width:160px;height:2px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden;"><div id="auth-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#a76025,#ffbf74 50%,#61d4ff);border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1);"></div></div>
+  </div>
+  <script>setTimeout(function(){document.getElementById('auth-bar').style.width='100%'},50);window.addEventListener('load',function(){var l=document.getElementById('auth-loader');setTimeout(function(){l.style.opacity='0';l.style.visibility='hidden'},400)});</script>
 </body>
 </html>

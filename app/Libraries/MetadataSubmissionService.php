@@ -35,9 +35,9 @@ class MetadataSubmissionService
         return $errors;
     }
 
-    public function store(array $payload, array $files, string $submittedByRole = 'user'): array
+    public function store(array $payload, array $files, string $submittedByRole = 'user', int $accId = 0): array
     {
-        $db = Database::connect('gravport');
+        $db = Database::connect();
         $this->ensureTable($db);
 
         $submissionKey = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
@@ -60,6 +60,31 @@ class MetadataSubmissionService
         $db->table('dataset_user_submissions')->insert($row);
         $id = $db->insertID();
 
+        // Stage CSV dan TIFF ke staging tables untuk review superadmin
+        $obsType     = $this->resolveObsType((string) ($payload['jenis_data'] ?? ''));
+        $datasetCode = (string) ($payload['dataset_code'] ?? '');
+        if ($accId > 0 && $id > 0) {
+            if (!empty($storedFiles['tabular_file_path'])) {
+                $this->stageTabularCsv(
+                    ROOTPATH . $storedFiles['tabular_file_path'],
+                    $accId,
+                    $obsType,
+                    basename($storedFiles['tabular_file_path']),
+                    $id,
+                    $datasetCode
+                );
+            }
+            if (!empty($storedFiles['raster_file_path'])) {
+                $this->stageRasterFile(
+                    $storedFiles['raster_file_path'],
+                    $accId,
+                    basename($storedFiles['raster_file_path']),
+                    $id,
+                    $datasetCode
+                );
+            }
+        }
+
         return [
             'id' => $id,
             'stored_files' => $storedFiles,
@@ -67,10 +92,150 @@ class MetadataSubmissionService
         ];
     }
 
+    private function resolveObsType(string $jenisData): string
+    {
+        return match (strtolower(trim($jenisData))) {
+            'airborne' => 'airborne',
+            'marine', 'laut' => 'marine',
+            default => 'terrestrial',
+        };
+    }
+
+    private function stageTabularCsv(string $filePath, int $accId, string $obsType, string $sourceName, int $submissionId = 0, string $datasetCode = ''): void
+    {
+        if (!is_file($filePath) || !is_readable($filePath)) {
+            return;
+        }
+
+        $fh = fopen($filePath, 'r');
+        if ($fh === false) {
+            return;
+        }
+
+        $header = fgetcsv($fh);
+        if (!is_array($header)) {
+            fclose($fh);
+            return;
+        }
+
+        $header = array_map(fn($h) => strtolower(trim((string) $h)), $header);
+
+        $idxLat   = $this->colIndex($header, ['latitude', 'lat', 'y']);
+        $idxLon   = $this->colIndex($header, ['longitude', 'lon', 'long', 'x']);
+        $idxVal   = $this->colIndex($header, ['anomaly_value', 'anomaly', 'faa', 'ba', 'value', 'gravity']);
+
+        if ($idxLat === null || $idxLon === null || $idxVal === null) {
+            fclose($fh);
+            return;
+        }
+
+        $db   = Database::connect();
+        $conn = $db->connID;
+
+        // Lookup dataset_id from datasets_grav_anom based on dataset_code
+        $datasetId = null;
+        if ($datasetCode !== '') {
+            $anomType = str_starts_with($datasetCode, 'faa') ? 'FAA' : 'CBA';
+            $level    = str_ends_with($datasetCode, '_l1') ? 1 : 2;
+            $dsRow    = $db->query(
+                "SELECT dataset_id FROM geoportal.datasets_grav_anom WHERE dataset_anom_type = ? AND dataset_level = ? LIMIT 1",
+                [$anomType, $level]
+            )->getRowArray();
+            $datasetId = $dsRow['dataset_id'] ?? null;
+        }
+
+        $batch = [];
+        while (($row = fgetcsv($fh)) !== false) {
+            $lat = isset($row[$idxLat]) ? (float) $row[$idxLat] : null;
+            $lon = isset($row[$idxLon]) ? (float) $row[$idxLon] : null;
+            $val = isset($row[$idxVal]) ? (float) $row[$idxVal] : null;
+
+            if ($lat === null || $lon === null || $val === null) {
+                continue;
+            }
+            if ($lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
+                continue;
+            }
+
+            $batch[] = [$lat, $lon, $val];
+
+            if (count($batch) >= 500) {
+                $this->insertStagingPointBatch($conn, $batch, $accId, $obsType, $sourceName, $submissionId, $datasetId);
+                $batch = [];
+            }
+        }
+
+        if ($batch !== []) {
+            $this->insertStagingPointBatch($conn, $batch, $accId, $obsType, $sourceName, $submissionId, $datasetId);
+        }
+
+        fclose($fh);
+    }
+
+    private function colIndex(array $header, array $candidates): ?int
+    {
+        foreach ($candidates as $name) {
+            $idx = array_search($name, $header, true);
+            if ($idx !== false) {
+                return (int) $idx;
+            }
+        }
+        return null;
+    }
+
+    private function insertStagingPointBatch($conn, array $batch, int $accId, string $obsType, string $source, int $submissionId = 0, $datasetId = null): void
+    {
+        $values = [];
+        $subE    = $submissionId > 0 ? pg_escape_literal($conn, (string) $submissionId) : 'NULL';
+        $dsE     = $datasetId !== null ? pg_escape_literal($conn, (string) $datasetId) : 'NULL';
+        foreach ($batch as [$lat, $lon, $val]) {
+            $latE  = pg_escape_literal($conn, (string) $lat);
+            $lonE  = pg_escape_literal($conn, (string) $lon);
+            $valE  = pg_escape_literal($conn, (string) $val);
+            $accE  = pg_escape_literal($conn, (string) $accId);
+            $obsE  = pg_escape_literal($conn, $obsType);
+            $srcE  = pg_escape_literal($conn, $source);
+            $values[] = "($accE, $valE, $obsE, $srcE, $latE, $lonE, ST_SetSRID(ST_MakePoint($lonE, $latE), 4326), $subE, $dsE)";
+        }
+
+        $sql = 'INSERT INTO geoportal.staging_gravity_points
+                    (acc_id, point_value, point_obs_type, source_file, lat, lon, geom, submission_id, dataset_id)
+                VALUES ' . implode(',', $values);
+        pg_query($conn, $sql);
+    }
+
+    private function stageRasterFile(string $relativePath, int $accId, string $source, int $submissionId = 0, string $datasetCode = ''): void
+    {
+        $db   = Database::connect();
+        $conn = $db->connID;
+
+        // Lookup dataset_id for the raster
+        $datasetId = null;
+        if ($datasetCode !== '') {
+            $anomType = str_starts_with($datasetCode, 'faa') ? 'FAA' : 'CBA';
+            $level    = str_ends_with($datasetCode, '_l1') ? 1 : 2;
+            $dsRow    = $db->query(
+                "SELECT dataset_id FROM geoportal.datasets_grav_anom WHERE dataset_anom_type = ? AND dataset_level = ? LIMIT 1",
+                [$anomType, $level]
+            )->getRowArray();
+            $datasetId = $dsRow['dataset_id'] ?? null;
+        }
+
+        $accE  = pg_escape_literal($conn, (string) $accId);
+        $srcE  = pg_escape_literal($conn, $source);
+        $pathE = pg_escape_literal($conn, $relativePath);
+        $subE  = $submissionId > 0 ? pg_escape_literal($conn, (string) $submissionId) : 'NULL';
+        $dsE   = $datasetId !== null ? pg_escape_literal($conn, (string) $datasetId) : 'NULL';
+
+        pg_query($conn, "INSERT INTO geoportal.staging_gravity_rasters
+                             (acc_id, source_file, review_status, submission_id, dataset_id)
+                         VALUES ($accE, $pathE, 'pending', $subE, $dsE)");
+    }
+
     private function ensureTable($db): void
     {
         $db->query(<<<SQL
-CREATE TABLE IF NOT EXISTS testing.dataset_user_submissions (
+CREATE TABLE IF NOT EXISTS geoportal.dataset_user_submissions (
     id bigserial PRIMARY KEY,
     metadata_file_identifier text NOT NULL,
     jenis_data text NOT NULL,

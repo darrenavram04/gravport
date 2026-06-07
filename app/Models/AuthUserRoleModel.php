@@ -2,65 +2,27 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use CodeIgniter\Database\BaseConnection;
+use Config\Database;
 
-class AuthUserRoleModel extends Model
+class AuthUserRoleModel
 {
-    protected $DBGroup = 'auth';
-    protected $table   = 'user_roles';
-    protected $returnType = 'array';
-    protected $allowedFields = ['user_id', 'role_id'];
+    private BaseConnection $db;
+
+    public function __construct()
+    {
+        $this->db = Database::connect();
+    }
 
     public function getPrimaryRoleName(int $userId): string
     {
-        $db = $this->db;
+        $row = $this->db->query(
+            'SELECT role FROM geoportal.accounts WHERE acc_id = ? LIMIT 1',
+            [$userId]
+        )->getRowArray();
 
-        $sql = "
-            SELECT r.name
-            FROM user_roles ur
-            JOIN roles r ON r.id = ur.role_id
-            WHERE ur.user_id = ?
-            ORDER BY r.name ASC
-            LIMIT 1
-        ";
-
-        $row = $db->query($sql, [$userId])->getRowArray();
-
-        if (!empty($row['name'])) {
-            return (string) $row['name'];
-        }
-
-        return $this->bootstrapMissingRole($userId);
-    }
-
-    private function bootstrapMissingRole(int $userId): string
-    {
-        $role = $this->db->table('roles')
-            ->select('id, name')
-            ->where('name', 'user')
-            ->get()
-            ->getRowArray();
-
-        if (!$role) {
-            $this->db->table('roles')->insert(['name' => 'user']);
-            $role = $this->db->table('roles')
-                ->select('id, name')
-                ->where('name', 'user')
-                ->get()
-                ->getRowArray();
-        }
-
-        if (!empty($role['id'])) {
-            $exists = $this->where('user_id', $userId)
-                ->where('role_id', (int) $role['id'])
-                ->first();
-
-            if (!$exists) {
-                $this->insert([
-                    'user_id' => $userId,
-                    'role_id' => (int) $role['id'],
-                ]);
-            }
+        if (!empty($row['role'])) {
+            return (string) $row['role'];
         }
 
         return 'user';

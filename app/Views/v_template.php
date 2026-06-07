@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <?php
 $versionedAsset = static function (string $relativePath): string {
     $absolutePath = FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
@@ -13,8 +13,6 @@ $teamImageUrls = [
     3 => $versionedAsset('assets/img/team/team-3.jpg'),
     4 => $versionedAsset('assets/img/team/team-4.jpg'),
 ];
-$geoidSourceUrl = 'https://icgem.gfz-potsdam.de/tom_longtime';
-$geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs84';
 ?>
 <html class="wide wow-animation" lang="en">
   <head>
@@ -23,7 +21,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
-    <link rel="icon" href="<?= base_url('images/itb.png'); ?>" type="image/x-icon">
+    <link rel="icon" href="<?= base_url('images/gravport_logo_color.png'); ?>" type="image/x-icon">
     <meta name="theme-color" content="#a76025">
     <!-- Stylesheets-->
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Poppins:400,500,600%7CTeko:300,400,500%7CMaven+Pro:500">
@@ -278,7 +276,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
       overflow: hidden; white-space: nowrap;
       border-top: 1px solid rgba(255,255,255,0.07);
       border-bottom: 1px solid rgba(255,255,255,0.07);
-      background: rgba(4,8,20,0.95);
+      background: transparent;
       padding: 13px 0;
       cursor: default;
     }
@@ -414,7 +412,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
   <body class="gravport-landing gp-loading">
     <div class="gp-loader" id="gpLoader" role="status" aria-label="Loading GravPort">
       <div class="gp-loader__brand">
-        <img src="<?= base_url('images/itb.png'); ?>" alt="GravPort logo">
+        <img src="<?= base_url('images/gravport_logo_color.png'); ?>" alt="GravPort logo">
         <strong>GravPort</strong>
       </div>
       <div class="gp-loader__bar">
@@ -520,6 +518,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
       </div>
     </div>
 
+
       <!-- ================== DATASET HERO ================== -->
       <section id="dataset" class="dataset-hero story-scene section-shell section-shell--dataset">
         <div class="scene-sticky">
@@ -529,12 +528,12 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
             <div class="dataset-constellation__intro">
               <div class="dataset-constellation__copy">
                 <span class="dataset-constellation__kicker"></span>
-                <h2 class="dataset-hero__title">Data Catalog</h2>
-                <p class="dataset-hero__subtitle">
+                <h2 class="dataset-hero__title" data-i18n="ds.title">Data Catalog</h2>
+                <p class="dataset-hero__subtitle" data-i18n="ds.subtitle">
                   FAA dan CBA level 1-2 siap dipreview dan diunduh.
                 </p>
               </div>
-              <a href="<?= site_url('catalog'); ?>" class="dataset-hero__catalog-link dataset-constellation__catalog-link btn-magnetic">
+              <a href="<?= site_url('catalog'); ?>" class="dataset-hero__catalog-link dataset-constellation__catalog-link btn-magnetic" data-i18n="ds.opencatalog">
                 Open Catalog
               </a>
             </div>
@@ -593,38 +592,165 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
       <!-- ================== END DATASET HERO ================== -->
 
 
-      <!-- About Section -->
-      <section id="About" class="about section section-shell section-shell--light">
-        <div class="container about-shell" data-aos="fade-up">
-            <div class="section-heading section-heading--split section-heading--about">
-              <div class="about-heading-card">
-                <span class="section-kicker">Gravity Geoportal Indonesia</span>
-                <h2 class="section-title">Data anomali gayaberat nasional dalam satu platform</h2>
-              </div>
-              <div class="about-heading-side">
-                <p class="section-lead">
-                  FAA dan CBA level 1-2 untuk preview, analisis, dan unduh data.
-                </p>
-                <div class="about-metrics" aria-label="Geoportal highlights">
-                  <article class="about-metric">
-                    <span class="about-metric__label">Coverage</span>
-                    <strong><span class="js-counter" data-target="9" data-suffix=" Provinsi">0 Provinsi</span></strong>
-                    <p>Jawa dan Bali — data gayaberat dari 9 provinsi dalam satu platform.</p>
-                  </article>
-                  <article class="about-metric">
-                    <span class="about-metric__label">Dataset</span>
-                    <strong><span class="js-counter" data-target="4" data-suffix=" Tipe Data">0 Tipe Data</span></strong>
-                    <p>FAA L1, CBA L1, FAA L2, CBA L2 — scatter dan grid siap diunduh.</p>
-                  </article>
-                  <article class="about-metric">
-                    <span class="about-metric__label">Platform</span>
-                    <strong><span class="js-counter" data-target="3" data-suffix=" Fitur Utama">0 Fitur</span></strong>
-                    <p>Catalog, WebMap, dan Metadata — satu alur dari preview hingga unduh.</p>
-                  </article>
-                </div>
-              </div>
+      <!-- ══ DATA GRAVITASI ANALYTICS ══ -->
+      <section id="About" class="section-shell" style="background:transparent;padding:100px 0 40px;position:relative;overflow:hidden;scroll-margin-top:80px;">
+
+        <div style="position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px">
+
+          <!-- Stat cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px">
+
+            <div style="padding:24px;border-radius:20px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));backdrop-filter:blur(22px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(167,96,37,.10),transparent 55%);pointer-events:none"></div>
+              <div data-i18n="st.tp.label" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,168,86,.9);margin-bottom:12px">Total Titik</div>
+              <div id="statPoints" style="font-family:'Poppins',sans-serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1">—</div>
+              <div data-i18n="st.tp.sub" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">titik gravitasi terukur</div>
             </div>
 
+            <div style="padding:24px;border-radius:20px;border:1px solid rgba(255,191,116,.18);background:linear-gradient(145deg,rgba(255,191,116,.08),rgba(255,191,116,.02));backdrop-filter:blur(22px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(255,191,116,.13),transparent 55%);pointer-events:none"></div>
+              <div data-i18n="st.faa.label" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#ffbf74;margin-bottom:12px">FAA Rata-rata</div>
+              <div id="statFaaMean" style="font-family:'Poppins',sans-serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1">—</div>
+              <div data-i18n="st.faa.sub" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">mGal · Free Air Anomaly</div>
+            </div>
+
+            <div style="padding:24px;border-radius:20px;border:1px solid rgba(97,212,255,.18);background:linear-gradient(145deg,rgba(97,212,255,.08),rgba(97,212,255,.02));backdrop-filter:blur(22px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(97,212,255,.13),transparent 55%);pointer-events:none"></div>
+              <div data-i18n="st.cba.label" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#61d4ff;margin-bottom:12px">CBA Rata-rata</div>
+              <div id="statCbaMean" style="font-family:'Poppins',sans-serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1">—</div>
+              <div data-i18n="st.cba.sub" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">mGal · Complete Bouguer Anomaly</div>
+            </div>
+
+            <div style="padding:24px;border-radius:20px;border:1px solid rgba(34,211,160,.18);background:linear-gradient(145deg,rgba(34,211,160,.08),rgba(34,211,160,.02));backdrop-filter:blur(22px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(34,211,160,.13),transparent 55%);pointer-events:none"></div>
+              <div data-i18n="st.std.label" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#22d3a0;margin-bottom:12px">Std Deviasi FAA</div>
+              <div id="statFaaStd" style="font-family:'Poppins',sans-serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1">—</div>
+              <div data-i18n="st.std.sub" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(190,208,235,.5);margin-top:6px">mGal · variabilitas anomali</div>
+            </div>
+
+          </div>
+
+          <!-- Chart + stat tables -->
+          <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start">
+
+            <div style="padding:28px 28px 22px;border-radius:20px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));backdrop-filter:blur(22px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at 90% 5%,rgba(167,96,37,.08),transparent 45%);pointer-events:none"></div>
+              <div style="position:relative;z-index:1;margin-bottom:20px">
+                <div data-i18n="st.chart.title" style="font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:#fff">Rentang Nilai Anomali Gravitasi (mGal)</div>
+                <div data-i18n="st.chart.sub" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(190,208,235,.55);margin-top:4px">Min · Rata-rata · Maks per tipe anomali — FAA vs CBA</div>
+              </div>
+              <div style="position:relative;z-index:1"><canvas id="anomalyChart" height="160"></canvas></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px">
+
+              <div style="padding:20px;border-radius:20px;border:1px solid rgba(255,191,116,.18);background:linear-gradient(145deg,rgba(255,191,116,.08),rgba(255,191,116,.02));backdrop-filter:blur(22px)">
+                <div data-i18n="st.faa.panel" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ffbf74;margin-bottom:12px">Free Air Anomaly</div>
+                <div id="faaStatRows"></div>
+              </div>
+
+              <div style="padding:20px;border-radius:20px;border:1px solid rgba(97,212,255,.18);background:linear-gradient(145deg,rgba(97,212,255,.08),rgba(97,212,255,.02));backdrop-filter:blur(22px)">
+                <div data-i18n="st.cba.panel" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#61d4ff;margin-bottom:12px">Complete Bouguer</div>
+                <div id="cbaStatRows"></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+      <script>
+      (function(){
+        var API='<?= site_url('api/v1/public-stats') ?>';
+        var chart=null;
+        var _lastAnom=null;
+        function t(key){return window.GP_T?window.GP_T(key):(window.GP_TRANSLATIONS&&window.GP_TRANSLATIONS['id']&&window.GP_TRANSLATIONS['id'][key])||key;}
+        function fmgal(v){var n=parseFloat(v);if(isNaN(n))return '—';return(n>=0?'+':'')+n.toFixed(1);}
+        function fmtPts(n,lang){
+          lang=lang||localStorage.getItem('gp_lang')||'id';
+          if(lang==='en'){if(n>=1e6)return(n/1e6).toFixed(1).replace('.0','')+'M';if(n>=1e3)return(n/1e3).toFixed(1).replace('.0','')+'K';return String(n);}
+          if(n>=1e6)return(n/1e6).toFixed(1).replace('.0','')+'jt';if(n>=1e3)return(n/1e3).toFixed(1).replace('.0','')+'rb';return String(n);
+        }
+        function statRow(label,value,unit){
+          return '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
+            +'<span style="font-family:Poppins,sans-serif;font-size:11px;color:rgba(190,208,235,.6)">'+label+'</span>'
+            +'<span style="font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#fff">'+value
+            +' <span style="font-weight:400;font-size:10px;color:rgba(190,208,235,.45)">'+unit+'</span></span>'
+            +'</div>';
+        }
+        function buildStatRows(el,s){
+          if(!el||!s)return;
+          var ptsLabel=parseInt(s.cnt).toLocaleString(localStorage.getItem('gp_lang')==='en'?'en-US':'id-ID')+' '+t('st.row.points');
+          el.innerHTML=statRow(t('st.row.mean'),fmgal(s.mean_val),'mGal')
+            +statRow(t('st.row.std'),'±'+parseFloat(s.std_val).toFixed(1),'mGal')
+            +statRow(t('st.row.min'),fmgal(s.min_val),'mGal')
+            +statRow(t('st.row.max'),fmgal(s.max_val),'mGal')
+            +'<div style="font-family:Poppins,sans-serif;font-size:10px;color:rgba(190,208,235,.35);margin-top:8px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px">'+ptsLabel+'</div>';
+        }
+        function buildChart(anomStats,lang){
+          var faa=null,cba=null;
+          anomStats.forEach(function(r){if(r.anom_type==='FAA')faa=r;if(r.anom_type==='CBA')cba=r;});
+          var labels=[t('st.chart.min'),t('st.chart.avg'),t('st.chart.max')];
+          var datasets=[];
+          if(faa)datasets.push({label:'FAA',data:[parseFloat(faa.min_val),parseFloat(faa.mean_val),parseFloat(faa.max_val)],backgroundColor:'rgba(255,191,116,.25)',borderColor:'#ffbf74',borderWidth:2,borderRadius:8,borderSkipped:false});
+          if(cba)datasets.push({label:'CBA',data:[parseFloat(cba.min_val),parseFloat(cba.mean_val),parseFloat(cba.max_val)],backgroundColor:'rgba(97,212,255,.22)',borderColor:'#61d4ff',borderWidth:2,borderRadius:8,borderSkipped:false});
+          if(!datasets.length)return;
+          var ctx=document.getElementById('anomalyChart').getContext('2d');
+          if(chart)chart.destroy();
+          chart=new Chart(ctx,{
+            type:'bar',
+            data:{labels:labels,datasets:datasets},
+            options:{
+              responsive:true,maintainAspectRatio:true,
+              plugins:{
+                legend:{display:true,labels:{color:'rgba(190,208,235,.75)',font:{family:'Poppins',size:11,weight:'600'},boxWidth:10,boxHeight:10}},
+                tooltip:{backgroundColor:'rgba(8,17,31,.92)',titleColor:'#fff',bodyColor:'rgba(190,208,235,.8)',borderColor:'rgba(255,255,255,.10)',borderWidth:1,padding:12,
+                  callbacks:{label:function(c){var v=c.raw;return ' '+c.dataset.label+': '+(v>=0?'+':'')+v.toFixed(2)+' mGal';}}}
+              },
+              scales:{
+                x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(190,208,235,.65)',font:{family:'Poppins',size:11,weight:'600'}}},
+                y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(190,208,235,.65)',font:{family:'Poppins',size:10},callback:function(v){return(v>=0?'+':'')+v+' mGal';}}}
+              }
+            }
+          });
+        }
+        function loadStats(){
+          fetch(API).then(function(r){return r.json();}).then(function(res){
+            var d=res.data;
+            var anomStats=d.anom_stats||[];
+            var faa=null,cba=null;
+            anomStats.forEach(function(r){if(r.anom_type==='FAA')faa=r;if(r.anom_type==='CBA')cba=r;});
+            _lastAnom={anomStats:anomStats,faa:faa,cba:cba,total:d.total_points||0};
+            var lang=localStorage.getItem('gp_lang')||'id';
+            document.getElementById('statPoints').textContent=fmtPts(d.total_points||0,lang);
+            document.getElementById('statFaaMean').textContent=faa?fmgal(faa.mean_val):'—';
+            document.getElementById('statCbaMean').textContent=cba?fmgal(cba.mean_val):'—';
+            document.getElementById('statFaaStd').textContent=faa?('±'+parseFloat(faa.std_val).toFixed(1)):'—';
+            buildStatRows(document.getElementById('faaStatRows'),faa);
+            buildStatRows(document.getElementById('cbaStatRows'),cba);
+            if(anomStats.length)buildChart(anomStats,lang);
+          }).catch(function(){});
+        }
+        window.GP_REBUILD_STATS=function(lang){
+          if(!_lastAnom)return;
+          document.getElementById('statPoints').textContent=fmtPts(_lastAnom.total,lang);
+          buildStatRows(document.getElementById('faaStatRows'),_lastAnom.faa);
+          buildStatRows(document.getElementById('cbaStatRows'),_lastAnom.cba);
+        };
+        window.GP_REBUILD_CHART=function(lang){
+          if(!_lastAnom||!_lastAnom.anomStats.length)return;
+          buildChart(_lastAnom.anomStats,lang);
+        };
+        loadStats();
+        setInterval(loadStats,30000);
+      })();
+      </script>
+
+      <!-- About Overview -->
+      <section id="overview" class="about section section-shell section-shell--light" style="padding-top:40px;scroll-margin-top:80px;">
+        <div class="container">
           <div class="row align-items-center g-4">
             <div class="col-lg-6">
               <div class="media-panel">
@@ -634,17 +760,17 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
 
             <div class="col-lg-6">
               <div class="content-panel about-panel">
-                <h3 class="about-title">Overview</h3>
+                <h3 class="about-title" data-i18n="ov.heading">Overview</h3>
 
                 <ul class="nav nav-pills about-tabs mb-3" role="tablist">
                   <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="pill" href="#tab1">Free Air Anomaly</a>
+                    <a class="nav-link active" data-bs-toggle="pill" href="#tab1" data-i18n="ov.tab.faa">Free Air Anomaly</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="pill" href="#tab2">Complete Bouguer Anomaly</a>
+                    <a class="nav-link" data-bs-toggle="pill" href="#tab2" data-i18n="ov.tab.cba">Complete Bouguer Anomaly</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="pill" href="#tab3">Integrasi</a>
+                    <a class="nav-link" data-bs-toggle="pill" href="#tab3" data-i18n="ov.tab.int">Integrasi</a>
                   </li>
                 </ul>
 
@@ -652,109 +778,22 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
 
                 <div class="tab-content mt-3">
                   <div class="tab-pane fade show active" id="tab1">
-                    <p class="text-muted fst-italic text-justify">FAA dipakai untuk membaca pola awal medan gayaberat.</p>
-                    <p class="text-justify"><strong>Cocok untuk screening regional dan identifikasi area prospek.</strong></p>
-                    <p class="text-justify">Di GravPort, FAA bisa langsung dipreview lewat katalog dan WebMap.</p>
+                    <p class="text-muted fst-italic text-justify" data-i18n="ov.faa.1">Data Free Air Anomaly (FAA) menggambarkan perbedaan antara nilai gravitasi observasi dan nilai gravitasi normal setelah dikoreksi terhadap ketinggian permukaan pengukuran.</p>
+                    <p class="text-justify" data-i18n="ov.faa.2">FAA digunakan untuk pemodelan struktur kerak bumi dangkal, identifikasi cekungan sedimen, dan eksplorasi sumber daya alam di wilayah Jawa-Bali.</p>
+                    <p class="text-justify" data-i18n="ov.faa.3">GravPort menyediakan data FAA level 1 (point observasi terfilter) dan level 2 (gridded &amp; diinterpolasi) dari berbagai survei darat dan udara.</p>
                   </div>
 
                   <div class="tab-pane fade" id="tab2">
-                    <p class="text-muted fst-italic text-justify">CBA lebih siap untuk interpretasi geologi dan struktur bawah permukaan.</p>
-                    <p class="text-justify"><strong>Level 1 dan level 2 menghubungkan data titik ke grid raster yang lebih detail.</strong></p>
-                    <p class="text-justify">Alurnya tetap ringkas: preview, pilih area, lalu unduh.</p>
+                    <p class="text-muted fst-italic text-justify" data-i18n="ov.cba.1">Complete Bouguer Anomaly (CBA) adalah anomali gayaberat yang telah dikoreksi secara lengkap: udara bebas, Bouguer plat, dan terrain correction untuk massa topografi di sekitar titik ukur.</p>
+                    <p class="text-justify" data-i18n="ov.cba.2">CBA sangat sensitif terhadap variasi densitas batuan bawah permukaan, menjadikannya alat utama untuk pemetaan geologi regional dan identifikasi intrusi magmatik.</p>
+                    <p class="text-justify" data-i18n="ov.cba.3">Data CBA di GravPort tersedia dalam format grid reguler dengan resolusi spasial tinggi, hasil integrasi survei multisumber yang telah divalidasi secara kualitas.</p>
                   </div>
 
                   <div class="tab-pane fade" id="tab3">
-                    <p class="text-justify"><strong>GravPort menghubungkan katalog, preview peta, dan unduhan dalam satu alur.</strong></p>
-                    <p class="text-justify">User bisa cek data lebih dulu sebelum memotong area yang dibutuhkan.</p>
-                    <p class="text-justify"><strong>Hasilnya lebih cepat, lebih jelas, dan lebih siap dipakai.</strong></p>
+                    <p class="text-justify" data-i18n="ov.int.1">GravPort mengintegrasikan data gayaberat dari berbagai lembaga survei nasional dan internasional, termasuk BIG, BMKG, dan mitra riset universitas di Indonesia.</p>
+                    <p class="text-justify" data-i18n="ov.int.2">Proses integrasi meliputi harmonisasi datum referensi, penanganan sistematik antar survei, dan quality control berbasis statistik untuk setiap titik data.</p>
+                    <p class="text-justify" data-i18n="ov.int.3">Hasil integrasi menghasilkan coverage gayaberat yang lebih komprehensif dan konsisten untuk seluruh wilayah Jawa-Bali dibandingkan dataset tunggal manapun.</p>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Tools Section-->
-      <section class="section section-sm section-first bg-default text-center section-shell section-shell--tools" id="tools">
-        <div class="container">
-          <div class="section-heading section-heading--center" data-aos="fade-up">
-            <h2 class="section-title">Toolkit</h2>
-          </div>
-
-          <div class="row row-30 justify-content-center align-items-center tool-grid">
-            <div class="col-md-7 col-lg-5 col-xl-6 text-lg-left wow fadeInUp">
-              <div class="tool-visual">
-                <div class="tool-visual__frame">
-                  <span class="tool-visual__badge">3D Geoid</span>
-                  <div class="tool-geoid-viewer" style="position:relative;overflow:hidden;border-radius:inherit;">
-                    <iframe
-                      id="sketchfabGeoid"
-                      title="EGM 2008 with Blue Marble Texture"
-                      src="https://sketchfab.com/models/c731817a2c6548d89afb5af36b82e1a2/embed?autostart=1&preload=1&autospin=1&ui_watermark=0&ui_controls=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_annotations=0&ui_settings=0&ui_vr=0&ui_ar=0&ui_help=0&ui_fullscreen=0"
-                      frameborder="0"
-                      allow="autoplay; fullscreen; xr-spatial-tracking"
-                      style="width:100%;height:100%;display:block;border:0;"
-                      loading="lazy">
-                    </iframe>
-                  </div>
-                  <div class="tool-visual__frame-glow" aria-hidden="true"></div>
-                </div>
-                <p class="tool-visual__caption">
-                  Model EGM2008 interaktif — drag untuk memutar. Data via <a href="<?= esc($geoidReferenceUrl) ?>" target="_blank" rel="noopener">WGS84/EGM2008</a>.
-                </p>
-              </div>
-            </div>
-
-            <div class="col-lg-7 col-xl-6">
-              <div class="row row-30">
-                <div class="col-sm-6 wow fadeInRight">
-                  <article class="box-icon-modern box-icon-modern-custom tool-card">
-                    <div class="tool-card__icon">
-                      <img src="<?= base_url('images/civil3d.jpg'); ?>" alt="Civil 3D">
-                    </div>
-                    <div class="tool-card__body">
-                      <h5 class="box-icon-modern-title">Civil 3D</h5>
-                      <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pemodelan terrain dan visualisasi permukaan geospasial dari data titik pengukuran gravitasi</p>
-                    </div>
-                  </article>
-                </div>
-                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".1s">
-                  <article class="box-icon-modern box-icon-modern-2 tool-card">
-                    <div class="tool-card__icon">
-                      <img src="<?= base_url('images/arcgispro.jpeg'); ?>" alt="ArcGIS Pro">
-                    </div>
-                    <div class="tool-card__body">
-                      <h5 class="box-icon-modern-title">ArcGIS Pro</h5>
-                      <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Analisis spasial dan pemetaan vektor FAA dan CBA level 1-2 skala regional</p>
-                    </div>
-                  </article>
-                </div>
-                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".2s">
-                  <article class="box-icon-modern box-icon-modern-2 tool-card">
-                    <div class="tool-card__icon">
-                      <img src="<?= base_url('images/agisoft.jpg'); ?>" alt="Agisoft Metashape">
-                    </div>
-                    <div class="tool-card__body">
-                      <h5 class="box-icon-modern-title">Agisoft Metashape</h5>
-                      <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Rekonstruksi dan georeferensi model permukaan dari data citra udara gravitimetri</p>
-                    </div>
-                  </article>
-                </div>
-                <div class="col-sm-6 wow fadeInRight" data-wow-delay=".3s">
-                  <article class="box-icon-modern box-icon-modern-2 tool-card">
-                    <div class="tool-card__icon">
-                      <img src="<?= base_url('images/redtoolbox.png'); ?>" alt="RedToolBox">
-                    </div>
-                    <div class="tool-card__body">
-                      <h5 class="box-icon-modern-title">RedToolBox</h5>
-                      <div class="box-icon-modern-decor"></div>
-                      <p class="box-icon-modern-text">Pre-processing dan quality control data pengukuran gravitasi airborne PPK</p>
-                    </div>
-                  </article>
                 </div>
               </div>
             </div>
@@ -763,13 +802,13 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
       </section>
 
       <!-- Meet The Team-->
-      <section id="team" class="team section section-shell section-shell--team">
+      <section id="team" class="team section section-shell section-shell--team" style="scroll-margin-top:80px;">
 
         <div class="container">
           <div class="section-heading section-heading--center" data-aos="fade-up">
-            <span class="section-kicker">Core Team</span>
-            <h2 class="section-title">Meet Our Team</h2>
-            <p class="section-lead">
+
+            <h2 class="section-title" data-i18n="tm.heading">Meet Our Team</h2>
+            <p class="section-lead" data-i18n="tm.lead">
               Tim pengolahan data, visualisasi, dan pengembangan GravPort.
             </p>
           </div>
@@ -845,7 +884,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
       </section><!-- /Team Section -->
 
       <!-- Contact Form-->
-      <section class="section section-sm section-last bg-default text-left section-shell section-shell--contact" id="contacts">
+      <section class="section section-sm section-last bg-default text-left section-shell section-shell--contact" id="contacts" style="scroll-margin-top:80px;">
         <div class="container contact-shell">
           <article class="title-classic contact-heading">
             <div class="title-classic-title">
@@ -893,11 +932,11 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
         <div class="gravport-footer__body">
           <div class="gravport-footer__col gravport-footer__col--brand">
             <div class="gravport-footer__logo">
-              <img src="<?= base_url('images/itb.png'); ?>" alt="Logo ITB">
+              <img src="<?= base_url('images/gravport_logo_color.png'); ?>" alt="Logo ITB">
               <strong>GravPort</strong>
             </div>
             <p class="gravport-footer__pitch">
-              Geoportal anomali gayaberat nasional — FAA dan CBA level 1–2 dalam satu platform terpadu untuk preview, filter area, dan unduh cepat.
+              Geoportal anomali gayaberat nasional - FAA dan CBA level 1-2 dalam satu platform terpadu untuk preview, filter area, dan unduh cepat.
             </p>
           </div>
 
@@ -977,6 +1016,7 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
         </div>
       </div>
     </div>
+
 
     <div class="site-toast" id="siteToast" role="status" aria-live="polite"></div>
 
@@ -1567,3 +1607,4 @@ $geoidReferenceUrl = 'https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs8
 
   </body>
 </html>
+

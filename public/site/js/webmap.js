@@ -74,7 +74,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await loadProvinces();
       syncDatasetMeta();
-      await loadPreview(false);
+
+      // Wait for the cinematic loader to dismiss, then load the initial overview.
+      // noBounds skips viewport-bounds entirely on the first call so the server
+      // aggregates ALL data at the coarse zoom level — guaranteed no OOM.
+      // skipNextMapReload suppresses any spurious moveend that fires during the
+      // first user interaction before this await resolves.
+      await new Promise(resolve => document.addEventListener('wm:mapready', resolve, { once: true }));
+      state.skipNextMapReload = true;
+      await loadPreview(false, { noBounds: true });
+      state.skipNextMapReload = false;
     } catch (error) {
       toast(error.message || "Gagal memuat WebMap.");
     }
@@ -328,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function loadPreview(fit) {
+  async function loadPreview(fit, opts = {}) {
     const dataset = currentDataset();
     if (!dataset) return;
 
@@ -343,12 +352,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const requestId = ++state.lastRequestId;
     const payload = {
       dataset: dataset.code,
-      ...buildSpatialPayload({ forPreview: true }),
+      ...buildSpatialPayload({ forPreview: true, noBounds: Boolean(opts.noBounds) }),
     };
 
     const response = await api(cfg.layerUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       body: JSON.stringify(payload),
     });
 
@@ -381,7 +390,11 @@ document.addEventListener("DOMContentLoaded", () => {
       interactive: true,
       renderer: dataset.type === "raster" ? state.rasterRenderer : undefined,
       bubblingMouseEvents: false,
-      style: (feature) => rasterStyle(dataset, feature),
+      style: (feature) => {
+        const geomType = feature.geometry?.type;
+        if (geomType === "Point" || geomType === "MultiPoint") return {};
+        return rasterStyle(dataset, feature);
+      },
       pointToLayer: (feature, latlng) =>
         L.circleMarker(latlng, {
           ...pointStyle(dataset, feature.properties, meta),
@@ -443,34 +456,37 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderLegend(dataset, meta) {
     const root = document.documentElement;
 
+    const scaleLabels = "<span>&lt; −50</span><span>−50~0</span><span>0~50</span><span>&gt; 50</span>";
+    const unitNote = " Satuan: mGal.";
+
     if (dataset.type === "vector" && meta.mode === "aggregated_points") {
       els.legendTitle.textContent = "Legenda Ringkasan";
-      els.legendDesc.textContent = "Lingkaran mewakili kumpulan titik pada sel viewport agar tampilan awal tetap ringan.";
-      els.legendScale.innerHTML = "<span>Rendah</span><span>Rata-rata</span><span>Tinggi</span>";
+      els.legendDesc.textContent = "Lingkaran mewakili rata-rata anomali gravitasi (mGal) kumpulan titik pada sel viewport." + unitNote;
+      els.legendScale.innerHTML = scaleLabels;
       root.style.setProperty(
         "--legend-gradient",
-        "linear-gradient(90deg, #ffe39f 0%, #ffb347 35%, #ff7f2a 70%, #cb3317 100%)"
+        "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
       );
       return;
     }
 
     if (dataset.type === "vector") {
       els.legendTitle.textContent = "Legenda Titik";
-      els.legendDesc.textContent = "Semua titik asli dimuat langsung dari viewport aktif tanpa klaster.";
-      els.legendScale.innerHTML = "<span>Rendah</span><span>Sedang</span><span>Tinggi</span>";
+      els.legendDesc.textContent = "Warna titik menunjukkan nilai anomali gravitasi tiap titik pengukuran." + unitNote;
+      els.legendScale.innerHTML = scaleLabels;
       root.style.setProperty(
         "--legend-gradient",
-        "linear-gradient(90deg, #ffe39f 0%, #ffb347 35%, #ff7f2a 70%, #cb3317 100%)"
+        "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
       );
       return;
     }
 
     els.legendTitle.textContent = "Legenda Raster/Grid";
-    els.legendDesc.textContent = "Grid yang terlihat hanya area aktif pada viewport untuk menjaga performa.";
-    els.legendScale.innerHTML = "<span>Low</span><span>Mean</span><span>High</span>";
+    els.legendDesc.textContent = "Warna grid menunjukkan nilai anomali gravitasi rata-rata tiap sel." + unitNote;
+    els.legendScale.innerHTML = scaleLabels;
     root.style.setProperty(
       "--legend-gradient",
-      "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 35%, #33c0a8 70%, #17836f 100%)"
+      "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
     );
   }
 
@@ -498,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     els.drawer.classList.add("is-open");
     els.drawerTitle.textContent = props.title || "Ringkasan titik";
-    els.drawerSubtitle.textContent = `${dataset.label} - mode ringan`;
+    els.drawerSubtitle.textContent = dataset.label;
     els.drawerNote.textContent = "Perbesar area atau gunakan filter yang lebih sempit untuk memunculkan titik asli satu per satu.";
     els.drawerSummary.innerHTML = renderDetailItems([
       { label: props.summary_label || "Mean", value: `${props.summary_value ?? "-"} ${props.summary_unit || ""}` },
@@ -536,13 +552,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const response = await fetch(cfg.downloadVectorUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       body: JSON.stringify({
         dataset: dataset.code,
-        ...buildSpatialPayload({ forPreview: true }),
+        ...buildSpatialPayload({ forPreview: false }),
+        force_detail: true,
       }),
     });
 
+    if (response.status === 401) { toast("Login diperlukan untuk mengunduh data."); return; }
+    if (response.status === 403) { toast("Akun Anda belum memiliki akses unduh. Silakan upgrade."); return; }
     if (!response.ok) {
       toast(await extractErrorMessage(response, "Unduhan vector gagal."));
       return;
@@ -567,13 +586,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const response = await fetch(cfg.clipRasterUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       body: JSON.stringify({
         dataset: dataset.code,
         ...payload,
       }),
     });
 
+    if (response.status === 401) { toast("Login diperlukan untuk mengunduh data."); return; }
+    if (response.status === 403) { toast("Akun Anda belum memiliki akses unduh raster. Silakan upgrade."); return; }
     if (!response.ok) {
       toast(await extractErrorMessage(response, "Unduhan raster gagal."));
       return;
@@ -588,7 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const response = await fetch(cfg.downloadMetadataUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       body: JSON.stringify({
         dataset: dataset.code,
         ...buildSpatialPayload({ forPreview: false }),
@@ -685,11 +706,12 @@ document.addEventListener("DOMContentLoaded", () => {
       explicitFilter = true;
     }
 
-    if (forPreview || !explicitFilter) {
-      payload.bounds = mapBoundsPayload();
-    }
-
+    // Only add viewport bounds for preview requests (not downloads).
+    // noBounds skips bounds on the initial overview load to avoid large-area OOM.
     if (forPreview) {
+      if (!options.noBounds) {
+        payload.bounds = mapBoundsPayload();
+      }
       payload.zoom = Math.round(state.map.getZoom());
     }
 
@@ -756,7 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
         radius: Math.max(5, Math.min(13, 4 + Math.log10(count + 1) * (zoom >= 8 ? 4 : 3.2))),
         color: "#ffffff",
         weight: 1,
-        fillColor: dataset.code === "cba_l1" ? "#cb3317" : colorForNumber(props.summary_value),
+        fillColor: dataset.code === "cba_l1" ? "#17836f" : colorForNumber(props.summary_value),
         fillOpacity: 0.9,
       };
     }
@@ -767,7 +789,7 @@ document.addEventListener("DOMContentLoaded", () => {
       radius,
       color: "#ffffff",
       weight: 0.8,
-      fillColor: dataset.code === "cba_l1" ? "#cb3317" : colorForNumber(props.summary_value),
+      fillColor: dataset.code === "cba_l1" ? "#17836f" : colorForNumber(props.summary_value),
       fillOpacity: 0.82,
     };
   }
@@ -783,18 +805,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function colorForNumber(value) {
-    const v = Number(value || 0);
-    if (v < 0) return "#ffe39f";
-    if (v < 50) return "#ffb347";
-    if (v < 150) return "#ff7f2a";
-    return "#cb3317";
+    const v = Number(value ?? 0);
+    if (v < -50) return "#d9f8f2";
+    if (v < 0)   return "#8fe0d0";
+    if (v < 50)  return "#33c0a8";
+    return "#17836f";
   }
 
   function colorForRaster(value) {
-    const v = Number(value || 0);
-    if (v < 20) return "#d9f8f2";
-    if (v < 100) return "#8fe0d0";
-    if (v < 200) return "#33c0a8";
+    const v = Number(value ?? 0);
+    if (v < -50) return "#d9f8f2";
+    if (v < 0)   return "#8fe0d0";
+    if (v < 50)  return "#33c0a8";
     return "#17836f";
   }
 
@@ -902,7 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (response.meta?.mode === "aggregated_points") {
       const grouped = Number(response.meta?.feature_count ?? 0).toLocaleString("id-ID");
       const source = Number(response.meta?.source_feature_count ?? 0).toLocaleString("id-ID");
-      return `${baseNote} Mode ringan aktif: ${grouped} sel mewakili ${source} titik pada viewport saat ini.`;
+      return `${baseNote} ${grouped} sel mewakili ${source} titik pada viewport saat ini.`.trim();
     }
     if (currentFilterLabel() === "Viewport") {
       return `${baseNote} Preview mengikuti viewport aktif.`;

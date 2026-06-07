@@ -24,7 +24,7 @@ class Security extends BaseConfig
      *
      * Randomize the CSRF Token for added security.
      */
-    public bool $tokenRandomize = false;
+    public bool $tokenRandomize = true;
 
     /**
      * --------------------------------------------------------------------------
@@ -83,4 +83,12 @@ class Security extends BaseConfig
      * @see https://codeigniter4.github.io/userguide/libraries/security.html#redirection-on-failure
      */
     public bool $redirect = (ENVIRONMENT === 'production');
+
+    /**
+     * Midtrans webhook must be excluded from CSRF — it's a server-to-server POST
+     * authenticated via Midtrans signature verification instead.
+     */
+    public array $excludeURIs = [
+        'payment/webhook',
+    ];
 }

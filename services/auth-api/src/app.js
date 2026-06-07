@@ -1,6 +1,7 @@
 const express = require('express');
 const helmet = require('helmet');
-const authRoutes = require('./routes/auth');
+const authRoutes   = require('./routes/auth');
+const forgotRoutes = require('./routes/forgot');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/v1/auth', authRoutes);
+app.use('/v1/auth', forgotRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -598,3 +598,34 @@ body {
     bottom: 12px;
   }
 }
+
+@media (max-width: 480px) {
+  .wm-stage {
+    min-height: 55vh;
+    height: 55vh;
+  }
+
+  #map {
+    min-height: 55vh;
+  }
+
+  .wm-stage-toolbar {
+    left: 10px;
+    right: 10px;
+    gap: 8px;
+  }
+
+  .wm-drawer,
+  .wm-legend {
+    width: calc(100% - 16px);
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    max-height: calc(100vh - 16px);
+  }
+
+  .wm-legend {
+    top: auto;
+    bottom: 8px;
+  }
+}

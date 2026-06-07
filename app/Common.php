@@ -21,6 +21,13 @@ if (! function_exists('auth_is_logged_in')) {
     }
 }
 
+if (! function_exists('auth_is_guest')) {
+    function auth_is_guest(): bool
+    {
+        return auth_is_logged_in() && session()->get('role') === 'guest';
+    }
+}
+
 if (! function_exists('auth_current_role')) {
     function auth_current_role(): string
     {
@@ -29,11 +36,23 @@ if (! function_exists('auth_current_role')) {
         }
 
         $session = session();
-        $email = trim((string) ($session->get('email') ?? ''));
         $sessionRole = (string) ($session->get('role') ?? '');
+
+        // Guest session — role already set to 'guest' at login time, no DB lookup needed.
+        if ($sessionRole === 'guest') {
+            return 'guest';
+        }
+
+        $email = trim((string) ($session->get('email') ?? ''));
 
         if ($email === '') {
             return $sessionRole !== '' ? $sessionRole : 'user';
+        }
+
+        // Superadmin check — resolved once at login and stored in session.
+        // This block only runs if role was not already set to 'superadmin' in session.
+        if ($sessionRole === 'superadmin') {
+            return 'superadmin';
         }
 
         try {
@@ -54,5 +73,18 @@ if (! function_exists('auth_current_role')) {
         }
 
         return $sessionRole !== '' ? $sessionRole : 'user';
+    }
+}
+
+if (! function_exists('auth_role_level')) {
+    function auth_role_level(string $role): int
+    {
+        return match ($role) {
+            'guest'      => 0,
+            'user'       => 1,
+            'admin'      => 2,
+            'superadmin' => 3,
+            default      => -1,
+        };
     }
 }

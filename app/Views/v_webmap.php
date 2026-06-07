@@ -100,7 +100,7 @@
 
 <div class="wm-loader" id="wmLoader" role="status" aria-label="Loading WebMap">
   <div class="wm-loader__brand">
-    <img src="<?= base_url('images/itb.png'); ?>" alt="">
+    <img src="<?= base_url('images/gravport_logo_color.png'); ?>" alt="GravPort">
     <strong>GravPort</strong>
   </div>
   <p class="wm-loader__tag">WebMap</p>
@@ -122,13 +122,13 @@
     <div class="wm-card wm-card--hero">
       <p class="wm-eyebrow">WebMap</p>
       <h1>WebMap</h1>
-      <p class="wm-copy">
+      <p class="wm-copy" data-i18n="wm.copy">
         Pilih data, tentukan area, lalu unduh hasilnya.
       </p>
     </div>
 
     <div class="wm-card">
-      <p class="wm-section-title">Data</p>
+      <p class="wm-section-title" data-i18n="wm.sec.data">Data</p>
       <div class="wm-radio-grid">
         <label class="wm-radio-pill">
           <input type="radio" name="anomaly" value="faa" checked>
@@ -142,7 +142,7 @@
     </div>
 
     <div class="wm-card">
-      <p class="wm-section-title">Level</p>
+      <p class="wm-section-title" data-i18n="wm.sec.level">Level</p>
       <div class="wm-inline-grid">
         <label class="wm-radio-pill">
           <input type="radio" name="level" value="l1" checked>
@@ -256,7 +256,7 @@
     <aside id="detailDrawer" class="wm-drawer">
       <div class="wm-drawer-head">
         <div>
-          <p class="wm-eyebrow wm-eyebrow--light">Metadata</p>
+          <p class="wm-eyebrow wm-eyebrow--light">Summary Data</p>
           <h3 id="drawerTitle">Pilih fitur di peta</h3>
           <p id="drawerSubtitle" class="wm-drawer-subtitle">Ringkasan dan detail akan muncul di sini.</p>
         </div>
@@ -294,11 +294,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
-<script src="<?= base_url('site/js/webmap.js?v=2'); ?>"></script>
+<script src="<?= base_url('site/js/webmap.js?v=8'); ?>"></script>
 
 <script>
 /* ============================================================
-   GravPort WebMap — Creative Layer
+   GravPort WebMap - Creative Layer
 ============================================================ */
 (function () {
 
@@ -331,6 +331,7 @@
           clearInterval(msgTimer);
           loader.classList.add('is-done');
           document.body.classList.remove('wm-loading');
+          document.dispatchEvent(new CustomEvent('wm:mapready'));
           triggerPageIn();
           setTimeout(function () {
             if (loader.parentNode) loader.parentNode.removeChild(loader);
@@ -387,3 +388,4 @@
 
 </body>
 </html>
+
