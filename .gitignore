@@ -28,9 +28,11 @@ writable/auth-api/
 # Build artifacts (kecuali scripts dan config yang diperlukan)
 build/check_server.py
 build/logs/
-# File SQL dump besar (>100MB, di-transfer terpisah ke server)
+# File SQL dump besar
 build/dump_gravport.sql
 build/gravport_schema_dump.sql
+build/dump_local_current.sql
+build/dump_app.sql
 
 # OS files
 .DS_Store
