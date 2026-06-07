@@ -7,6 +7,7 @@ const pool = new Pool({
   database: config.database.database,
   user: config.database.user,
   password: config.database.password,
+  options: `-c search_path=${config.database.schema}`,
 });
 
 module.exports = {
