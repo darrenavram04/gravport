@@ -478,6 +478,7 @@ class WebMap extends BaseController
         $dataset = $this->dataset($datasetCode);
         $db = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
+        $db->query("SET LOCAL statement_timeout = '15000'"); // 15 s hard cap per query
         $rows = $db->query('
             SELECT
                 t.id,
@@ -492,6 +493,7 @@ class WebMap extends BaseController
             WHERE 1=1
             ' . $sqlBoundary . '
             ORDER BY t.id ASC
+            LIMIT 5000
         ', $params)->getResultArray();
 
         $features = [];
@@ -552,6 +554,7 @@ class WebMap extends BaseController
             default        => '',
         };
 
+        $db->query("SET LOCAL statement_timeout = '15000'");
         $rows = $db->query('
             WITH src AS (
                 SELECT
