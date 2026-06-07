@@ -481,7 +481,7 @@
                  style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.84rem;color:#142033;">
         </div>
         <button type="submit"
-                style="background:#a76025;color:#fff;border:none;padding:9px 0;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:2px;">
+                style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:#a76025;color:#fff;border:none;padding:9px 0;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:2px;">
           <i class="bi bi-cloud-upload"></i> Upload ke Katalog
         </button>
       </form>
