@@ -47,6 +47,11 @@ const config = {
     apiKey: readString('RESEND_API_KEY', ''),
     from: readString('RESEND_FROM', 'GravPort <onboarding@resend.dev>'),
   },
+  brevo: {
+    apiKey: readString('BREVO_API_KEY', ''),
+    fromEmail: readString('BREVO_FROM_EMAIL', ''),
+    fromName: readString('BREVO_FROM_NAME', 'GravPort'),
+  },
   app: {
     baseUrl: readString('APP_BASE_URL', 'http://localhost/geoportal/public'),
   },
