@@ -480,7 +480,7 @@
           <input type="file" name="metadata_xml" accept=".xml" required
                  style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.84rem;color:#142033;">
         </div>
-        <button type="submit" class="admin-link" style="cursor:pointer;align-self:center;margin-top:4px;">
+        <button type="submit" class="admin-link" style="cursor:pointer;align-self:flex-start;margin-top:4px;">
           <i class="bi bi-cloud-upload"></i>
           <span>Upload ke Katalog</span>
         </button>
