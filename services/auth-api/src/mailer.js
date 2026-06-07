@@ -2,8 +2,17 @@ const nodemailer = require('nodemailer');
 const config = require('./config');
 
 let _transporter = null;
+let _resend = null;
 
-function getTransporter() {
+function getResendClient() {
+  if (!_resend) {
+    const { Resend } = require('resend');
+    _resend = new Resend(config.resend.apiKey);
+  }
+  return _resend;
+}
+
+function getSmtpTransporter() {
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
       host: config.smtp.host,
@@ -21,25 +30,38 @@ function getTransporter() {
   return _transporter;
 }
 
-/**
- * Send an email. Returns true on success, false on failure.
- * Never throws — caller decides how to handle failure.
- * Resets transporter on error so next call gets a fresh connection.
- */
 async function sendMail({ to, subject, html }) {
+  // Prefer Resend API (works via HTTPS, not blocked by firewalls)
+  if (config.resend.apiKey) {
+    try {
+      const client = getResendClient();
+      await client.emails.send({
+        from: config.resend.from,
+        to: [to],
+        subject,
+        html,
+      });
+      console.log('[mailer] Email sent via Resend to', to, '| subject:', subject);
+      return true;
+    } catch (err) {
+      console.error('[mailer] Resend failed for', to, ':', err.message);
+      return false;
+    }
+  }
+
+  // Fallback to SMTP (for local development)
   if (!config.smtp.user || !config.smtp.pass) {
-    console.warn('[mailer] SMTP not configured — email not sent to', to);
+    console.warn('[mailer] No email provider configured — email not sent to', to);
     return false;
   }
   try {
-    const transporter = getTransporter();
+    const transporter = getSmtpTransporter();
     await transporter.sendMail({ from: config.smtp.from, to, subject, html });
-    console.log('[mailer] Email sent to', to, '| subject:', subject);
+    console.log('[mailer] Email sent via SMTP to', to, '| subject:', subject);
     return true;
   } catch (err) {
-    // Reset cached transporter so next call gets a fresh connection
     _transporter = null;
-    console.error('[mailer] Failed to send email to', to, ':', err.message);
+    console.error('[mailer] SMTP failed for', to, ':', err.message);
     return false;
   }
 }
