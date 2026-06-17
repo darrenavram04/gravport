@@ -12,6 +12,7 @@ class MidtransService
     ];
 
     private const TIER_LABELS = [
+        'lite' => 'Lite',
         'solo' => 'Solo',
         'pro'  => 'Pro',
         'Enterprise' => 'Enterprise',

@@ -91,6 +91,16 @@ class RegistrationController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Cek apakah email sudah terdaftar sebagai akun aktif
+        $db = \Config\Database::connect();
+        $existing = $db->query(
+            'SELECT acc_id FROM geoportal.accounts WHERE acc_email = ? LIMIT 1',
+            [strtolower($email)]
+        )->getRowArray();
+        if ($existing) {
+            return redirect()->back()->withInput()->with('error', 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.');
+        }
+
         // Cek apakah email sudah punya pending aktif — langsung lanjut ke payment
         $existingPending = $this->pending->findActiveByEmail($email);
         if ($existingPending !== null) {
@@ -139,6 +149,16 @@ class RegistrationController extends BaseController
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // Cek apakah email organisasi sudah terdaftar sebagai akun aktif
+        $db = \Config\Database::connect();
+        $existingAcc = $db->query(
+            'SELECT acc_id FROM geoportal.accounts WHERE acc_email = ? LIMIT 1',
+            [strtolower($orgEmail)]
+        )->getRowArray();
+        if ($existingAcc) {
+            return redirect()->back()->withInput()->with('error', 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.');
         }
 
         $existingOrg = $this->pending->findActiveOrgByEmail($orgEmail);
@@ -257,8 +277,10 @@ class RegistrationController extends BaseController
                 (int) $tier['tier_id'],
                 $endDate,
                 $reviewedBy,
-                ['notes' => 'Diaktifkan via admin panel']
+                ['notes' => 'Diaktifkan via admin panel', 'payment_cycle' => $record['billing_cycle'] === 'annual' ? 'A' : 'M']
             );
+        } else {
+            log_message('error', '[RegistrationController] activateIndividual: tier "' . $record['tier_name'] . '" tidak ditemukan di subscriptions_tier. Akun dibuat tanpa subscription.');
         }
 
         $this->pending->approve($pendingId, $reviewedBy);

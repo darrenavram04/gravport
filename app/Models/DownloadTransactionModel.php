@@ -29,6 +29,8 @@ class DownloadTransactionModel
             'provider_revenue'    => (float) ($data['provider_revenue'] ?? 0),
             'status'              => 'completed',
             'user_agent'          => $data['user_agent'] ?? null,
+            // Set eksplisit agar timestamp pakai waktu server DB, bukan PHP (menghindari timezone mismatch)
+            'downloaded_at'       => $this->db->query("SELECT now() AS t")->getRowArray()['t'],
         ];
 
         $this->db->table('geoportal.download_transactions')->insert($row);

@@ -107,6 +107,20 @@ class WebMap extends BaseController
     public function downloadVector()
     {
         try {
+            // Quota check
+            $userId = (int) (session()->get('user_id') ?? 0);
+            $role   = auth_current_role();
+            if (!in_array($role, ['admin', 'superadmin'], true)) {
+                $quota = $this->marketplace->checkQuota($userId);
+                if (!$quota['allowed']) {
+                    return $this->response->setStatusCode(403)->setJSON([
+                        'error' => $quota['reason'] === 'no_subscription'
+                            ? 'Diperlukan langganan aktif untuk mengunduh data.'
+                            : 'Kuota unduhan mingguan Anda telah habis.',
+                    ]);
+                }
+            }
+
             $input = $this->inputPayload();
             $datasetCode = (string) ($input['dataset'] ?? 'faa_l1');
             $dataset = $this->dataset($datasetCode);
@@ -142,6 +156,20 @@ class WebMap extends BaseController
     public function clipRaster()
     {
         try {
+            // Quota check
+            $userId = (int) (session()->get('user_id') ?? 0);
+            $role   = auth_current_role();
+            if (!in_array($role, ['admin', 'superadmin'], true)) {
+                $quota = $this->marketplace->checkQuota($userId);
+                if (!$quota['allowed']) {
+                    return $this->response->setStatusCode(403)->setJSON([
+                        'error' => $quota['reason'] === 'no_subscription'
+                            ? 'Diperlukan langganan aktif untuk mengunduh data.'
+                            : 'Kuota unduhan mingguan Anda telah habis.',
+                    ]);
+                }
+            }
+
             $input = $this->inputPayload();
             $datasetCode = (string) ($input['dataset'] ?? 'faa_l2');
 
@@ -181,6 +209,20 @@ class WebMap extends BaseController
     public function downloadRasterGrid(int $rid)
     {
         $datasetCode = (string) ($this->request->getGet('dataset') ?? 'faa_l2');
+
+        // Quota check
+        $userId = (int) (session()->get('user_id') ?? 0);
+        $role   = auth_current_role();
+        if (!in_array($role, ['admin', 'superadmin'], true)) {
+            $quota = $this->marketplace->checkQuota($userId);
+            if (!$quota['allowed']) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'error' => $quota['reason'] === 'no_subscription'
+                        ? 'Diperlukan langganan aktif untuk mengunduh data.'
+                        : 'Kuota unduhan mingguan Anda telah habis.',
+                ]);
+            }
+        }
 
         if ($this->enterpriseGateFail($datasetCode)) {
             return $this->response->setStatusCode(403)->setJSON([
@@ -228,6 +270,20 @@ class WebMap extends BaseController
     public function downloadRasterProvince(int $provinceId)
     {
         $datasetCode = (string) ($this->request->getGet('dataset') ?? 'faa_l2');
+
+        // Quota check
+        $userId = (int) (session()->get('user_id') ?? 0);
+        $role   = auth_current_role();
+        if (!in_array($role, ['admin', 'superadmin'], true)) {
+            $quota = $this->marketplace->checkQuota($userId);
+            if (!$quota['allowed']) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'error' => $quota['reason'] === 'no_subscription'
+                        ? 'Diperlukan langganan aktif untuk mengunduh data.'
+                        : 'Kuota unduhan mingguan Anda telah habis.',
+                ]);
+            }
+        }
 
         if ($this->enterpriseGateFail($datasetCode)) {
             return $this->response->setStatusCode(403)->setJSON([
@@ -540,13 +596,15 @@ class WebMap extends BaseController
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
         $gridSize = $this->aggregateGridSize($filters);
 
-        // TABLESAMPLE keeps memory flat. Without bounds (global overview) always
-        // use an aggressive 3% sample regardless of zoom — the result is still
-        // statistically representative and keeps PostgreSQL + PHP memory tiny.
-        $zoom      = (int) ($filters['zoom'] ?? 0);
-        $hasBounds = is_array($filters['bounds'] ?? null);
+        // TABLESAMPLE keeps memory flat. Without bounds AND without explicit spatial
+        // filter (province/geometry), use aggressive 3% for global overview.
+        // When province or custom geometry is active, treat it as bounded — sampling
+        // 3% of the entire table would miss spatially-clustered province data.
+        $zoom             = (int) ($filters['zoom'] ?? 0);
+        $hasBounds        = is_array($filters['bounds'] ?? null);
+        $hasExplicitSpatial = !empty($filters['province_id']) || !empty($filters['geometry']);
         $sample = match (true) {
-            !$hasBounds    => ' TABLESAMPLE SYSTEM(3)',
+            !$hasBounds && !$hasExplicitSpatial => ' TABLESAMPLE SYSTEM(3)',
             $zoom <= 5     => ' TABLESAMPLE SYSTEM(5)',
             $zoom <= 6     => ' TABLESAMPLE SYSTEM(10)',
             $zoom <= 7     => ' TABLESAMPLE SYSTEM(30)',
@@ -870,14 +928,19 @@ class WebMap extends BaseController
         $dataset = $this->dataset($datasetCode);
         $db = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
-        $row = $db->query('
-            SELECT COUNT(*) AS total
-            FROM ' . $dataset['table'] . ' t
-            WHERE 1=1
-            ' . $sqlBoundary . '
-        ', $params)->getRowArray();
-
-        return (int) ($row['total'] ?? 0);
+        try {
+            $db->query("SET LOCAL statement_timeout = '8000'");
+            $row = $db->query('
+                SELECT COUNT(*) AS total
+                FROM ' . $dataset['table'] . ' t
+                WHERE 1=1
+                ' . $sqlBoundary . '
+            ', $params)->getRowArray();
+            return (int) ($row['total'] ?? 0);
+        } catch (\Throwable) {
+            // Timeout atau error: anggap banyak (gunakan aggregate)
+            return 9999;
+        }
     }
 
     private function exportFilteredVectorCsvFile(string $datasetCode, array $filters): array
@@ -1101,7 +1164,18 @@ class WebMap extends BaseController
             FROM clipped
         ';
 
-        $row = $db->query($sql, $boundaryParams)->getRowArray();
+        try {
+            $result = $db->query($sql, $boundaryParams);
+        } catch (\Throwable $e) {
+            log_message('error', '[WebMap::rasterBinaryFromFilters] Query gagal: ' . $e->getMessage());
+            throw new \RuntimeException('Proses clip raster gagal. Coba persempit area aktif atau hubungi admin.');
+        }
+
+        if ($result === false) {
+            throw new \RuntimeException('Query raster gagal — tidak ada hasil.');
+        }
+
+        $row = $result->getRowArray();
 
         if (!$row || empty($row['tif'])) {
             return null;
@@ -1200,7 +1274,14 @@ class WebMap extends BaseController
 
         if ($boundary !== null) {
             if ($boundary['geometry_type'] === 'Point' && $buffer > 0) {
+                // Point dengan buffer: gunakan ST_DWithin (radius dalam meter via geography)
                 $clauses[] = 'ST_DWithin(' . $geomColumn . '::geography, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)::geography, ?)';
+                $params[] = $boundary['geojson'];
+                $params[] = $buffer;
+            } elseif ($buffer > 0 && in_array($boundary['geometry_type'], ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'], true)) {
+                // Polygon/Rectangle/Circle (tersimpan sebagai polygon) dengan buffer:
+                // Ekspansi geometri sebesar $buffer meter menggunakan proyeksi 3857 → 4326
+                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), 3857), ?), 4326))';
                 $params[] = $boundary['geojson'];
                 $params[] = $buffer;
             } else {

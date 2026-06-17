@@ -363,14 +363,13 @@ class ApiController extends BaseController
 
     /**
      * Check if the given tier can access the specified data level.
-     * Level 1: all tiers. Level 2: pro, team, enterprise, government.
+     * Level 1 & 2: semua tier berbayar (lite, solo, pro, team, enterprise, government).
+     * Perbedaan lite vs pro hanya di kuota download, bukan akses data.
      */
     private function canAccessLevel(int $level, string $tier): bool
     {
-        if ($level <= 1) {
-            return in_array($tier, ['solo', 'pro', 'team', 'enterprise', 'government']);
-        }
-        return in_array($tier, ['pro', 'team', 'enterprise', 'government']);
+        $paidTiers = ['lite', 'solo', 'pro', 'team', 'enterprise', 'government'];
+        return in_array($tier, $paidTiers);
     }
 
     // ────────────────────────────────────────────────────────────────
