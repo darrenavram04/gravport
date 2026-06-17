@@ -24,7 +24,7 @@ class SubscriptionModel
     public function findTier(string $name): ?array
     {
         return $this->db->query(
-            'SELECT * FROM geoportal.subscriptions_tier WHERE tier_name = ?', [$name]
+            'SELECT * FROM geoportal.subscriptions_tier WHERE lower(tier_name) = lower(?)', [$name]
         )->getRowArray() ?: null;
     }
 
