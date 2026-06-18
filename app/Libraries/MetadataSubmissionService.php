@@ -273,9 +273,6 @@ CREATE TABLE IF NOT EXISTS geoportal.dataset_user_submissions (
     submitted_at timestamptz NOT NULL DEFAULT now()
 )
 SQL);
-        // Add columns that may be missing from tables created before this version
-        $db->query('ALTER TABLE geoportal.dataset_user_submissions ADD COLUMN IF NOT EXISTS dataset_code text');
-        $db->query('ALTER TABLE geoportal.dataset_user_submissions ADD COLUMN IF NOT EXISTS acc_id bigint');
     }
 
     private function validateShapefileZip(?UploadedFile $file): ?string
