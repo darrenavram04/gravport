@@ -707,9 +707,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Only add viewport bounds for preview requests (not downloads).
-    // noBounds skips bounds on the initial overview load to avoid large-area OOM.
+    // Skip bounds when province is selected — the province polygon defines the
+    // spatial extent; adding viewport bounds would exclude provinces outside
+    // the current viewport and corrupt the spatial filter.
     if (forPreview) {
-      if (!options.noBounds) {
+      if (!options.noBounds && !payload.province_id) {
         payload.bounds = mapBoundsPayload();
       }
       payload.zoom = Math.round(state.map.getZoom());

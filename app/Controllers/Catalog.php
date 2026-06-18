@@ -344,20 +344,28 @@ class Catalog extends BaseController
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
         $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('t.geom', $entry, $bounds);
-        $rows = $db->query('
-            SELECT
-                t.id,
-                ROUND((t.latitude)::numeric, 6) AS latitude,
-                ROUND((t.longitude)::numeric, 6) AS longitude,
-                ROUND((t.orthometric_height)::numeric, 3) AS elevation_m,
-                ROUND((t.anomaly_value)::numeric, 3) AS anomaly_value,
-                t.source_file,
-                t.survey_mode,
-                ST_AsGeoJSON(t.geom) AS geojson
-            FROM ' . $dataset['table'] . ' t
-            WHERE 1=1
-            ' . $sql . '
-        ', $params)->getResultArray();
+        $db->query("BEGIN");
+        $db->query("SET LOCAL statement_timeout = '30000'");
+        try {
+            $rows = $db->query('
+                SELECT
+                    t.id,
+                    ROUND((t.latitude)::numeric, 6) AS latitude,
+                    ROUND((t.longitude)::numeric, 6) AS longitude,
+                    ROUND((t.orthometric_height)::numeric, 3) AS elevation_m,
+                    ROUND((t.anomaly_value)::numeric, 3) AS anomaly_value,
+                    t.source_file,
+                    t.survey_mode,
+                    ST_AsGeoJSON(t.geom) AS geojson
+                FROM ' . $dataset['table'] . ' t
+                WHERE 1=1
+                ' . $sql . '
+            ', $params)->getResultArray();
+            $db->query("COMMIT");
+        } catch (\Throwable $e) {
+            try { $db->query("ROLLBACK"); } catch (\Throwable) {}
+            throw $e;
+        }
 
         $features = array_map(static function (array $row) use ($dataset): array {
             return [
@@ -556,10 +564,9 @@ class Catalog extends BaseController
         $params = [];
 
         if (!empty($entry['province_id'])) {
+            // Province IS the spatial extent; don't also apply viewport bounds.
             $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1))';
-        }
-
-        if ($bounds !== null) {
+        } elseif ($bounds !== null) {
             $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
             $params[] = $bounds['west'];
             $params[] = $bounds['south'];
