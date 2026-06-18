@@ -102,7 +102,7 @@
               <th>#</th>
               <th>Tipe</th>
               <th>Level</th>
-              <th>Nilai</th>
+              <th>Jumlah Titik</th>
               <th>File Sumber</th>
               <th>Status</th>
               <th>Catatan Reviewer</th>
@@ -116,7 +116,7 @@
               <td><?= esc($row['id']) ?></td>
               <td><span class="badge badge-point">FAA/CBA</span></td>
               <td>L<?= esc($row['data_level'] ?? 1) ?></td>
-              <td><?= esc($row['nilai'] ?? '-') ?></td>
+              <td><?= number_format((int)($row['point_count'] ?? 0)) ?> titik</td>
               <td style="font-size:.78rem"><?= esc($row['source_file'] ?? '-') ?></td>
               <td>
                 <?php $st = $row['review_status']; ?>

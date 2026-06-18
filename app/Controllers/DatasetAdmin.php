@@ -207,20 +207,25 @@ class DatasetAdmin extends BaseController
 
         $pointSubmissions = $db->query("
             SELECT
-                sgp.staged_point_id AS id,
+                MIN(sgp.staged_point_id) AS id,
                 'point' AS data_type,
-                COALESCE(d.dataset_anom_type, '-') AS anom_type,
-                COALESCE(d.dataset_level, 1) AS data_level,
+                COALESCE(MAX(d.dataset_anom_type), '-') AS anom_type,
+                COALESCE(MAX(d.dataset_level), 1) AS data_level,
                 sgp.source_file,
-                sgp.point_value AS nilai,
-                sgp.review_status,
-                sgp.review_notes AS catatan_reviewer,
-                sgp.staged_at AS submitted_at,
-                sgp.reviewed_at
+                COUNT(*) AS point_count,
+                CASE
+                    WHEN bool_or(sgp.review_status = 'pending')  THEN 'pending'
+                    WHEN bool_or(sgp.review_status = 'rejected') THEN 'rejected'
+                    ELSE 'approved'
+                END AS review_status,
+                MAX(sgp.review_notes) AS catatan_reviewer,
+                MIN(sgp.staged_at)    AS submitted_at,
+                MAX(sgp.reviewed_at)  AS reviewed_at
             FROM geoportal.staging_gravity_points sgp
             LEFT JOIN geoportal.datasets_grav_anom d ON d.dataset_id = sgp.dataset_id
             WHERE sgp.acc_id = ?
-            ORDER BY sgp.staged_at DESC
+            GROUP BY sgp.source_file
+            ORDER BY MIN(sgp.staged_at) DESC
         ", [$accId])->getResultArray();
 
         $rasterSubmissions = $db->query("
