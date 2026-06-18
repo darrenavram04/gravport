@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedMeta: null,
     previewTimer: null,
     lastRequestId: 0,
+    layerAbortController: null,
     skipNextMapReload: false,
     pointRenderer: null,
     rasterRenderer: null,
@@ -349,17 +350,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Abort any in-flight layer request before sending a new one.
+    // Without this, switching provinces rapidly fires simultaneous heavy
+    // spatial queries that can exhaust server memory.
+    if (state.layerAbortController) {
+      state.layerAbortController.abort();
+    }
+    state.layerAbortController = new AbortController();
+    const signal = state.layerAbortController.signal;
+
     const requestId = ++state.lastRequestId;
     const payload = {
       dataset: dataset.code,
       ...buildSpatialPayload({ forPreview: true, noBounds: Boolean(opts.noBounds) }),
     };
 
-    const response = await api(cfg.layerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-      body: JSON.stringify(payload),
-    });
+    let response;
+    try {
+      response = await api(cfg.layerUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify(payload),
+        signal,
+      });
+    } catch (e) {
+      if (e.name === "AbortError") return; // superseded by newer request
+      throw e;
+    }
 
     if (requestId !== state.lastRequestId) {
       return;

@@ -951,11 +951,16 @@ class WebMap extends BaseController
         try {
             $db->query("BEGIN");
             $db->query("SET LOCAL statement_timeout = '8000'");
+            // Use LIMIT 501 so the query stops as soon as we know there are > 500 rows,
+            // instead of scanning the entire table for an exact count.
             $row = $db->query('
                 SELECT COUNT(*) AS total
-                FROM ' . $dataset['table'] . ' t
-                WHERE 1=1
-                ' . $sqlBoundary . '
+                FROM (
+                    SELECT 1 FROM ' . $dataset['table'] . ' t
+                    WHERE 1=1
+                    ' . $sqlBoundary . '
+                    LIMIT 501
+                ) sub
             ', $params)->getRowArray();
             $db->query("COMMIT");
             return (int) ($row['total'] ?? 0);
