@@ -57,7 +57,14 @@ class MetadataSubmissionService
             'submitted_by_role' => $submittedByRole,
         ]);
 
-        $db->table('dataset_user_submissions')->insert($row);
+        $ok = $db->table('dataset_user_submissions')->insert($row);
+        if (! $ok) {
+            $err = $db->error();
+            throw new \RuntimeException(
+                'DB insert gagal [' . ($err['code'] ?? '?') . ']: ' . ($err['message'] ?? 'unknown error') .
+                ' | row keys: ' . implode(', ', array_keys($row))
+            );
+        }
         $id = $db->insertID();
 
         // Stage CSV dan TIFF ke staging tables untuk review superadmin
