@@ -567,10 +567,8 @@ class WebMap extends BaseController
             $db->query("COMMIT");
         } catch (\Throwable $e) {
             try { $db->query("ROLLBACK"); } catch (\Throwable) {}
-            if ($hasProvince) { $this->clearProvinceQueryPid(); }
             throw $e;
         }
-        if ($hasProvince) { $this->clearProvinceQueryPid(); }
 
         $features = [];
 
@@ -693,10 +691,8 @@ class WebMap extends BaseController
             $db->query("COMMIT");
         } catch (\Throwable $e) {
             try { $db->query("ROLLBACK"); } catch (\Throwable) {}
-            if ($hasProvince) { $this->clearProvinceQueryPid(); }
             throw $e;
         }
-        if ($hasProvince) { $this->clearProvinceQueryPid(); }
 
         $features = [];
         $sourceCount = 0;
@@ -1435,32 +1431,31 @@ class WebMap extends BaseController
     }
 
     /**
-     * Cancel the previous province spatial query (if any) and register the current
-     * PostgreSQL backend PID so that the NEXT request can cancel this one.
-     * Uses a global temp file — one active province query allowed at a time.
+     * Tag this PostgreSQL session as an active province query so the NEXT province
+     * request can find and cancel it via pg_stat_activity. Then cancel any OTHER
+     * province query that is currently active.
+     *
+     * Uses application_name instead of a PID file — avoids PID-recycling bugs where
+     * a fast province (e.g. DKI Jakarta) finishes, its PID is reused by the next
+     * connection, and pg_cancel_backend ends up canceling the new request itself.
      */
     private function cancelPreviousProvinceQuery(object $db): void
     {
-        $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gp_province_query.pid';
-        if (is_readable($pidFile)) {
-            $oldPid = (int) trim((string) @file_get_contents($pidFile));
-            if ($oldPid > 0) {
-                try {
-                    $db->query('SELECT pg_cancel_backend(?)', [$oldPid]);
-                } catch (\Throwable) {}
-            }
-        }
         $row = $db->query('SELECT pg_backend_pid() AS pid')->getRowArray();
         $myPid = (int) ($row['pid'] ?? 0);
-        if ($myPid > 0) {
-            @file_put_contents($pidFile, (string) $myPid, LOCK_EX);
+        if ($myPid <= 0) {
+            return;
         }
-    }
-
-    private function clearProvinceQueryPid(): void
-    {
-        $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gp_province_query.pid';
-        @file_put_contents($pidFile, '0', LOCK_EX);
+        // Tag this session with a unique marker (province prefix + our PID).
+        $db->query("SET application_name = 'gp_prov_" . $myPid . "'");
+        // Cancel any OTHER active province backend (same prefix, different PID).
+        $db->query("
+            SELECT pg_cancel_backend(pid)
+            FROM pg_stat_activity
+            WHERE application_name LIKE 'gp_prov_%'
+              AND state = 'active'
+              AND pid != " . $myPid . "
+        ");
     }
 
     /** Returns true when the dataset is Level 2 and the user lacks Enterprise access. */
