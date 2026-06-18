@@ -725,13 +725,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Only add viewport bounds for preview requests (not downloads).
     // Skip bounds when province is selected — the province polygon defines the
-    // spatial extent; adding viewport bounds would exclude provinces outside
-    // the current viewport and corrupt the spatial filter.
+    // At low zoom with province: no bounds — show full province overview.
+    // At high zoom (≥ 10) with province: send bounds so the server switches to
+    // detail mode for the visible viewport instead of aggregating the whole province.
     if (forPreview) {
+      const currentZoom = Math.round(state.map.getZoom());
       if (!options.noBounds && !payload.province_id) {
         payload.bounds = mapBoundsPayload();
+      } else if (!options.noBounds && payload.province_id && currentZoom >= 10) {
+        payload.bounds = mapBoundsPayload();
       }
-      payload.zoom = Math.round(state.map.getZoom());
+      payload.zoom = currentZoom;
     }
 
     return payload;

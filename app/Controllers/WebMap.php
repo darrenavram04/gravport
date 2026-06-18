@@ -926,6 +926,12 @@ class WebMap extends BaseController
         $zoom = (int) ($filters['zoom'] ?? 0);
         $bounds = $filters['bounds'] ?? null;
 
+        // Province filter: aggregate at low zoom (full overview), detail at zoom ≥ 10.
+        // JS sends bounds only at zoom ≥ 10 for province, so this is consistent.
+        if (!empty($filters['province_id'])) {
+            return $zoom < 10;
+        }
+
         if ($zoom <= 7) {
             return true;
         }
@@ -1314,13 +1320,19 @@ class WebMap extends BaseController
         $params = [];
         $buffer = max(0, (int) ($filters['buffer_meters'] ?? 0));
 
-        // Province: use pre-computed province_id column (integer index, O(log n))
-        // instead of ST_Intersects subquery (O(n) spatial scan per row).
-        // province_id is populated once via scripts/add_province_id_index.sql.
-        // Viewport bounds are intentionally NOT added — province IS the spatial extent.
+        // Province: use pre-computed province_id column (integer index, O(log n)).
+        // At high zoom (≥ 10), JS also sends bounds so we further limit to the visible
+        // viewport — fast because province_id index already narrows rows to ~thousands.
         if (!empty($filters['province_id'])) {
             $clauses[] = 't.province_id = ?';
             $params[] = (int) $filters['province_id'];
+            if (!empty($filters['bounds'])) {
+                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
+                $params[] = $filters['bounds']['west'];
+                $params[] = $filters['bounds']['south'];
+                $params[] = $filters['bounds']['east'];
+                $params[] = $filters['bounds']['north'];
+            }
         } else {
             $boundary = $this->boundaryPayload($filters);
             if ($boundary !== null) {
