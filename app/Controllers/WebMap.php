@@ -1314,12 +1314,12 @@ class WebMap extends BaseController
         $params = [];
         $buffer = max(0, (int) ($filters['buffer_meters'] ?? 0));
 
-        // Province: direct subquery avoids fetching + re-parsing large GeoJSON in PHP.
-        // PostGIS can use the GiST index on both tables for an efficient nested-loop join.
-        // Viewport bounds are intentionally NOT added here — the province polygon IS the
-        // spatial extent; mixing bounds would exclude provinces outside the current viewport.
+        // Province: use pre-computed province_id column (integer index, O(log n))
+        // instead of ST_Intersects subquery (O(n) spatial scan per row).
+        // province_id is populated once via scripts/add_province_id_index.sql.
+        // Viewport bounds are intentionally NOT added — province IS the spatial extent.
         if (!empty($filters['province_id'])) {
-            $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ? LIMIT 1))';
+            $clauses[] = 't.province_id = ?';
             $params[] = (int) $filters['province_id'];
         } else {
             $boundary = $this->boundaryPayload($filters);

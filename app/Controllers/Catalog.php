@@ -565,7 +565,14 @@ class Catalog extends BaseController
 
         if (!empty($entry['province_id'])) {
             // Province IS the spatial extent; don't also apply viewport bounds.
-            $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1))';
+            // Vector tables (t.geom prefix) use the pre-computed province_id index.
+            // Raster tables keep the ST_Intersects subquery (no province_id column).
+            if (str_starts_with($geomColumn, 't.')) {
+                $clauses[] = 't.province_id = ?';
+                $params[] = (int) $entry['province_id'];
+            } else {
+                $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1))';
+            }
         } elseif ($bounds !== null) {
             $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
             $params[] = $bounds['west'];
@@ -814,7 +821,10 @@ class Catalog extends BaseController
         if (empty($entry['province_id'])) {
             return '';
         }
-
+        // Vector tables (t.geom): use pre-computed province_id index.
+        if (str_starts_with($geomColumn, 't.')) {
+            return ' AND t.province_id = ' . (int) $entry['province_id'] . ' ';
+        }
         return ' AND ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ' . (int) $entry['province_id'] . ' LIMIT 1)) ';
     }
 
