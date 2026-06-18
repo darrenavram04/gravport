@@ -534,7 +534,8 @@ class WebMap extends BaseController
         $dataset = $this->dataset($datasetCode);
         $db = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
-        $db->query("SET LOCAL statement_timeout = '15000'"); // 15 s hard cap per query
+        $db->query("BEGIN");
+        $db->query("SET LOCAL statement_timeout = '15000'");
         $rows = $db->query('
             SELECT
                 t.id,
@@ -551,6 +552,7 @@ class WebMap extends BaseController
             ORDER BY t.id ASC
             LIMIT 5000
         ', $params)->getResultArray();
+        $db->query("COMMIT");
 
         $features = [];
 
@@ -612,6 +614,7 @@ class WebMap extends BaseController
             default        => '',
         };
 
+        $db->query("BEGIN");
         $db->query("SET LOCAL statement_timeout = '15000'");
         $rows = $db->query('
             WITH src AS (
@@ -657,6 +660,7 @@ class WebMap extends BaseController
             $gridSize,
             $gridSize,
         ]))->getResultArray();
+        $db->query("COMMIT");
 
         $features = [];
         $sourceCount = 0;
@@ -929,6 +933,7 @@ class WebMap extends BaseController
         $db = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
         try {
+            $db->query("BEGIN");
             $db->query("SET LOCAL statement_timeout = '8000'");
             $row = $db->query('
                 SELECT COUNT(*) AS total
@@ -936,9 +941,10 @@ class WebMap extends BaseController
                 WHERE 1=1
                 ' . $sqlBoundary . '
             ', $params)->getRowArray();
+            $db->query("COMMIT");
             return (int) ($row['total'] ?? 0);
         } catch (\Throwable) {
-            // Timeout atau error: anggap banyak (gunakan aggregate)
+            try { $db->query("ROLLBACK"); } catch (\Throwable) {}
             return 9999;
         }
     }
@@ -1269,33 +1275,44 @@ class WebMap extends BaseController
     {
         $clauses = [];
         $params = [];
-        $boundary = $this->boundaryPayload($filters);
         $buffer = max(0, (int) ($filters['buffer_meters'] ?? 0));
 
-        if ($boundary !== null) {
-            if ($boundary['geometry_type'] === 'Point' && $buffer > 0) {
-                // Point dengan buffer: gunakan ST_DWithin (radius dalam meter via geography)
-                $clauses[] = 'ST_DWithin(' . $geomColumn . '::geography, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)::geography, ?)';
-                $params[] = $boundary['geojson'];
-                $params[] = $buffer;
-            } elseif ($buffer > 0 && in_array($boundary['geometry_type'], ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'], true)) {
-                // Polygon/Rectangle/Circle (tersimpan sebagai polygon) dengan buffer:
-                // Ekspansi geometri sebesar $buffer meter menggunakan proyeksi 3857 → 4326
-                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), 3857), ?), 4326))';
-                $params[] = $boundary['geojson'];
-                $params[] = $buffer;
-            } else {
-                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))';
-                $params[] = $boundary['geojson'];
+        // Province: direct subquery avoids fetching + re-parsing large GeoJSON in PHP.
+        // PostGIS can use the GiST index on both tables for an efficient nested-loop join.
+        if (!empty($filters['province_id'])) {
+            $clauses[] = 'ST_Intersects(' . $geomColumn . ', (SELECT geom FROM geoportal.polygon_adm_province WHERE adm_id = ? LIMIT 1))';
+            $params[] = (int) $filters['province_id'];
+            if (!empty($filters['bounds'])) {
+                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
+                $params[] = $filters['bounds']['west'];
+                $params[] = $filters['bounds']['south'];
+                $params[] = $filters['bounds']['east'];
+                $params[] = $filters['bounds']['north'];
             }
-        }
+        } else {
+            $boundary = $this->boundaryPayload($filters);
+            if ($boundary !== null) {
+                if ($boundary['geometry_type'] === 'Point' && $buffer > 0) {
+                    $clauses[] = 'ST_DWithin(' . $geomColumn . '::geography, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)::geography, ?)';
+                    $params[] = $boundary['geojson'];
+                    $params[] = $buffer;
+                } elseif ($buffer > 0 && in_array($boundary['geometry_type'], ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'], true)) {
+                    $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), 3857), ?), 4326))';
+                    $params[] = $boundary['geojson'];
+                    $params[] = $buffer;
+                } else {
+                    $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))';
+                    $params[] = $boundary['geojson'];
+                }
+            }
 
-        if (!empty($filters['bounds']) && (($boundary['source'] ?? null) !== 'bounds')) {
-            $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
-            $params[] = $filters['bounds']['west'];
-            $params[] = $filters['bounds']['south'];
-            $params[] = $filters['bounds']['east'];
-            $params[] = $filters['bounds']['north'];
+            if (!empty($filters['bounds']) && (($boundary['source'] ?? null) !== 'bounds')) {
+                $clauses[] = 'ST_Intersects(' . $geomColumn . ', ST_MakeEnvelope(?, ?, ?, ?, 4326))';
+                $params[] = $filters['bounds']['west'];
+                $params[] = $filters['bounds']['south'];
+                $params[] = $filters['bounds']['east'];
+                $params[] = $filters['bounds']['north'];
+            }
         }
 
         if ($clauses === []) {
