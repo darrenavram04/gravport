@@ -9,7 +9,7 @@ use CodeIgniter\HTTP\RedirectResponse;
 class AuthController extends BaseController
 {
     private const LOGIN_WINDOW_SECONDS    = 900;
-    private const LOGIN_MAX_ATTEMPTS      = 8;
+    private const LOGIN_MAX_ATTEMPTS      = 20;
     private const REGISTER_WINDOW_SECONDS = 3600;
     private const REGISTER_MAX_ATTEMPTS   = 5;
     private const FORGOT_WINDOW_SECONDS   = 3600;
