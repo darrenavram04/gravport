@@ -534,25 +534,31 @@ class WebMap extends BaseController
         $dataset = $this->dataset($datasetCode);
         $db = Database::connect($dataset['db']);
         [$sqlBoundary, $params] = $this->spatialSql('t.' . $dataset['geom_column'], $filters);
+        $timeout = !empty($filters['province_id']) ? '30000' : '15000';
         $db->query("BEGIN");
-        $db->query("SET LOCAL statement_timeout = '15000'");
-        $rows = $db->query('
-            SELECT
-                t.id,
-                ROUND((t.latitude)::numeric, 6) AS latitude,
-                ROUND((t.longitude)::numeric, 6) AS longitude,
-                ROUND((t.orthometric_height)::numeric, 3) AS elevation_m,
-                ROUND((t.anomaly_value)::numeric, 3) AS anomaly_value,
-                t.source_file,
-                t.survey_mode,
-                ST_AsGeoJSON(t.geom) AS geojson
-            FROM ' . $dataset['table'] . ' t
-            WHERE 1=1
-            ' . $sqlBoundary . '
-            ORDER BY t.id ASC
-            LIMIT 5000
-        ', $params)->getResultArray();
-        $db->query("COMMIT");
+        $db->query("SET LOCAL statement_timeout = '{$timeout}'");
+        try {
+            $rows = $db->query('
+                SELECT
+                    t.id,
+                    ROUND((t.latitude)::numeric, 6) AS latitude,
+                    ROUND((t.longitude)::numeric, 6) AS longitude,
+                    ROUND((t.orthometric_height)::numeric, 3) AS elevation_m,
+                    ROUND((t.anomaly_value)::numeric, 3) AS anomaly_value,
+                    t.source_file,
+                    t.survey_mode,
+                    ST_AsGeoJSON(t.geom) AS geojson
+                FROM ' . $dataset['table'] . ' t
+                WHERE 1=1
+                ' . $sqlBoundary . '
+                ORDER BY t.id ASC
+                LIMIT 5000
+            ', $params)->getResultArray();
+            $db->query("COMMIT");
+        } catch (\Throwable $e) {
+            try { $db->query("ROLLBACK"); } catch (\Throwable) {}
+            throw $e;
+        }
 
         $features = [];
 
@@ -602,65 +608,75 @@ class WebMap extends BaseController
         // filter (province/geometry), use aggressive 3% for global overview.
         // When province or custom geometry is active, treat it as bounded — sampling
         // 3% of the entire table would miss spatially-clustered province data.
-        $zoom             = (int) ($filters['zoom'] ?? 0);
-        $hasBounds        = is_array($filters['bounds'] ?? null);
-        $hasExplicitSpatial = !empty($filters['province_id']) || !empty($filters['geometry']);
+        $zoom               = (int) ($filters['zoom'] ?? 0);
+        $hasBounds          = is_array($filters['bounds'] ?? null);
+        $hasProvince        = !empty($filters['province_id']);
+        $hasExplicitSpatial = $hasProvince || !empty($filters['geometry']);
+        // Province queries never use TABLESAMPLE — data is spatially clustered per province
+        // so block-level sampling would skip the province entirely.
         $sample = match (true) {
+            $hasProvince                        => '',
             !$hasBounds && !$hasExplicitSpatial => ' TABLESAMPLE SYSTEM(3)',
-            $zoom <= 5     => ' TABLESAMPLE SYSTEM(5)',
-            $zoom <= 6     => ' TABLESAMPLE SYSTEM(10)',
-            $zoom <= 7     => ' TABLESAMPLE SYSTEM(30)',
-            $zoom <= 8     => ' TABLESAMPLE SYSTEM(60)',
-            default        => '',
+            $zoom <= 5                          => ' TABLESAMPLE SYSTEM(5)',
+            $zoom <= 6                          => ' TABLESAMPLE SYSTEM(10)',
+            $zoom <= 7                          => ' TABLESAMPLE SYSTEM(30)',
+            $zoom <= 8                          => ' TABLESAMPLE SYSTEM(60)',
+            default                             => '',
         };
 
+        $timeout = $hasProvince ? '30000' : '15000';
         $db->query("BEGIN");
-        $db->query("SET LOCAL statement_timeout = '15000'");
-        $rows = $db->query('
-            WITH src AS (
+        $db->query("SET LOCAL statement_timeout = '{$timeout}'");
+        try {
+            $rows = $db->query('
+                WITH src AS (
+                    SELECT
+                        t.anomaly_value,
+                        t.geom
+                    FROM ' . $dataset['table'] . ' t' . $sample . '
+                    WHERE 1=1
+                    ' . $sqlBoundary . '
+                ),
+                binned AS (
+                    SELECT
+                        FLOOR(ST_X(t.geom) / ?) * ? AS cell_x,
+                        FLOOR(ST_Y(t.geom) / ?) * ? AS cell_y,
+                        COUNT(*) AS point_count,
+                        AVG(t.anomaly_value) AS mean_val,
+                        MIN(t.anomaly_value) AS min_val,
+                        MAX(t.anomaly_value) AS max_val
+                    FROM src t
+                    GROUP BY 1, 2
+                )
                 SELECT
-                    t.anomaly_value,
-                    t.geom
-                FROM ' . $dataset['table'] . ' t' . $sample . '
-                WHERE 1=1
-                ' . $sqlBoundary . '
-            ),
-            binned AS (
-                SELECT
-                    FLOOR(ST_X(t.geom) / ?) * ? AS cell_x,
-                    FLOOR(ST_Y(t.geom) / ?) * ? AS cell_y,
-                    COUNT(*) AS point_count,
-                    AVG(t.anomaly_value) AS mean_val,
-                    MIN(t.anomaly_value) AS min_val,
-                    MAX(t.anomaly_value) AS max_val
-                FROM src t
-                GROUP BY 1, 2
-            )
-            SELECT
-                ROW_NUMBER() OVER (ORDER BY cell_y, cell_x) AS bin_id,
-                point_count,
-                ROUND((SUM(point_count) OVER ())::numeric, 0) AS source_count,
-                ROUND((mean_val)::numeric, 3) AS mean_val,
-                ROUND((min_val)::numeric, 3) AS min_val,
-                ROUND((max_val)::numeric, 3) AS max_val,
-                ST_AsGeoJSON(
-                    ST_SetSRID(
-                        ST_MakePoint(cell_x + (? / 2.0), cell_y + (? / 2.0)),
-                        4326
-                    )
-                ) AS centroid_geojson
-            FROM binned
-            ORDER BY point_count DESC, bin_id ASC
-            LIMIT 1200
-        ', array_merge($params, [
-            $gridSize,
-            $gridSize,
-            $gridSize,
-            $gridSize,
-            $gridSize,
-            $gridSize,
-        ]))->getResultArray();
-        $db->query("COMMIT");
+                    ROW_NUMBER() OVER (ORDER BY cell_y, cell_x) AS bin_id,
+                    point_count,
+                    ROUND((SUM(point_count) OVER ())::numeric, 0) AS source_count,
+                    ROUND((mean_val)::numeric, 3) AS mean_val,
+                    ROUND((min_val)::numeric, 3) AS min_val,
+                    ROUND((max_val)::numeric, 3) AS max_val,
+                    ST_AsGeoJSON(
+                        ST_SetSRID(
+                            ST_MakePoint(cell_x + (? / 2.0), cell_y + (? / 2.0)),
+                            4326
+                        )
+                    ) AS centroid_geojson
+                FROM binned
+                ORDER BY point_count DESC, bin_id ASC
+                LIMIT 1200
+            ', array_merge($params, [
+                $gridSize,
+                $gridSize,
+                $gridSize,
+                $gridSize,
+                $gridSize,
+                $gridSize,
+            ]))->getResultArray();
+            $db->query("COMMIT");
+        } catch (\Throwable $e) {
+            try { $db->query("ROLLBACK"); } catch (\Throwable) {}
+            throw $e;
+        }
 
         $features = [];
         $sourceCount = 0;

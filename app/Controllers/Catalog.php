@@ -133,8 +133,32 @@ class Catalog extends BaseController
         $dataset['download_label'] = $dataset['type'] === 'raster' ? 'Download GeoTIFF' : 'Download CSV';
         $dataset['metadata_label'] = 'Download Metadata XML';
 
+        $initialBbox = null;
+        if (!empty($dataset['province_id'])) {
+            $db = Database::connect();
+            $row = $db->query('
+                SELECT
+                    ST_XMin(ST_Envelope(geom)) AS west,
+                    ST_YMin(ST_Envelope(geom)) AS south,
+                    ST_XMax(ST_Envelope(geom)) AS east,
+                    ST_YMax(ST_Envelope(geom)) AS north
+                FROM geoportal.polygon_adm_province
+                WHERE adm_id = ?
+                LIMIT 1
+            ', [(int) $dataset['province_id']])->getRowArray();
+            if ($row) {
+                $initialBbox = [
+                    'west'  => (float) $row['west'],
+                    'south' => (float) $row['south'],
+                    'east'  => (float) $row['east'],
+                    'north' => (float) $row['north'],
+                ];
+            }
+        }
+
         return view('v_dataset_view', [
-            'dataset' => $dataset,
+            'dataset'     => $dataset,
+            'initialBbox' => $initialBbox,
         ]);
     }
 
@@ -635,14 +659,21 @@ class Catalog extends BaseController
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
         $db = Database::connect();
         [$sql, $params] = $this->entrySpatialSql('t.geom', $entry, $bounds);
-        $row = $db->query('
-            SELECT COUNT(*) AS total
-            FROM ' . $dataset['table'] . ' t
-            WHERE 1=1
-            ' . $sql . '
-        ', $params)->getRowArray();
-
-        return (int) ($row['total'] ?? 0);
+        try {
+            $db->query("BEGIN");
+            $db->query("SET LOCAL statement_timeout = '8000'");
+            $row = $db->query('
+                SELECT COUNT(*) AS total
+                FROM ' . $dataset['table'] . ' t
+                WHERE 1=1
+                ' . $sql . '
+            ', $params)->getRowArray();
+            $db->query("COMMIT");
+            return (int) ($row['total'] ?? 0);
+        } catch (\Throwable) {
+            try { $db->query("ROLLBACK"); } catch (\Throwable) {}
+            return 9999;
+        }
     }
 
     private function exportVectorCsv(array $entry): array

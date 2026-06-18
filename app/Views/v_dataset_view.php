@@ -312,10 +312,17 @@ $backUrl = (strpos($fromParam, $catalogBase) === 0) ? $fromParam : $catalogBase;
         label: '<?= esc($dataset['title'], 'js') ?>',
         geojsonUrl: '<?= site_url('catalog/geojson/' . (int) $dataset['id']) ?>',
     };
+    const initialBbox = <?= json_encode($initialBbox) ?>;
 
-    const map = L.map('map', {
-        preferCanvas: true,
-    }).setView([-7.45, 110.15], 6);
+    const map = L.map('map', { preferCanvas: true });
+    if (initialBbox) {
+        map.fitBounds([
+            [initialBbox.south, initialBbox.west],
+            [initialBbox.north, initialBbox.east],
+        ], { padding: [0, 0] });
+    } else {
+        map.setView([-7.45, 110.15], 6);
+    }
     const pointRenderer = L.canvas({ padding: 0.5 });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
