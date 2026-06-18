@@ -367,20 +367,40 @@ $backUrl = (strpos($fromParam, $catalogBase) === 0) ? $fromParam : $catalogBase;
         };
     }
 
+    const SEISMIC_STOPS = [
+        [-1.000, [0,   0, 140]],
+        [-0.750, [0,  55, 220]],
+        [-0.500, [0, 135, 255]],
+        [-0.250, [110, 195, 255]],
+        [ 0.000, [255, 255, 255]],
+        [ 0.250, [255, 220,  90]],
+        [ 0.500, [255, 140,   0]],
+        [ 0.750, [215,  50,   0]],
+        [ 1.000, [140,   0,   0]],
+    ];
+
+    function interpolateSeismic(t) {
+        t = Math.max(-1, Math.min(1, t));
+        for (let i = 0; i < SEISMIC_STOPS.length - 1; i++) {
+            const [t0, c0] = SEISMIC_STOPS[i];
+            const [t1, c1] = SEISMIC_STOPS[i + 1];
+            if (t <= t1) {
+                const f = (t - t0) / (t1 - t0);
+                return `rgb(${Math.round(c0[0]+f*(c1[0]-c0[0]))},${Math.round(c0[1]+f*(c1[1]-c0[1]))},${Math.round(c0[2]+f*(c1[2]-c0[2]))})`;
+            }
+        }
+        const c = SEISMIC_STOPS.at(-1)[1];
+        return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+
     function colorForNumber(value) {
-        const v = Number(value || 0);
-        if (v < 0) return '#ffe39f';
-        if (v < 50) return '#ffb347';
-        if (v < 150) return '#ff7f2a';
-        return '#cb3317';
+        const absMax = 215;
+        return interpolateSeismic(Number(value || 0) / absMax);
     }
 
     function colorForRaster(value) {
-        const v = Number(value || 0);
-        if (v < 20) return '#d9f8f2';
-        if (v < 100) return '#8fe0d0';
-        if (v < 200) return '#33c0a8';
-        return '#17836f';
+        const absMax = 335;
+        return interpolateSeismic(Number(value || 0) / absMax);
     }
 
     async function loadPreview(fit = false) {

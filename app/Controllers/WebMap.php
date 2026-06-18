@@ -32,7 +32,25 @@ class WebMap extends BaseController
 
     public function bootstrap()
     {
-        $datasets = array_values(array_map(fn (array $item): array => $this->clientDataset($item), $this->registry->definitions()));
+        $colorScales = [];
+        try {
+            $db = Database::connect();
+            $rows = $db->query('SELECT dataset_code, min_2sigma, max_2sigma FROM geoportal.mv_dataset_stats')->getResultArray();
+            foreach ($rows as $row) {
+                $colorScales[$row['dataset_code']] = [
+                    'vmin' => (float) $row['min_2sigma'],
+                    'vmax' => (float) $row['max_2sigma'],
+                ];
+            }
+        } catch (\Throwable) {
+            // mv_dataset_stats not yet created; JS falls back to built-in defaults
+        }
+
+        $datasets = array_values(array_map(function (array $item) use ($colorScales): array {
+            $client = $this->clientDataset($item);
+            $client['colorScale'] = $colorScales[$item['code']] ?? null;
+            return $client;
+        }, $this->registry->definitions()));
 
         return $this->respond([
             'defaultDataset' => 'faa_l1',

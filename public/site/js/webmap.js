@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     skipNextMapReload: false,
     pointRenderer: null,
     rasterRenderer: null,
+    colorScales: {},
   };
 
   initMap();
@@ -71,7 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function boot() {
     try {
       const bootstrap = await api(cfg.bootstrapUrl);
-      bootstrap.datasets.forEach((item) => state.datasets.set(item.code, item));
+      bootstrap.datasets.forEach((item) => {
+        state.datasets.set(item.code, item);
+        if (item.colorScale) state.colorScales[item.code] = item.colorScale;
+      });
 
       await loadProvinces();
       syncDatasetMeta();
@@ -472,39 +476,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderLegend(dataset, meta) {
     const root = document.documentElement;
-
-    const scaleLabels = "<span>&lt; −50</span><span>−50~0</span><span>0~50</span><span>&gt; 50</span>";
     const unitNote = " Satuan: mGal.";
+    const scale = datasetColorScale(dataset.code);
+    const { vmin, vmax } = scale;
+
+    const gradient = buildLegendGradient(vmin, vmax);
+    root.style.setProperty("--legend-gradient", gradient);
+    els.legendScale.innerHTML = buildLegendLabels(vmin, vmax);
 
     if (dataset.type === "vector" && meta.mode === "aggregated_points") {
       els.legendTitle.textContent = "Legenda Ringkasan";
       els.legendDesc.textContent = "Lingkaran mewakili rata-rata anomali gravitasi (mGal) kumpulan titik pada sel viewport." + unitNote;
-      els.legendScale.innerHTML = scaleLabels;
-      root.style.setProperty(
-        "--legend-gradient",
-        "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
-      );
       return;
     }
 
     if (dataset.type === "vector") {
       els.legendTitle.textContent = "Legenda Titik";
       els.legendDesc.textContent = "Warna titik menunjukkan nilai anomali gravitasi tiap titik pengukuran." + unitNote;
-      els.legendScale.innerHTML = scaleLabels;
-      root.style.setProperty(
-        "--legend-gradient",
-        "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
-      );
       return;
     }
 
     els.legendTitle.textContent = "Legenda Raster/Grid";
     els.legendDesc.textContent = "Warna grid menunjukkan nilai anomali gravitasi rata-rata tiap sel." + unitNote;
-    els.legendScale.innerHTML = scaleLabels;
-    root.style.setProperty(
-      "--legend-gradient",
-      "linear-gradient(90deg, #d9f8f2 0%, #8fe0d0 33%, #33c0a8 67%, #17836f 100%)"
-    );
+  }
+
+  function buildLegendGradient(vmin, vmax) {
+    const steps = 10;
+    const stops = [];
+    for (let i = 0; i <= steps; i++) {
+      const v = vmin + (vmax - vmin) * i / steps;
+      const color = colorForValue(v, vmin, vmax);
+      stops.push(`${color} ${(i / steps * 100).toFixed(1)}%`);
+    }
+    return `linear-gradient(90deg, ${stops.join(", ")})`;
+  }
+
+  function buildLegendLabels(vmin, vmax) {
+    const fmt = (v) => (v > 0 ? "+" : "") + v.toFixed(0);
+    const mid = (vmin < 0 && vmax > 0) ? "0" : fmt((vmin + vmax) / 2);
+    return `<span>${fmt(vmin)}</span><span>${mid}</span><span>${fmt(vmax)}</span>`;
   }
 
   async function openFeatureMeta(datasetCode, featureId) {
@@ -801,7 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
         radius: Math.max(5, Math.min(13, 4 + Math.log10(count + 1) * (zoom >= 8 ? 4 : 3.2))),
         color: "#ffffff",
         weight: 1,
-        fillColor: dataset.code === "cba_l1" ? "#17836f" : colorForNumber(props.summary_value),
+        fillColor: colorForDataset(dataset.code, props.summary_value),
         fillOpacity: 0.9,
       };
     }
@@ -812,35 +822,73 @@ document.addEventListener("DOMContentLoaded", () => {
       radius,
       color: "#ffffff",
       weight: 0.8,
-      fillColor: dataset.code === "cba_l1" ? "#17836f" : colorForNumber(props.summary_value),
+      fillColor: colorForDataset(dataset.code, props.summary_value),
       fillOpacity: 0.82,
     };
   }
 
   function rasterStyle(dataset, feature) {
     return {
-      color: dataset.code === "cba_l2" ? "#2f6e62" : "#6e6552",
-      weight: 0.9,
-      fillColor: colorForRaster(feature.properties.summary_value),
-      fillOpacity: 0.42,
-      dashArray: "5 4",
+      color: "rgba(60,60,60,0.35)",
+      weight: 0.5,
+      fillColor: colorForDataset(dataset.code, feature.properties.summary_value),
+      fillOpacity: 0.72,
+      dashArray: null,
     };
   }
 
-  function colorForNumber(value) {
-    const v = Number(value ?? 0);
-    if (v < -50) return "#d9f8f2";
-    if (v < 0)   return "#8fe0d0";
-    if (v < 50)  return "#33c0a8";
-    return "#17836f";
+  // Diverging blue-white-red colormap (seismic style), t in [-1, 1]
+  const SEISMIC_STOPS = [
+    [-1.000, [0,   0, 140]],
+    [-0.750, [0,  55, 220]],
+    [-0.500, [0, 135, 255]],
+    [-0.250, [110, 195, 255]],
+    [ 0.000, [255, 255, 255]],
+    [ 0.250, [255, 220,  90]],
+    [ 0.500, [255, 140,   0]],
+    [ 0.750, [215,  50,   0]],
+    [ 1.000, [140,   0,   0]],
+  ];
+
+  function interpolateSeismic(t) {
+    t = Math.max(-1, Math.min(1, t));
+    for (let i = 0; i < SEISMIC_STOPS.length - 1; i++) {
+      const [t0, c0] = SEISMIC_STOPS[i];
+      const [t1, c1] = SEISMIC_STOPS[i + 1];
+      if (t <= t1) {
+        const f = (t - t0) / (t1 - t0);
+        const r = Math.round(c0[0] + f * (c1[0] - c0[0]));
+        const g = Math.round(c0[1] + f * (c1[1] - c0[1]));
+        const b = Math.round(c0[2] + f * (c1[2] - c0[2]));
+        return `rgb(${r},${g},${b})`;
+      }
+    }
+    const c = SEISMIC_STOPS.at(-1)[1];
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
   }
 
-  function colorForRaster(value) {
-    const v = Number(value ?? 0);
-    if (v < -50) return "#d9f8f2";
-    if (v < 0)   return "#8fe0d0";
-    if (v < 50)  return "#33c0a8";
-    return "#17836f";
+  // Per-dataset 2σ defaults (used when mv_dataset_stats is not yet available)
+  const DEFAULT_COLOR_SCALES = {
+    faa_l1: { vmin: -69.80,  vmax: 214.14 },
+    faa_l2: { vmin: -120.05, vmax: 164.53 },
+    cba_l1: { vmin: -66.65,  vmax: 178.87 },
+    cba_l2: { vmin: -110.21, vmax: 333.70 },
+  };
+
+  function datasetColorScale(datasetCode) {
+    return state.colorScales[datasetCode] ?? DEFAULT_COLOR_SCALES[datasetCode] ?? { vmin: -150, vmax: 350 };
+  }
+
+  function colorForValue(value, vmin, vmax) {
+    const absMax = Math.max(Math.abs(vmin), Math.abs(vmax));
+    if (absMax === 0) return "rgb(255,255,255)";
+    const t = Number(value ?? 0) / absMax;
+    return interpolateSeismic(t);
+  }
+
+  function colorForDataset(datasetCode, value) {
+    const { vmin, vmax } = datasetColorScale(datasetCode);
+    return colorForValue(value, vmin, vmax);
   }
 
   function clearDataLayer() {
