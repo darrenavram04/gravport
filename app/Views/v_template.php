@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <?php
 $versionedAsset = static function (string $relativePath): string {
     $absolutePath = FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
@@ -1147,7 +1147,7 @@ $teamImageUrls = [
           title: "Scatter FAA Level 1 - Indonesia",
           desc: "Dataset scatter FAA Level 1 siap untuk analisis regional & integrasi ke model gravitasi.",
           specs: ["Coverage: Indonesia", "Format: Shapefile & CSV", "Catalog: FAA Level 1"],
-          img: "<?= base_url('images/grav-1.png'); ?>",
+          img: "<?= base_url('images/FAA_2STD.png'); ?>",
           catalogUrl: "<?= site_url('catalog') . '?q=' . rawurlencode('Scatter FAA Level 1'); ?>",
           previewUrl: "<?= site_url('catalog/view/1'); ?>",
           primaryLabel: "Open Catalog",
@@ -1163,7 +1163,7 @@ $teamImageUrls = [
           title: "Scatter CBA Level 1 - Indonesia",
           desc: "Dataset scatter CBA Level 1 siap untuk analisis regional & integrasi ke model gravitasi.",
           specs: ["Coverage: Indonesia", "Format: Shapefile & CSV", "Catalog: CBA Level 1"],
-          img: "<?= base_url('images/grav-2.png'); ?>",
+          img: "<?= base_url('images/BA_2STD.png'); ?>",
           catalogUrl: "<?= site_url('catalog') . '?q=' . rawurlencode('Scatter CBA Level 1'); ?>",
           previewUrl: "<?= site_url('catalog/view/2'); ?>",
           primaryLabel: "Open Catalog",
@@ -1179,7 +1179,7 @@ $teamImageUrls = [
           title: "Grid FAA Level 2 - Indonesia",
           desc: "Dataset raster grid FAA Level 2 siap dipakai untuk analisis spasial dan integrasi model gravitasi.",
           specs: ["Coverage: Indonesia", "Format: GeoTIFF", "Catalog: FAA Level 2"],
-          img: "<?= base_url('images/grav-3.png'); ?>",
+          img: "<?= base_url('images/FAA_Grid_2STD.png'); ?>",
           catalogUrl: "<?= site_url('catalog') . '?q=' . rawurlencode('Grid FAA Level 2'); ?>",
           previewUrl: "<?= site_url('catalog/view/3'); ?>",
           primaryLabel: "Open Catalog",
@@ -1195,7 +1195,7 @@ $teamImageUrls = [
           title: "Grid CBA Level 2 - Indonesia",
           desc: "Dataset raster grid CBA Level 2 (Complete Bouguer Anomaly) untuk analisis geospasial lanjut.",
           specs: ["Coverage: Indonesia", "Format: GeoTIFF", "Catalog: CBA Level 2"],
-          img: "<?= base_url('images/grav-4.png'); ?>",
+          img: "<?= base_url('images/BA_Grid_2STD.png'); ?>",
           catalogUrl: "<?= site_url('catalog') . '?q=' . rawurlencode('Grid CBA Level 2'); ?>",
           previewUrl: "<?= site_url('catalog/view/4'); ?>",
           primaryLabel: "Open Catalog",

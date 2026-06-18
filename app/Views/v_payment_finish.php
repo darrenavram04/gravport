@@ -47,7 +47,7 @@
       <h2>Pembayaran Berhasil!</h2>
       <p>
         Terima kasih atas pembayaran Anda.<br>
-        Akun GravPort Anda sedang diaktifkan - proses ini biasanya selesai dalam hitungan detik.<br><br>
+        Akun GravPort Anda akan diaktifkan dalam waktu 1 x 24 jam .<br><br>
         Cek email Anda untuk konfirmasi aktivasi dan langkah selanjutnya.
       </p>
     <?php else: ?>

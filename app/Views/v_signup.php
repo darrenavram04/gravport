@@ -538,7 +538,6 @@
 
       <p class="anim-fade-up" data-i18n="sg.intro">
         Pilih paket yang sesuai, dari eksplorasi individu hingga penggunaan tim profesional.
-        Semua paket memberikan akses ke 628K+ titik data gravitasi Jawa-Bali.
       </p>
 
       <div class="tier-mini-grid anim-fade-up">
@@ -734,7 +733,7 @@
             <label data-i18n="sg.lbl.pw">Password</label>
             <div class="auth-input-wrap">
               <i class="bi bi-lock fi-icon"></i>
-              <input class="auth-input" type="password" name="password" required placeholder="Min. 12 karakter" autocomplete="new-password">
+              <input class="auth-input" type="password" name="password" required placeholder="Min. 12 karakter (Gunakan simbol, angka, huruf besar, huruf kecil." autocomplete="new-password">
             </div>
           </div>
           <div class="auth-field">
