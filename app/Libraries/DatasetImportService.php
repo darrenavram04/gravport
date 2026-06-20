@@ -175,9 +175,13 @@ class DatasetImportService
 
     private function ensureMetadataTable($conn): void
     {
+        // Fresh-install: create with composite PK
         $this->query($conn, <<<SQL
 CREATE TABLE IF NOT EXISTS geoportal.dataset_metadata_xml (
-    dataset_code text PRIMARY KEY,
+    jenis_data text NOT NULL,
+    provinsi text NOT NULL,
+    level_data text NOT NULL,
+    dataset_code text,
     metadata_level text,
     source_path text NOT NULL,
     file_identifier text,
@@ -200,8 +204,38 @@ CREATE TABLE IF NOT EXISTS geoportal.dataset_metadata_xml (
     emails_json jsonb,
     contact_role text,
     raw_xml xml NOT NULL,
-    imported_at timestamptz NOT NULL DEFAULT now()
+    imported_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (jenis_data, provinsi, level_data)
 )
+SQL
+        );
+
+        // Migration for tables created with old dataset_code PRIMARY KEY schema
+        $this->query($conn, <<<SQL
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'geoportal'
+          AND table_name   = 'dataset_metadata_xml'
+          AND column_name  = 'jenis_data'
+    ) THEN
+        ALTER TABLE geoportal.dataset_metadata_xml
+            ADD COLUMN jenis_data text,
+            ADD COLUMN provinsi   text,
+            ADD COLUMN level_data text;
+        DELETE FROM geoportal.dataset_metadata_xml;
+        ALTER TABLE geoportal.dataset_metadata_xml
+            DROP CONSTRAINT IF EXISTS dataset_metadata_xml_pkey;
+        ALTER TABLE geoportal.dataset_metadata_xml
+            ALTER COLUMN dataset_code DROP NOT NULL,
+            ALTER COLUMN jenis_data SET NOT NULL,
+            ALTER COLUMN provinsi   SET NOT NULL,
+            ALTER COLUMN level_data SET NOT NULL;
+        ALTER TABLE geoportal.dataset_metadata_xml
+            ADD PRIMARY KEY (jenis_data, provinsi, level_data);
+    END IF;
+END $$
 SQL
         );
     }
@@ -246,7 +280,7 @@ SQL
         $this->query($conn, "CREATE INDEX IF NOT EXISTS {$indexName} ON {$table} USING GIST (grid_geom)");
     }
 
-    public function importMetadataXmlFile(string $datasetCode, string $xmlPath): array
+    public function importMetadataXmlFile(string $jenisData, string $provinsi, string $levelData, string $xmlPath): array
     {
         $db   = Database::connect();
         $conn = $db->connID;
@@ -255,10 +289,10 @@ SQL
             $conn = $db->connID;
         }
         $this->ensureMetadataTable($conn);
-        return $this->importMetadataXml($conn, $datasetCode, $xmlPath);
+        return $this->importMetadataXml($conn, $jenisData, $provinsi, $levelData, $xmlPath);
     }
 
-    private function importMetadataXml($conn, string $datasetCode, string $xmlPath): array
+    private function importMetadataXml($conn, string $jenisData, string $provinsi, string $levelData, string $xmlPath): array
     {
         if (!is_file($xmlPath)) {
             throw new RuntimeException("File metadata XML tidak ditemukan: {$xmlPath}");
@@ -271,15 +305,13 @@ SQL
 
         $data = $this->parseMetadataXml($xmlPath);
 
-        $metadataLevel = match(true) {
-            str_ends_with($datasetCode, '_l1') => 'level1',
-            str_ends_with($datasetCode, '_l2') => 'level2',
-            default                            => $datasetCode,
-        };
+        $metadataLevel = $levelData === 'Level 1' ? 'level1' : 'level2';
 
         $this->queryParams($conn, <<<SQL
 INSERT INTO geoportal.dataset_metadata_xml (
-    dataset_code,
+    jenis_data,
+    provinsi,
+    level_data,
     metadata_level,
     source_path,
     file_identifier,
@@ -304,10 +336,10 @@ INSERT INTO geoportal.dataset_metadata_xml (
     raw_xml,
     imported_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, NULLIF($7, '')::date, $8, $9, $10, $11, $12, $13, $14, $15,
-    $16, $17, $18, $19, $20, $21::jsonb, $22, $23::xml, now()
+    $1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, '')::date, $10, $11, $12, $13, $14, $15, $16,
+    $17, $18, $19, $20, $21, $22::jsonb, $23, $24::xml, now()
 )
-ON CONFLICT (dataset_code) DO UPDATE SET
+ON CONFLICT (jenis_data, provinsi, level_data) DO UPDATE SET
     metadata_level = EXCLUDED.metadata_level,
     source_path = EXCLUDED.source_path,
     file_identifier = EXCLUDED.file_identifier,
@@ -333,7 +365,9 @@ ON CONFLICT (dataset_code) DO UPDATE SET
     imported_at = now()
 SQL,
             [
-                $datasetCode,
+                $jenisData,
+                $provinsi,
+                $levelData,
                 $metadataLevel,
                 $this->relativePath($xmlPath),
                 $data['file_identifier'],

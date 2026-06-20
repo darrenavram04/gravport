@@ -275,18 +275,26 @@ class Catalog extends BaseController
             }
         }
 
-        $dataset     = $this->catalogEntry($id);
-        $datasetCode = $dataset['dataset_code'] ?? '';
+        $dataset      = $this->catalogEntry($id);
+        $provinceName = $dataset['province_name'] ?? '';
+        $levelData    = ($dataset['level_key'] ?? '') === 'level1' ? 'Level 1' : 'Level 2';
 
-        // Prefer the official CatMD XML uploaded by superadmin for this specific dataset
+        // Prefer the official CatMD XML uploaded by superadmin for this province + level
         $db  = Database::connect();
-        $row = $db->query(
-            "SELECT raw_xml, file_identifier, title FROM geoportal.dataset_metadata_xml WHERE dataset_code = ? LIMIT 1",
-            [$datasetCode]
-        )->getRowArray();
+        $row = null;
+        if ($provinceName !== '') {
+            $row = $db->query(
+                "SELECT raw_xml, file_identifier, title, jenis_data, provinsi, level_data
+                 FROM geoportal.dataset_metadata_xml
+                 WHERE provinsi = ? AND level_data = ?
+                 ORDER BY jenis_data
+                 LIMIT 1",
+                [$provinceName, $levelData]
+            )->getRowArray();
+        }
 
         if (!empty($row['raw_xml'])) {
-            $safeTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $datasetCode);
+            $safeTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$row['jenis_data']}_{$provinceName}_{$levelData}");
             $filename  = 'metadata_' . $safeTitle . '.xml';
             return $this->response
                 ->setHeader('Content-Type', 'application/xml; charset=utf-8')

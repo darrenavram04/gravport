@@ -464,17 +464,42 @@
       <form method="post" action="<?= site_url('admin/upload-metadata-xml') ?>" enctype="multipart/form-data"
             style="display:flex;flex-direction:column;gap:10px;">
         <?= csrf_field() ?>
+
         <div>
-          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:4px;">Dataset</label>
-          <select name="dataset_code" required
+          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:6px;">Jenis Data</label>
+          <div style="display:flex;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:.84rem;cursor:pointer;">
+              <input type="radio" name="jenis_data" value="Airborne" required> Airborne
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:.84rem;cursor:pointer;">
+              <input type="radio" name="jenis_data" value="Terestrial"> Terestrial
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:4px;">Provinsi</label>
+          <select name="provinsi" required
                   style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.84rem;color:#142033;">
-            <option value="">-- Pilih Dataset --</option>
-            <option value="faa_l1">Free Air Anomaly Level 1</option>
-            <option value="cba_l1">Complete Bouguer Anomaly Level 1</option>
-            <option value="faa_l2">Free Air Anomaly Level 2</option>
-            <option value="cba_l2">Complete Bouguer Anomaly Level 2</option>
+            <option value="">-- Pilih Provinsi --</option>
+            <?php foreach (['Aceh','Sumatera Utara','Sumatera Barat','Riau','Kepulauan Riau','Jambi','Sumatera Selatan','Kepulauan Bangka Belitung','Bengkulu','Lampung','DKI Jakarta','Jawa Barat','Banten','Jawa Tengah','DI Yogyakarta','Jawa Timur','Bali','Nusa Tenggara Barat','Nusa Tenggara Timur','Kalimantan Barat','Kalimantan Tengah','Kalimantan Selatan','Kalimantan Timur','Kalimantan Utara','Sulawesi Utara','Gorontalo','Papua','Papua Barat','Papua Selatan','Papua Tengah','Papua Pegunungan','Papua Barat Daya'] as $p): ?>
+              <option value="<?= esc($p) ?>"><?= esc($p) ?></option>
+            <?php endforeach ?>
           </select>
         </div>
+
+        <div>
+          <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:6px;">Level Data</label>
+          <div style="display:flex;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:.84rem;cursor:pointer;">
+              <input type="radio" name="level_data" value="Level 1" required> Level 1
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:.84rem;cursor:pointer;">
+              <input type="radio" name="level_data" value="Level 2"> Level 2
+            </label>
+          </div>
+        </div>
+
         <div>
           <label style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6b7a8f;display:block;margin-bottom:4px;">File XML</label>
           <input type="file" name="metadata_xml" accept=".xml" required

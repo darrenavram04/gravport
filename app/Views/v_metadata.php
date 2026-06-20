@@ -26,7 +26,7 @@ $sectionDescriptions = [
 ];
 $fieldDescriptions = [
     'metadata_file_identifier' => 'Gunakan identifier sebagai identitas unik file metadata. Format yang direkomendasikan mengikuti kombinasi jenis data, provinsi, dan level data.',
-    'jenis_data' => 'Pilih metode pengukuran atau jenis data yang Anda miliki, antara Airborne atau Gravimetri.',
+    'jenis_data' => 'Pilih metode pengukuran atau jenis data yang Anda miliki, antara Airborne atau Terestrial.',
     'provinsi' => 'Pilih nama wilayah tingkat provinsi yang menjadi cakupan area data Anda.',
     'level_data' => 'Pilih level 1 jika data berupa SHP atau CSV, dan level 2 jika data yang dimiliki berupa TIFF.',
     'bahasa' => 'Pilih bahasa metadata. Anda dapat menggunakan English sebagai default, atau Bahasa Indonesia jika seluruh isi metadata ditulis dalam bahasa Indonesia.',
@@ -330,32 +330,17 @@ $errors = session()->getFlashdata('errors') ?? [];
         </div>
 
         <div class="meta-grid">
-          <label class="meta-field">
-            <span>Metadata File Identifier</span>
-            <p class="meta-field__help">
-              <?= esc($fieldDescriptions['metadata_file_identifier']) ?>
-              <code>Metadata_Gravimetri_Banten_Level_1</code>
-            </p>
-            <input
-              name="metadata_file_identifier"
-              type="text"
-              value="<?= esc(old('metadata_file_identifier')) ?>"
-              placeholder="Metadata_Gravimetri_Banten_Level_1"
-              required
-            >
-          </label>
-
           <div class="meta-field">
             <legend>Jenis Data</legend>
-            <p class="meta-field__help"><?= esc($fieldDescriptions['jenis_data']) ?></p>
+            <p class="meta-field__help">Pilih metode pengukuran atau jenis data yang Anda miliki.</p>
             <div class="meta-choice-group">
               <label class="meta-choice">
-                <input type="radio" name="jenis_data" value="Airborne" <?= old('jenis_data') === 'Airborne' ? 'checked' : '' ?> required>
+                <input type="radio" name="jenis_data" id="jenis_airborne" value="Airborne" <?= old('jenis_data') === 'Airborne' ? 'checked' : '' ?> required onchange="updateFileIdentifier()">
                 <span>Airborne</span>
               </label>
               <label class="meta-choice">
-                <input type="radio" name="jenis_data" value="Gravimetri" <?= old('jenis_data', 'Gravimetri') === 'Gravimetri' ? 'checked' : '' ?>>
-                <span>Gravimetri</span>
+                <input type="radio" name="jenis_data" id="jenis_terestrial" value="Terestrial" <?= old('jenis_data') === 'Terestrial' ? 'checked' : '' ?> onchange="updateFileIdentifier()">
+                <span>Terestrial</span>
               </label>
             </div>
           </div>
@@ -363,7 +348,7 @@ $errors = session()->getFlashdata('errors') ?? [];
           <label class="meta-field">
             <span>Provinsi</span>
             <p class="meta-field__help"><?= esc($fieldDescriptions['provinsi']) ?></p>
-            <select name="provinsi" required>
+            <select name="provinsi" id="provinsi_select" required onchange="updateFileIdentifier()">
               <option value="">Pilih provinsi</option>
               <?php foreach ($provinces as $province): ?>
                 <option value="<?= esc($province) ?>" <?= old('provinsi') === $province ? 'selected' : '' ?>><?= esc($province) ?></option>
@@ -376,15 +361,33 @@ $errors = session()->getFlashdata('errors') ?? [];
             <p class="meta-field__help"><?= esc($fieldDescriptions['level_data']) ?></p>
             <div class="meta-choice-group">
               <label class="meta-choice">
-                <input type="radio" name="level_data" value="Level 1" <?= old('level_data', 'Level 1') === 'Level 1' ? 'checked' : '' ?> required>
+                <input type="radio" name="level_data" id="level_1" value="Level 1" <?= old('level_data', 'Level 1') === 'Level 1' ? 'checked' : '' ?> required onchange="updateFileIdentifier()">
                 <span>Level 1</span>
               </label>
               <label class="meta-choice">
-                <input type="radio" name="level_data" value="Level 2" <?= old('level_data') === 'Level 2' ? 'checked' : '' ?>>
+                <input type="radio" name="level_data" id="level_2" value="Level 2" <?= old('level_data') === 'Level 2' ? 'checked' : '' ?> onchange="updateFileIdentifier()">
                 <span>Level 2</span>
               </label>
             </div>
           </div>
+
+          <label class="meta-field">
+            <span>Metadata File Identifier</span>
+            <p class="meta-field__help">
+              Dibuat otomatis dari kombinasi jenis data, provinsi, dan level data.
+              Contoh: <code>Metadata_Airborne_Banten_Level_1</code>
+            </p>
+            <input
+              name="metadata_file_identifier"
+              id="metadata_file_identifier"
+              type="text"
+              value="<?= esc(old('metadata_file_identifier')) ?>"
+              placeholder="Metadata_Airborne_Banten_Level_1"
+              readonly
+              style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);cursor:default;"
+              required
+            >
+          </label>
 
           <label class="meta-field">
             <span>Dataset Tujuan</span>
@@ -748,6 +751,23 @@ $errors = session()->getFlashdata('errors') ?? [];
     }
     update();
 })();
+
+function updateFileIdentifier() {
+    const jenis = document.querySelector('input[name="jenis_data"]:checked');
+    const provinsi = document.getElementById('provinsi_select');
+    const level = document.querySelector('input[name="level_data"]:checked');
+    const field = document.getElementById('metadata_file_identifier');
+    if (!field) return;
+    const j = jenis ? jenis.value : '';
+    const p = provinsi ? provinsi.value : '';
+    const l = level ? level.value.replace(' ', '_') : '';
+    if (j && p && l) {
+        field.value = 'Metadata_' + j + '_' + p + '_' + l;
+    } else {
+        field.value = '';
+    }
+}
+document.addEventListener('DOMContentLoaded', updateFileIdentifier);
 </script>
 </body>
 </html>

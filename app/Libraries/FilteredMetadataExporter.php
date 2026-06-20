@@ -10,27 +10,37 @@ class FilteredMetadataExporter
 {
     public function export(array $dataset, array $filters = []): array
     {
-        $db = Database::connect();
-        $row = $db->query('
-            SELECT
-                metadata_level,
-                source_path,
-                file_identifier,
-                parent_identifier,
-                hierarchy_level_name,
-                metadata_date,
-                language_code,
-                character_set,
-                title,
-                abstract,
-                organisation_name,
-                contact_role,
-                country,
-                raw_xml
-            FROM geoportal.dataset_metadata_xml
-            WHERE metadata_level = ?
-            LIMIT 1
-        ', [(string) ($dataset['metadata_level'] ?? '')])->getRowArray();
+        $db           = Database::connect();
+        $provinceName = (string) ($dataset['province_name'] ?? '');
+        $levelData    = ($dataset['level_key'] ?? '') === 'level1' ? 'Level 1' : 'Level 2';
+
+        $row = null;
+        if ($provinceName !== '') {
+            $row = $db->query('
+                SELECT
+                    jenis_data,
+                    provinsi,
+                    level_data,
+                    metadata_level,
+                    source_path,
+                    file_identifier,
+                    parent_identifier,
+                    hierarchy_level_name,
+                    metadata_date,
+                    language_code,
+                    character_set,
+                    title,
+                    abstract,
+                    organisation_name,
+                    contact_role,
+                    country,
+                    raw_xml
+                FROM geoportal.dataset_metadata_xml
+                WHERE provinsi = ? AND level_data = ?
+                ORDER BY jenis_data
+                LIMIT 1
+            ', [$provinceName, $levelData])->getRowArray();
+        }
 
         if (!$row) {
             throw new RuntimeException('Metadata XML untuk dataset ini belum tersedia.');

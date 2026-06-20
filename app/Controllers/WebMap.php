@@ -367,27 +367,65 @@ class WebMap extends BaseController
     public function downloadMetadata()
     {
         try {
-            $input = $this->inputPayload();
+            $input       = $this->inputPayload();
             $datasetCode = (string) ($input['dataset'] ?? 'faa_l1');
-            $dataset = $this->dataset($datasetCode);
-            $filters = $this->filtersFromInput($input);
-            $metadataDataset = array_merge($dataset, [
-                'dataset_code' => $datasetCode,
-                'title' => $dataset['label'],
-                'spatial_scope' => $this->metadataScope($filters),
-            ]);
+            $dataset     = $this->dataset($datasetCode);
+            $filters     = $this->filtersFromInput($input);
 
-            if (!empty($filters['province_id'])) {
-                $metadataDataset['province_id'] = (int) $filters['province_id'];
-                $metadataDataset['province_name'] = $this->provinceName((int) $filters['province_id']);
-                $filters['province_name'] = $metadataDataset['province_name'];
-            } elseif ($filters['geometry'] !== null) {
-                $filters['geometry_type'] = $this->geometryType($filters['geometry']);
+            $levelData     = ($dataset['metadata_level'] ?? 'level1') === 'level1' ? 'Level 1' : 'Level 2';
+            $provinceNames = $this->resolveMetadataProvinces($filters);
+
+            $db = \Config\Database::connect();
+            if ($provinceNames === null) {
+                $rows = $db->query(
+                    "SELECT raw_xml, jenis_data, provinsi, level_data
+                     FROM geoportal.dataset_metadata_xml
+                     WHERE level_data = ?
+                     ORDER BY provinsi, jenis_data",
+                    [$levelData]
+                )->getResultArray();
+            } else {
+                $placeholders = implode(',', array_fill(0, count($provinceNames), '?'));
+                $rows = $db->query(
+                    "SELECT raw_xml, jenis_data, provinsi, level_data
+                     FROM geoportal.dataset_metadata_xml
+                     WHERE provinsi IN ($placeholders) AND level_data = ?
+                     ORDER BY provinsi, jenis_data",
+                    array_merge($provinceNames, [$levelData])
+                )->getResultArray();
             }
 
-            $export = $this->metadataExporter->export($metadataDataset, $filters);
+            if (empty($rows)) {
+                throw new \RuntimeException('Metadata XML untuk wilayah ini belum tersedia.');
+            }
 
-            return $this->response->download($export['path'], null)->setFileName($export['filename']);
+            if (count($rows) === 1) {
+                $row  = $rows[0];
+                $safe = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$row['jenis_data']}_{$row['provinsi']}_{$row['level_data']}");
+                $this->logWebMapDownload($datasetCode, 'metadata', $filters);
+                return $this->response
+                    ->setHeader('Content-Type', 'application/xml; charset=utf-8')
+                    ->setHeader('Content-Disposition', 'attachment; filename="metadata_' . $safe . '.xml"')
+                    ->setBody((string) $row['raw_xml']);
+            }
+
+            // Multiple provinces / jenis_data → bundle as ZIP
+            $safeCode = preg_replace('/[^A-Za-z0-9_]/', '_', $datasetCode);
+            $zipName  = 'metadata_' . $safeCode . '_' . date('Ymd_His') . '.zip';
+            $zipPath  = $this->exportDirectory('metadata') . DIRECTORY_SEPARATOR . $zipName;
+
+            if (is_file($zipPath)) {
+                unlink($zipPath);
+            }
+
+            $archive = new \PharData($zipPath);
+            foreach ($rows as $row) {
+                $safe = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$row['jenis_data']}_{$row['provinsi']}_{$row['level_data']}");
+                $archive->addFromString('metadata_' . $safe . '.xml', (string) $row['raw_xml']);
+            }
+
+            $this->logWebMapDownload($datasetCode, 'metadata', $filters);
+            return $this->response->download($zipPath, null)->setFileName($zipName);
         } catch (\Throwable $e) {
             return $this->response->setStatusCode(400)->setJSON([
                 'error' => $e->getMessage(),
@@ -1441,6 +1479,39 @@ class WebMap extends BaseController
         }
 
         return $geometry['type'] ?? null;
+    }
+
+    /**
+     * Returns the list of canonical province names relevant to the given spatial filters,
+     * or null when no spatial filter is active (caller should query all provinces).
+     */
+    private function resolveMetadataProvinces(array $filters): ?array
+    {
+        if (!empty($filters['province_id'])) {
+            $name = $this->provinceName((int) $filters['province_id']);
+            return $name !== null ? [$name] : null;
+        }
+
+        if (!empty($filters['geometry'])) {
+            $geojson = is_array($filters['geometry'])
+                ? json_encode($filters['geometry'])
+                : (string) $filters['geometry'];
+
+            $db   = \Config\Database::connect();
+            $hits = $db->query(
+                "SELECT adm_name
+                 FROM geoportal.polygon_adm_province
+                 WHERE ST_Intersects(geom, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))
+                 ORDER BY adm_name",
+                [$geojson]
+            )->getResultArray();
+
+            if (!empty($hits)) {
+                return array_column($hits, 'adm_name');
+            }
+        }
+
+        return null;
     }
 
     private function metadataScope(array $filters): string

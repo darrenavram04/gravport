@@ -194,10 +194,21 @@ class AdminHub extends BaseController
 
     public function uploadMetadataXml()
     {
-        $validCodes  = ['faa_l1', 'cba_l1', 'faa_l2', 'cba_l2'];
-        $datasetCode = $this->request->getPost('dataset_code');
-        if (!in_array($datasetCode, $validCodes, true)) {
-            return redirect()->back()->with('xml_error', 'Pilih dataset yang valid.');
+        $validJenis  = ['Airborne', 'Terestrial'];
+        $validLevels = ['Level 1', 'Level 2'];
+
+        $jenisData = $this->request->getPost('jenis_data');
+        $provinsi  = trim((string) $this->request->getPost('provinsi'));
+        $levelData = $this->request->getPost('level_data');
+
+        if (!in_array($jenisData, $validJenis, true)) {
+            return redirect()->back()->with('xml_error', 'Pilih jenis data yang valid (Airborne atau Terestrial).');
+        }
+        if ($provinsi === '') {
+            return redirect()->back()->with('xml_error', 'Pilih provinsi.');
+        }
+        if (!in_array($levelData, $validLevels, true)) {
+            return redirect()->back()->with('xml_error', 'Pilih level data yang valid (Level 1 atau Level 2).');
         }
 
         $file = $this->request->getFile('metadata_xml');
@@ -214,22 +225,17 @@ class AdminHub extends BaseController
             mkdir($uploadDir, 0777, true);
         }
 
-        $safeName = 'metadata_' . $datasetCode . '_' . date('Ymd_His') . '.xml';
+        $slug     = preg_replace('/[^A-Za-z0-9]+/', '_', "{$jenisData}_{$provinsi}_{$levelData}");
+        $safeName = 'metadata_' . $slug . '_' . date('Ymd_His') . '.xml';
         $file->move($uploadDir, $safeName);
         $xmlPath = $uploadDir . DIRECTORY_SEPARATOR . $safeName;
 
         try {
             $importer = new DatasetImportService();
-            $report   = $importer->importMetadataXmlFile($datasetCode, $xmlPath);
+            $report   = $importer->importMetadataXmlFile($jenisData, $provinsi, $levelData, $xmlPath);
 
-            $labels = [
-                'faa_l1' => 'Free Air Anomaly Level 1',
-                'cba_l1' => 'Complete Bouguer Anomaly Level 1',
-                'faa_l2' => 'Free Air Anomaly Level 2',
-                'cba_l2' => 'Complete Bouguer Anomaly Level 2',
-            ];
             return redirect()->to(site_url('dataset/manage'))
-                ->with('xml_success', "Metadata {$labels[$datasetCode]} berhasil diupload. File identifier: {$report['file_identifier']}");
+                ->with('xml_success', "Metadata {$jenisData} – {$provinsi} – {$levelData} berhasil diupload. File identifier: {$report['file_identifier']}");
         } catch (\Throwable $e) {
             return redirect()->back()->with('xml_error', 'Gagal memproses XML: ' . $e->getMessage());
         }
