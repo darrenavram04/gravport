@@ -167,6 +167,7 @@
             <td>
               <div style="font-weight:700;font-size:.85rem"><?= esc($s['full_name'] ?? '#'.(int)($s['acc_id'] ?? 0)) ?></div>
               <div style="font-size:.75rem;color:#6b7a8f"><?= esc($s['email'] ?? '') ?></div>
+              <div style="font-size:.7rem;color:#aab4c0">acc_id: <?= (int)($s['acc_id'] ?? 0) ?></div>
             </td>
             <td>
               <?php $tierLabel = $s['tier_name'] ?? null; ?>
@@ -203,6 +204,53 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ── Assign / Renew Subscription ── -->
+  <div class="card-section">
+    <h2><i class="bi bi-person-plus"></i> Assign / Perpanjang Langganan</h2>
+    <?php if (session()->getFlashdata('success')): ?>
+    <div style="background:#C6EFCE;color:#217346;padding:10px 16px;border-radius:12px;margin-bottom:16px;font-size:.85rem;font-weight:600">
+      <?= esc(session()->getFlashdata('success')) ?>
+    </div>
+    <?php endif; ?>
+    <?php if (session()->getFlashdata('error')): ?>
+    <div style="background:#fce8e8;color:#b91c1c;padding:10px 16px;border-radius:12px;margin-bottom:16px;font-size:.85rem;font-weight:600">
+      <?= esc(session()->getFlashdata('error')) ?>
+    </div>
+    <?php endif; ?>
+    <p style="font-size:.82rem;color:#6b7a8f;margin:0 0 16px">Gunakan <strong>acc_id</strong> yang tertera di kolom PENGGUNA pada tabel di atas.</p>
+    <form method="POST" action="<?= site_url('admin/subscriptions/assign') ?>">
+      <?= csrf_field() ?>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>acc_id Pengguna</label>
+          <input type="number" name="user_id" min="1" required placeholder="cth: 18">
+        </div>
+        <div class="form-group">
+          <label>Tier</label>
+          <select name="tier_id" required>
+            <option value="">-- Pilih Tier --</option>
+            <?php foreach ($tiers as $t): ?>
+            <option value="<?= (int)$t['tier_id'] ?>"><?= esc($t['tier_name']) ?> — Rp <?= number_format((float)($t['price_monthly']??0),0,',','.') ?>/bln</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tanggal Berakhir</label>
+          <input type="date" name="end_date" required value="<?= date('Y-m-d', strtotime('+1 month')) ?>">
+        </div>
+        <div class="form-group">
+          <label>Catatan (opsional)</label>
+          <input type="text" name="notes" placeholder="cth: Manual renewal">
+        </div>
+      </div>
+      <input type="hidden" name="payment_method" value="manual">
+      <input type="hidden" name="payment_ref" value="ADMIN-MANUAL">
+      <button type="submit" class="btn btn-primary" style="margin-top:12px;">
+        <i class="bi bi-check-circle"></i> Assign Langganan
+      </button>
+    </form>
   </div>
 
   <!-- ── Tier Rules ── -->
