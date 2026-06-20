@@ -170,7 +170,7 @@
             </td>
             <td>
               <?php $tierLabel = $s['tier_name'] ?? null; ?>
-              <span class="badge badge-<?= esc($tierLabel ?? '') ?>">
+              <span class="badge badge-<?= esc(strtolower($tierLabel ?? '')) ?>">
                 <?= esc(strtoupper($tierLabel ?? ('Tier '.(int)($s['tier_id'] ?? 0)))) ?>
               </span>
             </td>
