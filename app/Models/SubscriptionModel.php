@@ -57,7 +57,7 @@ class SubscriptionModel
             SELECT s.*, t.tier_name, t.price_monthly AS monthly_fee,
                    a.acc_email AS email, a.acc_name AS full_name
             FROM geoportal.subscriptions s
-            JOIN geoportal.subscriptions_tier t ON t.tier_id = s.tier_id
+            LEFT JOIN geoportal.subscriptions_tier t ON t.tier_id = s.tier_id
             LEFT JOIN geoportal.accounts a ON a.acc_id = s.acc_id
             ORDER BY s.created_at DESC
             LIMIT 200

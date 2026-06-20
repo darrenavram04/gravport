@@ -121,6 +121,59 @@ class RegistrationController extends BaseController
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // POST /register/renew — perpanjang/upgrade langganan (akun sudah ada)
+    // ─────────────────────────────────────────────────────────────────
+
+    public function submitRenew()
+    {
+        if (!auth_is_logged_in() || auth_is_guest()) {
+            return redirect()->to(site_url('signup'));
+        }
+
+        $tier  = (string) $this->request->getPost('tier_name');
+        $cycle = (string) $this->request->getPost('billing_cycle');
+
+        if (!in_array($tier, ['lite', 'solo', 'pro'], true)) {
+            return redirect()->back()->withInput()->with('error', 'Pilih paket Lite atau Pro.');
+        }
+        if (!in_array($cycle, self::VALID_CYCLES, true)) {
+            $cycle = 'monthly';
+        }
+
+        $userId = (int) (session()->get('user_id') ?? 0);
+        if ($userId <= 0) {
+            return redirect()->to(site_url('login'))->with('error', 'Sesi tidak valid. Silakan login ulang.');
+        }
+
+        $db = \Config\Database::connect();
+        $account = $db->query(
+            'SELECT acc_id, acc_email, acc_name FROM geoportal.accounts WHERE acc_id = ? LIMIT 1',
+            [$userId]
+        )->getRowArray();
+
+        if (!$account) {
+            return redirect()->to(site_url('login'))->with('error', 'Akun tidak ditemukan.');
+        }
+
+        // Redirect ke payment yang sudah ada jika sudah punya pending aktif
+        $existingPending = $this->pending->findActiveByEmail($account['acc_email']);
+        if ($existingPending !== null) {
+            return redirect()->to(site_url('payment/pay/individual/' . $existingPending['pending_id']));
+        }
+
+        // Buat pending baru (akun sudah ada di auth-api, activateIndividual akan reuse-nya)
+        $pendingId = $this->pending->create([
+            'full_name'     => $account['acc_name'],
+            'email'         => $account['acc_email'],
+            'password_hash' => password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT, ['cost' => 12]),
+            'tier_name'     => $tier,
+            'billing_cycle' => $cycle,
+        ]);
+
+        return redirect()->to(site_url('payment/pay/individual/' . $pendingId));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     // POST /register/team (paket Team/Bisnis)
     // ─────────────────────────────────────────────────────────────────
 

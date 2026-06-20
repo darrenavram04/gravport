@@ -169,8 +169,9 @@
               <div style="font-size:.75rem;color:#6b7a8f"><?= esc($s['email'] ?? '') ?></div>
             </td>
             <td>
-              <span class="badge badge-<?= esc($s['tier_name'] ?? '') ?>">
-                <?= esc(strtoupper($s['tier_name'] ?? '-')) ?>
+              <?php $tierLabel = $s['tier_name'] ?? null; ?>
+              <span class="badge badge-<?= esc($tierLabel ?? '') ?>">
+                <?= esc(strtoupper($tierLabel ?? ('Tier '.(int)($s['tier_id'] ?? 0)))) ?>
               </span>
             </td>
             <td style="font-size:.82rem"><?= esc($s['start_date'] ?? '-') ?></td>

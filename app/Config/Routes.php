@@ -18,6 +18,7 @@ $routes->post('login',           'AuthController::loginPost');
 $routes->get('login/guest',      'AuthController::loginAsGuest');
 $routes->get('signup',                   'RegistrationController::showForm');
 $routes->post('register/individual',     'RegistrationController::submitIndividual');
+$routes->post('register/renew',          'RegistrationController::submitRenew');
 $routes->post('register/team',           'RegistrationController::submitTeam');
 $routes->post('register/admin-inquiry',  'RegistrationController::submitAdminInquiry');
 $routes->get('pending-payment',          'RegistrationController::pendingPayment');

@@ -1,3 +1,4 @@
+<?php $isRenewing = auth_is_logged_in() && !auth_is_guest(); ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -530,7 +531,9 @@
         </div>
       </div>
 
-      <div class="auth-kicker anim-fade-up" data-i18n="sg.kicker">Mulai Berlangganan</div>
+      <div class="auth-kicker anim-fade-up" <?= !$isRenewing ? 'data-i18n="sg.kicker"' : '' ?>>
+        <?= $isRenewing ? 'Perpanjang Langganan' : 'Mulai Berlangganan' ?>
+      </div>
 
       <h1 class="anim-fade-up">
         <span data-i18n="sg.h1">Data gravitasi untuk </span><em data-i18n="sg.h1.em">setiap kebutuhan.</em>
@@ -653,10 +656,17 @@
 
       <!-- ── LANGKAH 1: Pilih Paket ────────────────────────────────────────── -->
       <div class="auth-step hidden" id="step1">
+        <?php if (!$isRenewing): ?>
         <button class="step-back" onclick="goBack(0)"><i class="bi bi-arrow-left"></i> <span data-i18n="sg.back">Kembali</span></button>
+        <?php endif; ?>
         <div class="step-head">
+          <?php if ($isRenewing): ?>
+          <h2>Perpanjang / Upgrade Langganan</h2>
+          <p>Pilih paket untuk melanjutkan akses Anda ke data gravitasi.</p>
+          <?php else: ?>
           <h2 data-i18n="sg.h2.pkg">Pilih Paket</h2>
           <p data-i18n="sg.p.pkg">Bayar bulanan atau hemat 2 bulan dengan paket tahunan.</p>
+          <?php endif; ?>
         </div>
 
         <div class="billing-toggle">
@@ -707,14 +717,24 @@
       <div class="auth-step hidden" id="step2Individual">
         <button class="step-back" onclick="goBack(1)"><i class="bi bi-arrow-left"></i> <span data-i18n="sg.back">Kembali</span></button>
         <div class="step-head">
+          <?php if ($isRenewing): ?>
+          <h2>Konfirmasi Perpanjangan</h2>
+          <?php else: ?>
           <h2 data-i18n="sg.h2.user">Informasi Pendaftaran</h2>
+          <?php endif; ?>
           <p>Paket <strong id="lblTierIndividual" style="color:var(--amber);"></strong> ·
              tagihan <strong id="lblCycleIndividual" style="color:var(--amber);"></strong></p>
         </div>
-        <form action="<?= site_url('register/individual') ?>" method="POST">
+        <form action="<?= site_url($isRenewing ? 'register/renew' : 'register/individual') ?>" method="POST">
           <?= csrf_field() ?>
           <input type="hidden" name="tier_name" id="inputTierName">
           <input type="hidden" name="billing_cycle" id="inputBillingCycle">
+          <?php if ($isRenewing): ?>
+          <div class="auth-note" style="margin-bottom:16px;">
+            <i class="bi bi-person-check-fill" style="color:var(--amber);margin-right:6px;"></i>
+            Subscription baru akan ditautkan ke akun Anda yang sudah terdaftar. Tidak diperlukan data tambahan.
+          </div>
+          <?php else: ?>
           <div class="auth-field">
             <label data-i18n="sg.lbl.name">Nama Lengkap</label>
             <div class="auth-input-wrap">
@@ -743,11 +763,14 @@
               <input class="auth-input" type="password" name="password_confirmation" required placeholder="Ulangi password" autocomplete="new-password">
             </div>
           </div>
+          <?php endif; ?>
           <div class="auth-note">
             Setelah mendaftar, instruksi pembayaran akan dikirim ke email Anda.
             Akun aktif dalam 1×24 jam kerja setelah pembayaran dikonfirmasi.
           </div>
-          <button type="submit" class="auth-submit">Daftar &amp; Lanjutkan ke Pembayaran</button>
+          <button type="submit" class="auth-submit">
+            <?= $isRenewing ? 'Perpanjang &amp; Lanjutkan ke Pembayaran' : 'Daftar &amp; Lanjutkan ke Pembayaran' ?>
+          </button>
         </form>
       </div>
 
@@ -809,6 +832,7 @@
 
 <script>
   /* ── State ──────────────────────────────────────────────────────────────── */
+  const IS_RENEWING = <?= ($isRenewing ? 'true' : 'false') ?>;
   let currentPath  = null;
   let selectedTier = null;
   let billingCycle = 'monthly';
@@ -890,6 +914,10 @@
     if (!selectedTier) { alert('Pilih paket terlebih dahulu.'); return; }
 
     if (selectedTier === 'Enterprise') {
+      if (IS_RENEWING) {
+        alert('Untuk perpanjangan paket Enterprise, silakan hubungi admin melalui email atau Admin Hub.');
+        return;
+      }
       document.getElementById('inputBillingCycleTeam').value = billingCycle;
       document.getElementById('lblCycleTeam').textContent = billingCycle === 'annual' ? 'Tahunan' : 'Bulanan';
       showStep('step2Team');
@@ -902,6 +930,13 @@
     }
     updateDots(2);
   }
+
+  /* ── Auto-skip step 0 for logged-in renewal users ──────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    if (IS_RENEWING) {
+      choosePath('user');
+    }
+  });
 
   /* ── Cinematic loader ───────────────────────────────────────────────────── */
   setTimeout(() => document.getElementById('auth-bar').style.width = '100%', 60);
