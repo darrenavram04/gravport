@@ -1232,12 +1232,25 @@ class WebMap extends BaseController
         }
 
         $db = Database::connect($dataset['db']);
-        $row = $db->query('
-            SELECT ST_AsTIFF(' . $dataset['raster_column'] . ') AS tif
-            FROM ' . $dataset['table'] . '
-            WHERE ' . $dataset['id_column'] . ' = ?
-            LIMIT 1
-        ', [$rid])->getRowArray();
+
+        try {
+            $result = $db->query('
+                SELECT ST_AsTIFF(' . $dataset['raster_column'] . ') AS tif
+                FROM ' . $dataset['table'] . '
+                WHERE ' . $dataset['id_column'] . ' = ?
+                LIMIT 1
+            ', [$rid]);
+        } catch (\Throwable $e) {
+            log_message('error', '[WebMap::rasterBinaryByGrid] ST_AsTIFF query failed for ' . $datasetCode . ' rid=' . $rid . ': ' . $e->getMessage());
+            return null;
+        }
+
+        if (!$result) {
+            log_message('error', '[WebMap::rasterBinaryByGrid] db->query() returned false for ' . $datasetCode . ' rid=' . $rid);
+            return null;
+        }
+
+        $row = $result->getRowArray();
 
         if (!$row || empty($row['tif'])) {
             return null;
@@ -1301,14 +1314,15 @@ class WebMap extends BaseController
     {
         if (!empty($filters['province_id'])) {
             $db = Database::connect();
-            $row = $db->query('
+            $qProvince = $db->query('
                 SELECT
                     ST_AsGeoJSON(geom) AS geojson,
                     ST_GeometryType(geom) AS geom_type
                 FROM geoportal.polygon_adm_province
                 WHERE adm_id = ?
                 LIMIT 1
-            ', [$filters['province_id']])->getRowArray();
+            ', [$filters['province_id']]);
+            $row = $qProvince ? $qProvince->getRowArray() : null;
 
             if (!$row) {
                 throw new InvalidArgumentException('Provinsi AOI tidak ditemukan.');
