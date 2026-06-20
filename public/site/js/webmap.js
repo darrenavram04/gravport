@@ -733,12 +733,8 @@ document.addEventListener("DOMContentLoaded", () => {
       explicitFilter = true;
     }
 
-    // Only add viewport bounds for preview requests (not downloads).
-    // Skip bounds when province is selected — the province polygon defines the
-    // At low zoom with province: no bounds — show full province overview.
-    // At high zoom (≥ 10) with province: send bounds so the server switches to
-    // detail mode for the visible viewport instead of aggregating the whole province.
     if (forPreview) {
+      // Preview: send viewport bounds for aggregation / detail switching.
       const currentZoom = Math.round(state.map.getZoom());
       if (!options.noBounds && !payload.province_id) {
         payload.bounds = mapBoundsPayload();
@@ -746,6 +742,10 @@ document.addEventListener("DOMContentLoaded", () => {
         payload.bounds = mapBoundsPayload();
       }
       payload.zoom = currentZoom;
+    } else if (!explicitFilter) {
+      // Download with no explicit province/geometry: send viewport bounds so the
+      // server scopes results to what is currently visible on the map.
+      payload.bounds = mapBoundsPayload();
     }
 
     return payload;

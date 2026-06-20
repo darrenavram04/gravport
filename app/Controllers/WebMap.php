@@ -1520,6 +1520,24 @@ class WebMap extends BaseController
             }
         }
 
+        // Fallback: use viewport bounds to find visible provinces
+        $b = $filters['bounds'] ?? null;
+        if (is_array($b) && isset($b['west'], $b['south'], $b['east'], $b['north'])) {
+            $db     = \Config\Database::connect();
+            $result = $db->query(
+                "SELECT adm_name
+                 FROM geoportal.polygon_adm_province
+                 WHERE ST_Intersects(geom, ST_MakeEnvelope(?, ?, ?, ?, 4326))
+                 ORDER BY adm_name",
+                [(float)$b['west'], (float)$b['south'], (float)$b['east'], (float)$b['north']]
+            );
+            $hits = $result ? $result->getResultArray() : [];
+
+            if (!empty($hits)) {
+                return array_column($hits, 'adm_name');
+            }
+        }
+
         return null;
     }
 
