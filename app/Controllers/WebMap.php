@@ -373,6 +373,7 @@ class WebMap extends BaseController
             $filters     = $this->filtersFromInput($input);
 
             $levelData     = ($dataset['metadata_level'] ?? 'level1') === 'level1' ? 'Level 1' : 'Level 2';
+            $jenisData     = str_starts_with($datasetCode, 'cba_') ? 'CBA' : 'FAA';
             $provinceNames = $this->resolveMetadataProvinces($filters);
 
             $db = \Config\Database::connect();
@@ -380,18 +381,18 @@ class WebMap extends BaseController
                 $result = $db->query(
                     "SELECT raw_xml, jenis_data, provinsi, level_data
                      FROM geoportal.dataset_metadata_xml
-                     WHERE level_data = ?
+                     WHERE level_data = ? AND jenis_data = ?
                      ORDER BY provinsi, jenis_data",
-                    [$levelData]
+                    [$levelData, $jenisData]
                 );
             } else {
                 $placeholders = implode(',', array_fill(0, count($provinceNames), '?'));
                 $result = $db->query(
                     "SELECT raw_xml, jenis_data, provinsi, level_data
                      FROM geoportal.dataset_metadata_xml
-                     WHERE provinsi IN ($placeholders) AND level_data = ?
+                     WHERE provinsi IN ($placeholders) AND level_data = ? AND jenis_data = ?
                      ORDER BY provinsi, jenis_data",
-                    array_merge($provinceNames, [$levelData])
+                    array_merge($provinceNames, [$levelData, $jenisData])
                 );
             }
             $rows = $result ? $result->getResultArray() : [];
