@@ -4,22 +4,55 @@
  * Migrate dataset_metadata_xml table to composite PK (jenis_data, provinsi, level_data)
  * and bulk-import all XML files from the Hasil XML Metadata folder.
  *
- * Run from the geoportal root:
- *   php scripts/import_metadata_xml.php
+ * Usage (from geoportal root):
+ *   php scripts/import_metadata_xml.php [/path/to/xml/folder]
+ *
+ * If no folder argument is given, defaults to the Windows local path.
+ * DB credentials are read from .env (database.default.*), falling back to
+ * app/Config/Database.php defaults.
  */
 
 define('GEOPORTAL_ROOT', dirname(__DIR__));
 chdir(GEOPORTAL_ROOT);
 
-// ── DB config (matches app/Config/Database.php) ────────────────────────────
-$dbHost   = '127.0.0.1';
-$dbPort   = 5433;
-$dbName   = 'geoportal';
-$dbUser   = getenv('DB_USER')     ?: 'postgres';
-$dbPass   = getenv('DB_PASSWORD') ?: 'yayaya123';
+// ── DB credentials: read from .env, fall back to Config/Database.php defaults ──
+$cfg = [
+    'host'   => '127.0.0.1',
+    'port'   => 5433,
+    'dbname' => 'geoportal',
+    'user'   => 'postgres',
+    'pass'   => 'yayaya123',
+];
 
-// ── Source folder ───────────────────────────────────────────────────────────
-$sourceDir = 'C:\\Users\\dpandasig\\Downloads\\Hasil XML Metadata';
+$envFile = GEOPORTAL_ROOT . DIRECTORY_SEPARATOR . '.env';
+if (is_file($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        if (!str_contains($line, '=')) continue;
+        [$k, $v] = array_map('trim', explode('=', $line, 2));
+        $v = trim($v, '"\'');
+        match ($k) {
+            'database.default.hostname' => $cfg['host']   = $v,
+            'database.default.port'     => $cfg['port']   = (int) $v,
+            'database.default.database' => $cfg['dbname'] = $v,
+            'database.default.username' => $cfg['user']   = $v,
+            'database.default.password' => $cfg['pass']   = $v,
+            default                     => null,
+        };
+    }
+}
+
+$dbHost = $cfg['host'];
+$dbPort = $cfg['port'];
+$dbName = $cfg['dbname'];
+$dbUser = $cfg['user'];
+$dbPass = $cfg['pass'];
+
+// ── Source folder: CLI arg → env var → default Windows path ─────────────────
+$sourceDir = $argv[1]
+    ?? getenv('SOURCE_DIR')
+    ?: 'C:\\Users\\dpandasig\\Downloads\\Hasil XML Metadata';
 
 // Province name normalisation: XML filename segment → canonical provinsi value
 // matching the dropdown list in v_metadata.php and v_admin_manage.php
