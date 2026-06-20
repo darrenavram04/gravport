@@ -208,37 +208,43 @@ class Catalog extends BaseController
         }
 
         // ── Perform download ──────────────────────────────────────────
-        $rowCount = null;
+        try {
+            $rowCount = null;
 
-        if ($dataset['type'] === 'vector') {
-            $export   = $this->exportVectorCsv($dataset);
-            $rowCount = $export['row_count'] ?? null;
-            $size     = is_file((string)($export['path'] ?? '')) ? filesize($export['path']) : null;
+            if ($dataset['type'] === 'vector') {
+                $export   = $this->exportVectorCsv($dataset);
+                $rowCount = $export['row_count'] ?? null;
+                $size     = is_file((string)($export['path'] ?? '')) ? filesize($export['path']) : null;
 
-            $this->logCatalogDownload($userId, $dataset, 'vector', $rowCount, $size ?: null);
+                $this->logCatalogDownload($userId, $dataset, 'vector', $rowCount, $size ?: null);
 
-            return $this->response->download($export['path'], null)->setFileName($export['filename']);
-        }
+                return $this->response->download($export['path'], null)->setFileName($export['filename']);
+            }
 
-        $originalRaster = $this->originalRasterPath($dataset['dataset_code']);
-        if ($dataset['spatial_scope'] === 'national' && $originalRaster !== null) {
-            $size = is_file($originalRaster) ? filesize($originalRaster) : null;
+            $originalRaster = $this->originalRasterPath($dataset['dataset_code']);
+            if ($dataset['spatial_scope'] === 'national' && $originalRaster !== null) {
+                $size = is_file($originalRaster) ? filesize($originalRaster) : null;
+                $this->logCatalogDownload($userId, $dataset, 'raster', null, $size ?: null);
+
+                return $this->response->download($originalRaster, null)
+                    ->setFileName($this->safeFilename($dataset['title']) . '.tif');
+            }
+
+            $binary = $this->exportRasterBinary($dataset);
+            if ($binary === null) {
+                return $this->response->setStatusCode(404)->setBody('Raster tidak ditemukan untuk dataset ini. Hubungi admin jika data seharusnya tersedia.');
+            }
+
+            $path = $this->writeBinaryExport($binary, $this->safeFilename($dataset['title']) . '.tif', 'data');
+            $size = is_file($path) ? filesize($path) : null;
             $this->logCatalogDownload($userId, $dataset, 'raster', null, $size ?: null);
 
-            return $this->response->download($originalRaster, null)
-                ->setFileName($this->safeFilename($dataset['title']) . '.tif');
+            return $this->response->download($path, null)->setFileName(basename($path));
+        } catch (\Throwable $e) {
+            log_message('error', '[Catalog::download] id=' . $id . ' error: ' . $e->getMessage());
+            session()->setFlashdata('error', 'Gagal mengunduh dataset. Silakan coba lagi atau hubungi admin.');
+            return redirect()->to(site_url('catalog/' . $id));
         }
-
-        $binary = $this->exportRasterBinary($dataset);
-        if ($binary === null) {
-            return $this->response->setStatusCode(404)->setBody('Raster tidak ditemukan untuk dataset ini.');
-        }
-
-        $path = $this->writeBinaryExport($binary, $this->safeFilename($dataset['title']) . '.tif', 'data');
-        $size = is_file($path) ? filesize($path) : null;
-        $this->logCatalogDownload($userId, $dataset, 'raster', null, $size ?: null);
-
-        return $this->response->download($path, null)->setFileName(basename($path));
     }
 
     private function logCatalogDownload(int $userId, array $dataset, string $type, ?int $rowCount, ?int $sizeBytes = null): void
@@ -755,31 +761,47 @@ class Catalog extends BaseController
     private function exportRasterBinary(array $entry): ?string
     {
         $dataset = $this->registry->dataset((string) $entry['dataset_code']);
+        if ($dataset === null || empty($dataset['table'])) {
+            return null;
+        }
+
         $db = Database::connect();
 
-        if (empty($entry['province_id'])) {
-            $row = $db->query('
-                SELECT ST_AsTIFF(ST_Union(rast)) AS tif
-                FROM ' . $dataset['table'] . '
-            ')->getRowArray();
-        } else {
-            $row = $db->query('
-                WITH province AS (
-                    SELECT geom
-                    FROM geoportal.polygon_adm_province
-                    WHERE adm_id = ?
-                    LIMIT 1
-                ),
-                clipped AS (
-                    SELECT ST_Clip(r.rast, p.geom, true) AS rast
-                    FROM ' . $dataset['table'] . ' r
-                    CROSS JOIN province p
-                    WHERE ST_Intersects(COALESCE(r.grid_geom, ST_Envelope(r.rast)::geometry(Polygon, 4326)), p.geom)
-                )
-                SELECT ST_AsTIFF(ST_Union(rast)) AS tif
-                FROM clipped
-            ', [(int) $entry['province_id']])->getRowArray();
+        try {
+            if (empty($entry['province_id'])) {
+                $result = $db->query('
+                    SELECT ST_AsTIFF(ST_Union(rast)) AS tif
+                    FROM ' . $dataset['table'] . '
+                ');
+            } else {
+                $result = $db->query('
+                    WITH province AS (
+                        SELECT geom
+                        FROM geoportal.polygon_adm_province
+                        WHERE adm_id = ?
+                        LIMIT 1
+                    ),
+                    clipped AS (
+                        SELECT ST_Clip(r.rast, p.geom, true) AS rast
+                        FROM ' . $dataset['table'] . ' r
+                        CROSS JOIN province p
+                        WHERE ST_Intersects(COALESCE(r.grid_geom, ST_Envelope(r.rast)::geometry(Polygon, 4326)), p.geom)
+                    )
+                    SELECT ST_AsTIFF(ST_Union(rast)) AS tif
+                    FROM clipped
+                ', [(int) $entry['province_id']]);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[Catalog] exportRasterBinary query failed: ' . $e->getMessage());
+            return null;
         }
+
+        if (!$result) {
+            log_message('error', '[Catalog] exportRasterBinary: db->query() returned false for dataset ' . $entry['dataset_code']);
+            return null;
+        }
+
+        $row = $result->getRowArray();
 
         if (!$row || empty($row['tif'])) {
             return null;
