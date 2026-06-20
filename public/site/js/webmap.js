@@ -743,9 +743,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       payload.zoom = currentZoom;
     } else if (!explicitFilter) {
-      // Download with no explicit province/geometry: send viewport bounds so the
-      // server scopes results to what is currently visible on the map.
-      payload.bounds = mapBoundsPayload();
+      // If an aggregate cell is selected, use that cell's precise bounds so the
+      // server scopes the download to exactly what the user clicked on.
+      // Otherwise fall back to the current viewport bounds.
+      const cellBounds = state.selectedMeta?.kind === "aggregate"
+        ? state.selectedFeatureLayer?.getBounds?.()
+        : null;
+      if (cellBounds?.isValid()) {
+        payload.bounds = {
+          west:  cellBounds.getWest(),
+          south: cellBounds.getSouth(),
+          east:  cellBounds.getEast(),
+          north: cellBounds.getNorth(),
+        };
+      } else {
+        payload.bounds = mapBoundsPayload();
+      }
     }
 
     return payload;
