@@ -743,19 +743,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       payload.zoom = currentZoom;
     } else if (!explicitFilter) {
-      // If an aggregate cell is selected, use that cell's precise bounds so the
-      // server scopes the download to exactly what the user clicked on.
-      // Otherwise fall back to the current viewport bounds.
-      const cellBounds = state.selectedMeta?.kind === "aggregate"
-        ? state.selectedFeatureLayer?.getBounds?.()
-        : null;
-      if (cellBounds?.isValid()) {
-        payload.bounds = {
-          west:  cellBounds.getWest(),
-          south: cellBounds.getSouth(),
-          east:  cellBounds.getEast(),
-          north: cellBounds.getNorth(),
-        };
+      // Aggregate cell is stored as a Point (centroid), so getBounds() is invalid.
+      // Reconstruct the cell's bounding box from centroid + cell size.
+      if (state.selectedMeta?.kind === "aggregate") {
+        const props    = state.selectedMeta.payload.props;
+        const center   = state.selectedFeatureLayer?.getLatLng?.();
+        const halfSize = (props?.aggregate_cell_size_deg ?? 0) / 2;
+        if (center && halfSize > 0) {
+          payload.bounds = {
+            west:  center.lng - halfSize,
+            south: center.lat - halfSize,
+            east:  center.lng + halfSize,
+            north: center.lat + halfSize,
+          };
+        } else {
+          payload.bounds = mapBoundsPayload();
+        }
       } else {
         payload.bounds = mapBoundsPayload();
       }
