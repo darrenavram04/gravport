@@ -377,23 +377,24 @@ class WebMap extends BaseController
 
             $db = \Config\Database::connect();
             if ($provinceNames === null) {
-                $rows = $db->query(
+                $result = $db->query(
                     "SELECT raw_xml, jenis_data, provinsi, level_data
                      FROM geoportal.dataset_metadata_xml
                      WHERE level_data = ?
                      ORDER BY provinsi, jenis_data",
                     [$levelData]
-                )->getResultArray();
+                );
             } else {
                 $placeholders = implode(',', array_fill(0, count($provinceNames), '?'));
-                $rows = $db->query(
+                $result = $db->query(
                     "SELECT raw_xml, jenis_data, provinsi, level_data
                      FROM geoportal.dataset_metadata_xml
                      WHERE provinsi IN ($placeholders) AND level_data = ?
                      ORDER BY provinsi, jenis_data",
                     array_merge($provinceNames, [$levelData])
-                )->getResultArray();
+                );
             }
+            $rows = $result ? $result->getResultArray() : [];
 
             if (empty($rows)) {
                 throw new \RuntimeException('Metadata XML untuk wilayah ini belum tersedia.');
@@ -1155,7 +1156,12 @@ class WebMap extends BaseController
             $filters['geometry_type'] = $this->geometryType($filters['geometry']);
         }
 
-        $metadataExport = $this->metadataExporter->export($metadataDataset, $filters);
+        try {
+            $metadataExport = $this->metadataExporter->export($metadataDataset, $filters);
+        } catch (\Throwable) {
+            $metadataExport = null;
+        }
+
         $directory = $this->exportDirectory('packages');
         $filename = $baseName . '.zip';
         $path = $directory . DIRECTORY_SEPARATOR . $filename;
@@ -1175,7 +1181,9 @@ class WebMap extends BaseController
             $archive->addFromString($file['name'], $file['contents'] ?? '');
         }
 
-        $archive->addFile($metadataExport['path'], 'metadata.xml');
+        if ($metadataExport !== null) {
+            $archive->addFile($metadataExport['path'], 'metadata.xml');
+        }
         $archive->addFromString(
             'filters.json',
             json_encode($this->packageFiltersManifest($datasetCode, $filters), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
@@ -1497,14 +1505,15 @@ class WebMap extends BaseController
                 ? json_encode($filters['geometry'])
                 : (string) $filters['geometry'];
 
-            $db   = \Config\Database::connect();
-            $hits = $db->query(
+            $db     = \Config\Database::connect();
+            $result = $db->query(
                 "SELECT adm_name
                  FROM geoportal.polygon_adm_province
                  WHERE ST_Intersects(geom, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))
                  ORDER BY adm_name",
                 [$geojson]
-            )->getResultArray();
+            );
+            $hits = $result ? $result->getResultArray() : [];
 
             if (!empty($hits)) {
                 return array_column($hits, 'adm_name');

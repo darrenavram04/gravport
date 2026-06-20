@@ -16,30 +16,35 @@ class FilteredMetadataExporter
 
         $row = null;
         if ($provinceName !== '') {
-            $row = $db->query('
-                SELECT
-                    jenis_data,
-                    provinsi,
-                    level_data,
-                    metadata_level,
-                    source_path,
-                    file_identifier,
-                    parent_identifier,
-                    hierarchy_level_name,
-                    metadata_date,
-                    language_code,
-                    character_set,
-                    title,
-                    abstract,
-                    organisation_name,
-                    contact_role,
-                    country,
-                    raw_xml
-                FROM geoportal.dataset_metadata_xml
-                WHERE provinsi = ? AND level_data = ?
-                ORDER BY jenis_data
-                LIMIT 1
-            ', [$provinceName, $levelData])->getRowArray();
+            try {
+                $result = $db->query('
+                    SELECT
+                        jenis_data,
+                        provinsi,
+                        level_data,
+                        metadata_level,
+                        source_path,
+                        file_identifier,
+                        parent_identifier,
+                        hierarchy_level_name,
+                        metadata_date,
+                        language_code,
+                        character_set,
+                        title,
+                        abstract,
+                        organisation_name,
+                        contact_role,
+                        country,
+                        raw_xml
+                    FROM geoportal.dataset_metadata_xml
+                    WHERE provinsi = ? AND level_data = ?
+                    ORDER BY jenis_data
+                    LIMIT 1
+                ', [$provinceName, $levelData]);
+                $row = $result ? $result->getRowArray() : null;
+            } catch (\Throwable) {
+                $row = null;
+            }
         }
 
         if (!$row) {
