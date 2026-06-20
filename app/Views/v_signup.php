@@ -678,10 +678,10 @@
 
         <div class="tier-grid">
           <!-- Lite -->
-          <div class="tier-card" id="cardSolo" onclick="selectTier('solo')">
+          <div class="tier-card" id="cardLite" onclick="selectTier('lite')">
             <div class="tier-card-top">
               <span class="tier-name">Lite</span>
-              <span class="tier-price" id="priceSolo">Rp 99.000<span class="tier-price-unit">/bulan</span></span>
+              <span class="tier-price" id="priceLite">Rp 99.000<span class="tier-price-unit">/bulan</span></span>
             </div>
             <div class="tier-features">Level 1+2 (FAA &amp; CBA, GeoTIFF) | Maks. 2 GB/minggu | 1 akun | Metadata ISO 19115</div>
             <i class="bi bi-check-circle-fill tier-check"></i>
@@ -838,8 +838,8 @@
   let billingCycle = 'monthly';
 
   const prices = {
-    monthly: { solo: 'Rp 99.000',      pro: 'Rp 349.000',      Enterprise: 'Rp 999.000'    },
-    annual:  { solo: 'Rp 990.000',     pro: 'Rp 3.490.000',    Enterprise: 'Rp 9.990.000'  },
+    monthly: { lite: 'Rp 99.000',      pro: 'Rp 349.000',      Enterprise: 'Rp 999.000'    },
+    annual:  { lite: 'Rp 990.000',     pro: 'Rp 3.490.000',    Enterprise: 'Rp 9.990.000'  },
   };
 
   /* ── Animated step transition ───────────────────────────────────────────── */
@@ -895,7 +895,7 @@
 
   function updatePriceDisplay() {
     const suffix = billingCycle === 'annual' ? '/tahun' : '/bulan';
-    ['solo', 'pro', 'Enterprise'].forEach(t => {
+    ['lite', 'pro', 'Enterprise'].forEach(t => {
       const el = document.getElementById('price' + t.charAt(0).toUpperCase() + t.slice(1));
       if (el) el.innerHTML = prices[billingCycle][t] + '<span class="tier-price-unit">' + suffix + '</span>';
     });
@@ -904,7 +904,7 @@
   /* ── Tier selection ─────────────────────────────────────────────────────── */
   function selectTier(tier) {
     selectedTier = tier;
-    ['solo', 'pro', 'Enterprise'].forEach(t => {
+    ['lite', 'pro', 'Enterprise'].forEach(t => {
       const card = document.getElementById('card' + t.charAt(0).toUpperCase() + t.slice(1));
       if (card) card.classList.toggle('selected', t === tier);
     });
@@ -924,7 +924,7 @@
     } else {
       document.getElementById('inputTierName').value      = selectedTier;
       document.getElementById('inputBillingCycle').value  = billingCycle;
-      document.getElementById('lblTierIndividual').textContent  = selectedTier === 'solo' ? 'Lite' : 'Pro';
+      document.getElementById('lblTierIndividual').textContent  = selectedTier === 'lite' ? 'Lite' : 'Pro';
       document.getElementById('lblCycleIndividual').textContent = billingCycle === 'annual' ? 'Tahunan' : 'Bulanan';
       showStep('step2Individual');
     }

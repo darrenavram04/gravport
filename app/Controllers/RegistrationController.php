@@ -323,18 +323,25 @@ class RegistrationController extends BaseController
             ? date('Y-m-d', strtotime('+1 year'))
             : date('Y-m-d', strtotime('+1 month'));
 
-        $tier = $this->subModel->findTier($record['tier_name']);
-        if ($tier) {
-            $this->subModel->assign(
-                $user['id'],
-                (int) $tier['tier_id'],
-                $endDate,
-                $reviewedBy,
-                ['notes' => 'Diaktifkan via admin panel', 'payment_cycle' => $record['billing_cycle'] === 'annual' ? 'A' : 'M']
-            );
-        } else {
-            log_message('error', '[RegistrationController] activateIndividual: tier "' . $record['tier_name'] . '" tidak ditemukan di subscriptions_tier. Akun dibuat tanpa subscription.');
+        // Normalize legacy 'solo' alias → 'lite' to match subscriptions_tier.tier_name
+        $tierName = strtolower(trim($record['tier_name'] ?? ''));
+        if ($tierName === 'solo') {
+            $tierName = 'lite';
         }
+
+        $tier = $this->subModel->findTier($tierName);
+        if (!$tier) {
+            log_message('error', '[RegistrationController] activateIndividual: tier "' . $record['tier_name'] . '" (normalized: "' . $tierName . '") tidak ditemukan di subscriptions_tier.');
+            return false;
+        }
+
+        $this->subModel->assign(
+            $user['id'],
+            (int) $tier['tier_id'],
+            $endDate,
+            $reviewedBy,
+            ['notes' => 'Diaktifkan via admin panel', 'payment_cycle' => $record['billing_cycle'] === 'annual' ? 'A' : 'M']
+        );
 
         $this->pending->approve($pendingId, $reviewedBy);
 
