@@ -634,7 +634,7 @@ XML;
         $row = $db->query(
             "SELECT dataset_code, title, spatial_scope, anomaly_type, data_level, items_count
              FROM geoportal.datasets WHERE dataset_code = ?",
-            [strtoupper($id)]
+            [strtolower($id)]
         )->getRowArray();
 
         if (!$row) {
