@@ -232,6 +232,10 @@ class ApiController extends BaseController
         $quota  = $this->marketplace->checkQuota($userId);
         $tier   = $quota['tier'] ?? 'none';
 
+        if (!($quota['allowed'] ?? true) && ($quota['reason'] ?? '') !== 'no_subscription') {
+            return $this->error('Kuota unduhan mingguan Anda telah habis. Reset setiap hari Senin.', 403);
+        }
+
         // ── Parse & validate BBOX ─────────────────────────────────
         $bboxStr = $this->request->getGet('bbox');
         if (!$bboxStr) {
