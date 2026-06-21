@@ -122,11 +122,7 @@ class ApiController extends BaseController
     {
         $db     = \Config\Database::connect();
         $result = $db->query(
-            "SELECT d.*, m.abstract, m.keywords, m.lineage, m.use_constraints, m.spatial_resolution,
-                    m.temporal_extent_begin, m.temporal_extent_end
-             FROM geoportal.datasets d
-             LEFT JOIN geoportal.dataset_metadata_xml m ON m.dataset_code = d.dataset_code
-             WHERE d.dataset_code = ?",
+            "SELECT * FROM geoportal.datasets WHERE dataset_code = ?",
             [strtolower($code)]
         );
         $row = $result ? $result->getRowArray() : null;
