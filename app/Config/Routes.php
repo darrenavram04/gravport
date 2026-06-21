@@ -165,16 +165,16 @@ $routes->get('ogc/wfs', 'OgcController::wfs');
 $routes->get('ogc/csw', 'OgcController::csw');
 
 // ── REST API v1 ───────────────────────────────────────────────────────────
-// Health is public (no auth)
+// Public (no auth)
 $routes->get('api/v1/health',        'ApiController::health');
 $routes->get('api/v1/public-stats',  'ApiController::publicStats');
+$routes->get('api/v1/catalog',       'ApiController::catalog');
 
-// All other /api/v1/* endpoints require API key authentication
+// Authenticated /api/v1/* endpoints require API key
 $routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
     $routes->get('datasets',                        'ApiController::datasets');
     $routes->get('datasets/(:segment)/points',      'ApiController::points/$1');
     $routes->get('datasets/(:segment)',             'ApiController::datasetDetail/$1');
-    $routes->get('catalog',                         'ApiController::catalog');
     $routes->get('user/quota',                      'ApiController::quota');
     $routes->get('user/downloads',                  'ApiController::downloads');
 });

@@ -120,15 +120,16 @@ class ApiController extends BaseController
     // ────────────────────────────────────────────────────────────────
     public function datasetDetail(string $code): ResponseInterface
     {
-        $db  = \Config\Database::connect();
-        $row = $db->query(
+        $db     = \Config\Database::connect();
+        $result = $db->query(
             "SELECT d.*, m.abstract, m.keywords, m.lineage, m.use_constraints, m.spatial_resolution,
                     m.temporal_extent_begin, m.temporal_extent_end
              FROM geoportal.datasets d
              LEFT JOIN geoportal.dataset_metadata_xml m ON m.metadata_level = CONCAT(LOWER(d.anom_type), '_l', d.data_level)
              WHERE d.dataset_code = ?",
-            [strtoupper($code)]
-        )->getRowArray();
+            [strtolower($code)]
+        );
+        $row = $result ? $result->getRowArray() : null;
 
         if (!$row) {
             return $this->error('Dataset not found.', 404);
