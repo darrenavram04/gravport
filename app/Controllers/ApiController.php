@@ -125,7 +125,7 @@ class ApiController extends BaseController
             "SELECT d.*, m.abstract, m.keywords, m.lineage, m.use_constraints, m.spatial_resolution,
                     m.temporal_extent_begin, m.temporal_extent_end
              FROM geoportal.datasets d
-             LEFT JOIN geoportal.dataset_metadata_xml m ON m.metadata_level = CONCAT(LOWER(d.anom_type), '_l', d.data_level)
+             LEFT JOIN geoportal.dataset_metadata_xml m ON m.dataset_code = d.dataset_code
              WHERE d.dataset_code = ?",
             [strtolower($code)]
         );
